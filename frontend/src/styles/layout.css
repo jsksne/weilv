@@ -1,0 +1,22 @@
+/* ==========================================================
+   微律 · 春日极光 — 布局与视图切换
+   逐条迁移自 ui-prototypes/02-sakura-spring.html：
+   · .shell 页面容器 / .view 视图切换（直接切换 + 上浮渐入）
+   · .stagger 级联入场（同步 05：五级延迟）
+   @keyframes viewIn 见 animations.css。
+   ========================================================== */
+/* ---------- 布局与视图切换（同步 05：直接切换 + 上浮渐入） ---------- */
+.shell { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 40px 22px 110px; }
+.view { display: none; }
+.view.active { display: block; animation: viewIn 0.7s var(--ease-decay) both; }
+
+/* 级联入场（同步 05：五级延迟） */
+.stagger > * { animation: viewIn 0.8s var(--ease-decay) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.13s; }
+.stagger > *:nth-child(3) { animation-delay: 0.21s; }
+.stagger > *:nth-child(4) { animation-delay: 0.29s; }
+.stagger > *:nth-child(5) { animation-delay: 0.37s; }
+
+/* ---------- 响应式（布局相关，自原型尾部媒体查询拆出） ---------- */
+@media (max-width: 560px) { .shell { padding: 24px 16px 90px; } }

@@ -1,0 +1,68 @@
+/* ==========================================================
+   微律 · 春日极光 — 文档基础与跨视图通用元件
+   迁移自 ui-prototypes/02-sakura-spring.html：
+   · body 画布（清晨天空渐变）
+   · chips / chip（今日页 · 问答页 · 引导页共用的选项胶囊）
+   · btn 按钮族（今日页 / 引导页共用）
+   · toast 反馈系统
+   · 线性图标系统（统一线宽）
+   对应 @keyframes 统一收口在 animations.css。
+   ========================================================== */
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* 春天清晨天空 + 极光：粉 → 薰衣草（v20：删除中段淡黄 #ffeede，整体加深一点） */
+  background: linear-gradient(172deg, #f8f3fb 0%, #fde9f1 38%, #f9e2ee 62%, #eee5fa 100%);
+  background-attachment: fixed;
+}
+
+/* ---------- 跨视图胶囊选项（原型定义于今日页心情卡，问答快问 / 引导页复用） ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1.5px solid rgba(255,183,197,0.6); background: #fff; color: var(--ink-2);
+  font-size: 13px; padding: 7px 16px; border-radius: 999px; cursor: pointer; font-family: var(--sans);
+  transition: all 0.45s var(--ease-decay);
+}
+.chip:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: translateY(-2px); }
+.chip.on { background: linear-gradient(120deg, #ffa8bd, #f78fb0 60%, #b9a7ea); color: #fff; border-color: transparent; font-weight: 700; box-shadow: 0 4px 14px rgba(233,160,220,0.32), inset 0 1px 0 rgba(255,255,255,0.28); }
+
+/* ---------- 按钮族 ---------- */
+.btn-sm { padding: 9px 18px; font-size: 13px; }
+.btn {
+  font-family: var(--sans); font-size: 13.5px; cursor: pointer; border-radius: 999px;
+  padding: 11px 24px; border: 1.5px solid transparent; letter-spacing: 1px;
+  transition: transform 0.5s var(--ease-decay), box-shadow 0.5s var(--ease-decay), background 0.4s;
+  position: relative;
+}
+.btn:active { transform: scale(0.94); }
+.btn-primary {
+  color: #fff; font-weight: 700;
+  background: linear-gradient(120deg, #ffa8bd, #f78fb0 50%, #b9a7ea);
+  background-size: 180% 100%;
+  box-shadow: 0 6px 18px rgba(233,160,220,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.btn-primary:hover { background-position: 90% 0; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(233,160,220,0.45), inset 0 1px 0 rgba(255,255,255,0.3); }
+.btn-ghost { background: #fff; border-color: rgba(255,183,197,0.65); color: var(--ink-2); }
+.btn-ghost:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: translateY(-2px); }
+.btn-ok { background: var(--teal-soft); border-color: rgba(124,198,183,0.65); color: var(--teal-ink); font-weight: 700; }
+.btn-ok:hover { box-shadow: 0 8px 18px rgba(124,198,183,0.35); transform: translateY(-2px); }
+
+/* ---------- Toast / 原型标记 ---------- */
+.toast-box { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
+.toast {
+  padding: 12px 24px; border-radius: 999px; font-size: 13px; letter-spacing: 1px; color: var(--ink);
+  background: rgba(255, 255, 255, 0.95); border: 1.5px solid rgba(255,183,197,0.7);
+  box-shadow: 0 12px 36px rgba(247,143,176,0.25); animation: toastIn 0.65s var(--ease-decay) both;
+  display: flex; gap: 8px; align-items: center;
+}
+.toast.out { animation: toastOut 0.5s var(--ease-rise) forwards; }
+
+/* ---------- 线性图标系统（统一线宽，替代图标位 emoji） ---------- */
+.ic { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.why-icon { display: inline-flex; color: var(--pink-deep); }
+.sg-ic { display: inline-flex; color: var(--pink-deep); }
+.sg-ic.night { color: var(--purple-deep); }
+.p-card h3 .ic { width: 16px; height: 16px; color: #a678d8; }
+.mi-ic { display: inline-flex; color: var(--purple-deep); }
+.insight-card h3 { display: flex; gap: 9px; align-items: center; }
+.insight-card h3 .ic { color: var(--pink-deep); }

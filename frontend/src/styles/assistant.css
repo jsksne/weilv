@@ -1,0 +1,181 @@
+/* ==========================================================
+   微律 · 春日极光 — 问问薇薇 · AI 问答管线（05 春日极光设计语言）
+   逐条迁移自 ui-prototypes/02-sakura-spring.html「问问薇薇」全段。
+   AI 存在感组件（.orb）的 Vue 宿主：components/effects/AssistantOrb.vue。
+   .q-bubble 的 backdrop-filter / -webkit-backdrop-filter 原样保留。
+   @keyframes 见 animations.css。
+   ========================================================== */
+.ask-wrap { max-width: 820px; margin: 0 auto; position: relative; }
+/* AI 页专属背景：极光晕在内容后方缓慢漂移 */
+.ask-bg { position: absolute; inset: -40px -140px -20px; z-index: -1; pointer-events: none; }
+.ask-bg i { position: absolute; border-radius: 50%; filter: blur(78px); animation: askDrift 30s ease-in-out infinite alternate; }
+.ask-bg i.g1 { width: 430px; height: 330px; left: -70px; top: 60px; background: radial-gradient(closest-side, rgba(255,183,197,0.5), transparent 70%); }
+.ask-bg i.g2 { width: 470px; height: 350px; right: -90px; top: 160px; background: radial-gradient(closest-side, rgba(201,168,235,0.42), transparent 70%); animation-delay: -12s; }
+.ask-bg i.g3 { width: 360px; height: 280px; left: 32%; bottom: -20px; background: radial-gradient(closest-side, rgba(124,198,183,0.3), transparent 70%); animation-delay: -20s; }
+
+.ask-hero { text-align: center; margin: 30px 0 26px; }
+/* AI 存在感：呼吸极光球 + 环绕花瓣 */
+.orb-stage { height: 132px; display: grid; place-items: center; margin-bottom: 12px; }
+.orb { width: 96px; height: 96px; position: relative; display: grid; place-items: center; }
+.orb-core {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 55%, #cdeee6);
+  box-shadow: 0 0 30px rgba(183,154,232,0.5), 0 0 60px rgba(255,183,197,0.35);
+  animation: orbBreath 6s infinite;
+}
+.orb-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(183,154,232,0.45); animation: orbSpin 14s linear infinite; }
+.orb-ring.r2 { inset: -14px; border-color: rgba(255,183,197,0.4); animation-duration: 22s; animation-direction: reverse; }
+.orb-ring .op { position: absolute; top: -7px; left: 50%; margin-left: -7px; width: 14px; height: 14px; }
+.ask-hero h2 { font-family: var(--disp); font-weight: 600; font-size: 28px; }
+.ask-hero h2 em { font-style: normal; background: linear-gradient(96deg, #f27ba4, #b79ae8 60%, #7cc6b7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ask-hero p { color: var(--ink-3); font-size: 13px; margin-top: 10px; letter-spacing: 0.5px; line-height: 1.9; }
+
+.quick-row { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-bottom: 22px; }
+
+/* 问答流（页面级滚动，无内滚动条） */
+.ask-log { display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; min-height: 120px; }
+/* 用户问题气泡 */
+.q-bubble {
+  align-self: flex-end; max-width: 78%;
+  background: linear-gradient(120deg, rgba(255,183,197,0.24), rgba(201,168,235,0.26));
+  border: 1px solid rgba(242,123,164,0.42);
+  color: var(--ink); padding: 12px 18px; border-radius: 18px 18px 4px 18px;
+  font-size: 14px; line-height: 1.8; animation: msgIn 0.65s var(--ease-decay) both;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+/* 管线组：阶段轨道 + 阶段卡 */
+.pipe { display: flex; flex-direction: column; gap: 14px; animation: msgIn 0.65s var(--ease-decay) both; }
+/* 阶段轨道：编号胶囊步进器（pending 描边 / active 极光填充 + 脉冲 / done 青色打勾） */
+.pipe-rail { display: flex; align-items: center; gap: 8px; }
+.pnode {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 7px; border-radius: 999px;
+  border: 1.5px solid rgba(255,183,197,0.5); background: rgba(255,255,255,0.72);
+  font-size: 12.5px; color: var(--ink-3); letter-spacing: 1px;
+  transition: color 0.5s var(--ease-decay), background 0.5s var(--ease-decay), border-color 0.5s var(--ease-decay);
+}
+.pnode .pno {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-family: var(--disp); font-style: normal; font-size: 11px; font-weight: 600;
+  background: #ffe9ef; color: var(--ink-3);
+  transition: background 0.5s var(--ease-decay), color 0.5s var(--ease-decay);
+}
+.pnode.active {
+  color: #fff; font-weight: 500; border-color: transparent;
+  background: var(--grad-aurora);
+  animation: nodePulse 1.8s infinite;
+}
+.pnode.active .pno { background: rgba(255,255,255,0.3); color: #fff; }
+.pnode.done { color: #8f6fd0; border-color: rgba(183,154,232,0.55); background: rgba(237,228,251,0.85); }
+.pnode.done .pno { background: #fff; color: #8f6fd0; font-size: 0; }
+.pnode.done .pno::before { content: '✓'; font-size: 11px; }
+.pline { flex: 1; min-width: 14px; height: 2.5px; background: rgba(147,113,138,0.12); border-radius: 99px; overflow: hidden; position: relative; }
+.pline::after { content: ''; position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--pink), var(--lav)); transition: width 0.8s var(--ease-decay); }
+.pline.fill::after { width: 100%; }
+/* 打字指示 */
+.typing { display: inline-flex; gap: 5px; padding: 5px 2px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); animation: typeDot 1.3s infinite; }
+.typing i:nth-child(2) { animation-delay: 0.18s; }
+.typing i:nth-child(3) { animation-delay: 0.36s; }
+/* 阶段卡（问题拆解 / 知识检索） */
+.stage-card { padding: 20px 24px; animation: msgIn 0.65s var(--ease-decay) both; }
+.stage-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.stage-no { font-family: var(--disp); font-size: 12px; font-weight: 600; color: #fff; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--grad-aurora); box-shadow: 0 3px 10px rgba(157,123,223,0.3); }
+.stage-head h4 { font-size: 14px; font-weight: 700; letter-spacing: 1px; color: var(--ink); }
+.stage-state { font-size: 11px; color: var(--ink-3); margin-left: auto; letter-spacing: 1px; }
+.stage-lead { font-size: 13px; color: var(--ink-2); margin-bottom: 12px; line-height: 1.9; }
+.stage-lead b { color: var(--ink); }
+/* 方向行（问题拆解结果） */
+.dir-row {
+  display: flex; gap: 12px; align-items: baseline; padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.92);
+  animation: msgIn 0.6s var(--ease-decay) both; margin-bottom: 8px;
+}
+.dir-row:last-child { margin-bottom: 0; }
+.dir-no { font-family: var(--disp); flex: none; font-size: 13px; font-weight: 600; }
+.dirs .dir-row:nth-child(1) .dir-no { color: var(--pink-deep); }
+.dirs .dir-row:nth-child(2) .dir-no { color: var(--purple-deep); }
+.dirs .dir-row:nth-child(3) .dir-no { color: var(--teal-ink); }
+.dir-row b { font-size: 13.5px; color: var(--ink); display: block; font-weight: 600; }
+.dir-row span { font-size: 12px; color: var(--ink-3); line-height: 1.7; display: block; margin-top: 2px; }
+/* 知识块（RAG chunk 依据） */
+.chunk {
+  padding: 13px 16px; border-radius: 13px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.92);
+  animation: msgIn 0.6s var(--ease-decay) both;
+}
+.chunk:last-child { margin-bottom: 0; }
+.chunk-badge { display: inline-block; font-size: 10.5px; letter-spacing: 1.5px; padding: 3px 10px; border-radius: 99px; margin-bottom: 7px; font-weight: 500; color: var(--teal-ink); background: var(--teal-soft); border: 1px solid rgba(124,198,183,0.45); }
+.chunk p { font-size: 12.5px; color: var(--ink-2); line-height: 1.8; }
+.chunk p b { color: var(--ink); font-weight: 500; }
+/* 相关度条 */
+.rel { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+.rel-bar { flex: 1; max-width: 200px; height: 4px; border-radius: 99px; background: rgba(147,113,138,0.1); overflow: hidden; }
+.rel-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--lav), var(--pink)); transition: width 1.1s var(--ease-decay); }
+.rel-val { font-size: 10.5px; color: var(--ink-3); letter-spacing: 1px; font-family: var(--disp); }
+/* 最终回答卡：柔光扩散 */
+.answer-card { position: relative; overflow: hidden; padding: 22px 26px; animation: msgIn 0.7s var(--ease-decay) both; }
+/* 初始问候卡：不单独入场，跟随问答页整体一起渐入（切页也不重播光效） */
+.greeting-card { animation: none; }
+.greeting-card .answer-glow { animation: none; opacity: 0; }
+.answer-glow {
+  position: absolute; left: 50%; top: 18px; width: 300px; height: 300px; margin: -150px;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,219,228,0.6), rgba(237,228,251,0.35) 55%, transparent 75%);
+  animation: glowSpread 1.6s var(--ease-rise) both;
+}
+.answer-face { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 11px; color: var(--ink-3); letter-spacing: 2px; position: relative; }
+.answer-face .mini { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 60%, #cdeee6); box-shadow: 0 0 10px rgba(183,154,232,0.45); }
+.answer-text { font-size: 14px; color: var(--ink-2); line-height: 2; position: relative; }
+.answer-text b { color: var(--ink); font-weight: 600; }
+/* 回答中的任务小卡 */
+.mini-task {
+  margin-top: 14px; padding: 13px 16px; border-radius: 13px;
+  background: rgba(237,228,251,0.65); border: 1px solid rgba(201,168,235,0.4);
+  display: flex; align-items: center; gap: 13px; animation: msgIn 0.6s var(--ease-decay) 0.2s both;
+}
+.mini-task .mt-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; font-size: 15px; background: linear-gradient(135deg, #ffd9e2, #eee2fd); }
+.mini-task b { font-size: 13.5px; color: var(--ink); display: block; }
+.mini-task span { font-size: 11.5px; color: var(--ink-3); }
+.mini-task .go { margin-left: auto; font-size: 12px; color: var(--purple-deep); border: 1px solid rgba(183,154,232,0.5); background: none; padding: 6px 13px; border-radius: 99px; cursor: pointer; transition: all 0.4s var(--ease-decay); font-family: var(--sans); }
+.mini-task .go:hover { background: rgba(237,228,251,0.9); transform: translateY(-1px); }
+/* 安全提示卡（疼痛等风险输入） */
+.safety-card { margin-top: 4px; padding: 15px 17px; border-radius: 13px; background: rgba(253,240,246,0.85); border: 1.5px solid rgba(201,168,235,0.55); animation: msgIn 0.6s var(--ease-decay) both; }
+.safety-card .st { display: flex; gap: 7px; align-items: center; font-size: 13px; color: #c06d92; font-weight: 700; margin-bottom: 7px; letter-spacing: 1px; }
+.safety-card p { font-size: 12.5px; color: var(--ink-2); line-height: 1.85; }
+.safety-card .rule { margin-top: 9px; font-size: 11px; color: var(--ink-3); border-top: 1px dashed rgba(201,168,235,0.5); padding-top: 8px; }
+/* 引用来源 */
+.cites { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,183,197,0.55); }
+.cites .ct { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-bottom: 7px; }
+.cite { font-size: 12px; color: var(--ink-2); display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
+.cite::before { content: '❀'; color: var(--pink); font-size: 10px; }
+/* 输入区（玻璃卡 + 呼吸光点） */
+.ask-input { display: flex; gap: 12px; padding: 12px 14px; align-items: center; }
+.ask-input .ai-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; margin-left: 6px; background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 60%, #cdeee6); box-shadow: 0 0 12px rgba(183,154,232,0.5); animation: orbBreath 6s infinite; }
+.ask-input input {
+  flex: 1; background: rgba(255,255,255,0.75); border: 1.5px solid rgba(255,183,197,0.55); border-radius: 13px;
+  padding: 12px 18px; color: var(--ink); font-size: 14px; font-family: var(--sans); outline: none;
+  transition: border-color 0.4s var(--ease-decay), box-shadow 0.4s var(--ease-decay);
+}
+.ask-input input:focus { border-color: var(--pink-deep); box-shadow: 0 0 0 4px rgba(247,143,176,0.12); }
+.ask-input input::placeholder { color: var(--ink-3); }
+.btn-send {
+  border: none; cursor: pointer; border-radius: 13px; padding: 0 26px; height: 46px; flex: none;
+  background: linear-gradient(120deg, #ffa8bd, #f78fb0 55%, #c9a8eb); color: #fff; font-weight: 700;
+  font-size: 14px; font-family: var(--sans); letter-spacing: 2px;
+  box-shadow: 0 6px 18px rgba(247,143,176,0.4); transition: transform 0.5s var(--ease-decay), box-shadow 0.5s var(--ease-decay);
+}
+.btn-send:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(247,143,176,0.5); }
+.btn-send:active { transform: scale(0.94); }
+.ask-foot { text-align: center; font-size: 11px; color: var(--ink-3); margin-top: 12px; letter-spacing: 0.5px; line-height: 1.8; }
+
+/* ---------- 响应式（问答页相关，自原型尾部媒体查询拆出） ---------- */
+@media (max-width: 560px) {
+  .q-bubble { max-width: 92%; }
+  .pipe-rail { gap: 5px; }
+  .pnode { padding: 4px 9px 4px 5px; font-size: 11px; gap: 5px; }
+  .pnode .pno { width: 17px; height: 17px; }
+  .ask-input { flex-wrap: wrap; }
+  .ask-input input { min-width: 60%; }
+  .btn-send { flex: 1; }
+}

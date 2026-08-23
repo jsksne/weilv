@@ -1,0 +1,42 @@
+/* ==========================================================
+   微律 · 春日极光 — 统一背景层
+   逐条迁移自 ui-prototypes/02-sakura-spring.html「统一背景层」：
+   天空尺度极光色晕（blobs）+ 微网格（bg-grid）+ 花瓣（petalField）
+   + 光尘（dust）+ 噪点（bg-noise）。
+   Vue 工程化宿主：components/effects/AuroraBackground.vue
+   （内含 PetalField.vue / DustField.vue）。
+   对应 @keyframes（petalSpin / blobIn / blobFloat / gridPulse / dustTwinkle）
+   统一收口在 animations.css。
+   ========================================================== */
+/* 极光色晕 + 网格 + 花瓣 + 光尘 + 噪点（统一背景层） */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+#petalField { position: absolute; inset: 0; overflow: hidden; }
+.petal { position: absolute; top: -8vh; will-change: transform; }
+.petal svg { display: block; animation: petalSpin var(--spin, 7s) linear infinite; }
+
+/* 极光色晕：vw 级天空尺度（路线 A），饱和度提一档，让亮色体系也能"被极光染开" */
+.blob { position: absolute; border-radius: 50%; filter: blur(110px); pointer-events: none; opacity: 0; animation: blobIn 2.6s var(--ease-decay) forwards, blobFloat 24s ease-in-out infinite alternate; }
+.blob.b1 { width: 58vw; height: 44vh; left: -12vw; top: -13vh; background: radial-gradient(closest-side, rgba(247,143,176,0.42), transparent 70%); }
+.blob.b2 { width: 52vw; height: 40vh; right: -13vw; top: -6vh; background: radial-gradient(closest-side, rgba(255,164,116,0.34), transparent 70%); animation-delay: .35s, 2s; }
+.blob.b3 { width: 46vw; height: 36vh; left: 24vw; bottom: -14vh; background: radial-gradient(closest-side, rgba(178,132,230,0.34), transparent 70%); animation-delay: .7s, 4s; }
+.blob.b4 { width: 40vw; height: 30vh; right: -10vw; bottom: -11vh; background: radial-gradient(closest-side, rgba(116,205,183,0.26), transparent 70%); animation-delay: 1s, 1.2s; }
+
+/* 微网格：极淡结构线，只在上半屏渐隐（AI 的秩序感，不冰冷） */
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(89, 68, 82, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(89, 68, 82, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% -6%, #000 22%, transparent 72%);
+  mask-image: radial-gradient(ellipse 100% 70% at 50% -6%, #000 22%, transparent 72%);
+  animation: gridPulse 16s ease-in-out infinite;
+}
+/* 光尘（JS 生成）：暖色微粒的非对称脉冲闪烁 */
+#dust { position: absolute; inset: 0; }
+.dust { position: absolute; border-radius: 50%; animation: dustTwinkle var(--d, 4s) ease-out infinite var(--delay, 0s); }
+/* 噪点纹理：细腻纸感颗粒 */
+.bg-noise {
+  position: absolute; inset: 0; opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}

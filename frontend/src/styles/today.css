@@ -1,0 +1,186 @@
+/* ==========================================================
+   微律 · 春日极光 — 今日页
+   逐条迁移自 ui-prototypes/02-sakura-spring.html「今日页」全段：
+   Hero 问候 / 微律观察 / 心情与任务卡 / 右栏呼吸与节奏。
+   通用元件（.card / .chip / .btn 族 / .ic 图标）见 glass.css / base.css；
+   完成特效层（.fx-*）见 effects.css；
+   @keyframes 见 animations.css。
+   ========================================================== */
+/* ---------- 今日页 · 问候与观察（同步 05：文案左对齐） ---------- */
+.hero { padding: 34px 0 26px; position: relative; }
+/* 首屏惊艳时刻：极光弧带，随文案左移至「早上好，小满」身后 */
+.hero .hero-arc {
+  position: absolute; left: -48px; top: 54px; z-index: -1; pointer-events: none;
+  width: min(600px, 100%); height: 150px;
+  background: linear-gradient(92deg, rgba(255,183,197,0.55) 0%, rgba(255,196,163,0.45) 36%, rgba(201,168,235,0.5) 68%, transparent 97%);
+  border-radius: 50% 50% 44% 56% / 88%;
+  filter: blur(24px);
+  animation: heroArcDrift 14s ease-in-out infinite alternate;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 2px;
+  color: #b57edc; background: var(--lav-soft); border: 1.5px dashed rgba(201,168,235,0.6);
+  padding: 7px 16px; border-radius: 999px; margin-bottom: 20px;
+}
+.hero h1 { font-family: var(--disp); font-weight: 900; font-size: clamp(32px, 5vw, 50px); color: var(--ink); line-height: 1.3; }
+.hero h1 em {
+  font-style: normal; position: relative; display: inline-block;
+  background: linear-gradient(100deg, #f27ba4, #b06fd8 60%, #8f6fd0);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero h1 em::after {
+  content: ''; position: absolute; left: 2%; bottom: 4px; width: 96%; height: 12px; z-index: -1;
+  background: linear-gradient(90deg, rgba(255,183,197,0.55), rgba(255,196,163,0.45), rgba(201,168,235,0.5));
+  border-radius: 99px; animation: hlPulse 3.4s ease-in-out infinite;
+}
+.hero p { color: var(--ink-2); font-size: 14.5px; margin-top: 16px; line-height: 2; font-weight: 300; max-width: 620px; }
+.hero p b { color: var(--pink-deep); font-weight: 500; }
+/* 进度行（同步 05：纯文字无卡片边框，位于微律观察上方；左进度 + 右检查按钮） */
+.progress-row { display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
+.progress-num { font-family: var(--disp); font-size: 26px; font-weight: 700; }
+.progress-num small { font-size: 13px; color: var(--ink-3); font-weight: 400; margin-left: 6px; }
+.progress-track { flex: 1; max-width: 380px; min-width: 120px; height: 6px; border-radius: 99px; background: rgba(147,113,138,0.12); overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, #ffb7c5, #f78fb0 45%, #b9a7ea); box-shadow: 0 0 16px rgba(233,160,220,0.45); transition: width 0.9s var(--ease-decay); }
+.progress-note { font-size: 12px; color: var(--ink-3); }
+.progress-cta { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.hero-hint { font-size: 11px; color: var(--ink-3); letter-spacing: 0.5px; }
+
+/* 微律观察卡 */
+.observe-card { padding: 26px 30px; position: relative; overflow: hidden;
+  background: linear-gradient(150deg, rgba(255,255,255,0.8), rgba(255,244,249,0.6) 55%, rgba(245,238,253,0.6)); }
+.observe-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #f78fb0; opacity: 0.85; }
+.obs-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.obs-head h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; letter-spacing: 3px; }
+.live { font-size: 11px; color: var(--pink-deep); display: inline-flex; gap: 6px; align-items: center; }
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink-deep); animation: dotPulse 2.2s infinite; }
+.obs-main { font-family: var(--disp); font-weight: 600; font-size: 24px; color: var(--ink); line-height: 1.5; }
+.obs-main em {
+  font-style: normal;
+  background: linear-gradient(100deg, #f27ba4, #9d7bdf);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.obs-sub { margin-top: 8px; font-size: 13px; color: var(--ink-2); line-height: 1.9; font-weight: 300; }
+.obs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.ob-stat { background: rgba(255,255,255,0.72); border: 1px solid rgba(255,183,197,0.35); border-radius: 16px; padding: 12px 14px; }
+.os-k { display: block; font-size: 11px; color: var(--ink-3); letter-spacing: 2px; }
+.ob-stat b { display: block; font-family: var(--disp); font-size: 16.5px; font-weight: 600; color: var(--ink); margin: 5px 0 3px; }
+.os-delta { font-size: 11px; letter-spacing: 0.5px; }
+.os-delta.up { color: var(--teal-ink); }
+.os-delta.warn { color: #d08a63; }
+.sug-row { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(255,183,197,0.5); }
+.sug-title { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-bottom: 8px; }
+.sug-item { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); line-height: 1.9; }
+.sug-item b { color: var(--ink); }
+.sug-item .sg-ic { font-size: 13px; }
+
+.today-grid { display: grid; grid-template-columns: 1fr 330px; gap: 20px; align-items: start; margin-top: 8px; }
+.section-title { display: flex; align-items: baseline; gap: 10px; margin: 22px 4px 16px; }
+.section-title h2 { font-family: var(--disp); font-weight: 600; font-size: 21px; color: var(--ink); letter-spacing: 1px; }
+.section-title span { font-size: 12px; color: var(--ink-3); }
+
+/* 状态卡（心情） */
+.mood-card { padding: 24px 26px; }
+.mood-head { display: flex; justify-content: space-between; align-items: center; }
+.mood-head h3 { font-size: 15px; font-weight: 700; }
+.mood-row { margin-top: 18px; }
+.mood-row .lbl { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; letter-spacing: 1px; }
+.moods { display: flex; gap: 10px; }
+.mood {
+  flex: 1; border: 1.5px solid rgba(255,183,197,0.5); background: #fff; border-radius: 18px;
+  padding: 12px 4px 10px; cursor: pointer; text-align: center; transition: all 0.45s var(--ease-decay);
+  font-family: var(--sans);
+}
+.mood .face { font-size: 24px; display: block; transition: transform 0.5s var(--ease-decay); }
+.mood span { font-size: 11.5px; color: var(--ink-2); display: block; margin-top: 5px; }
+.mood:hover { transform: translateY(-3px); border-color: var(--pink-deep); }
+.mood:hover .face { transform: scale(1.15) rotate(-8deg); }
+.mood.on { background: linear-gradient(150deg, #fff0f4, #fde7f3); border-color: var(--pink-deep); box-shadow: 0 8px 20px rgba(247,143,176,0.25); }
+.mood.on .face { transform: scale(1.2); }
+.mood-note { margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(255,183,197,0.6); font-size: 12px; color: var(--ink-3); line-height: 1.9; }
+.mood-note b { color: var(--ink-2); }
+.check-focus { animation: checkFocus 1.6s var(--ease-decay); }
+
+/* 任务卡 */
+.task-list { display: flex; flex-direction: column; gap: 16px; }
+.task-card { padding: 24px 26px; position: relative; overflow: hidden; }
+.task-card::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 99px; background: #f78fb0; }
+.task-card.t-eye::before { background: #6fbcae; }
+.task-card.t-move::before { background: #b79ae8; }
+.task-card.t-sleep::before { background: #a678d8; }
+.task-card.done::before { background: var(--purple); }
+.task-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.task-domain { font-size: 11px; letter-spacing: 2px; font-weight: 700; color: var(--pink-deep); }
+.task-card.t-eye .task-domain { color: var(--teal-ink); }
+.task-card.t-move .task-domain { color: #9d7bdf; }
+.task-card.t-sleep .task-domain { color: #a678d8; }
+.task-meta { font-size: 12px; color: var(--ink-3); }
+.task-name { font-family: var(--disp); font-weight: 600; font-size: 22px; color: var(--ink); letter-spacing: 0.5px; }
+.task-desc { margin-top: 8px; color: var(--ink-2); font-size: 13.5px; line-height: 1.95; font-weight: 300; }
+.task-why {
+  margin-top: 14px; display: flex; gap: 11px; padding: 13px 15px;
+  background: linear-gradient(120deg, #fff4f7, #f6effe); border-radius: 16px;
+  border: 1px solid rgba(255,183,197,0.35);
+}
+.task-why .why-icon { font-size: 15px; }
+.task-why b { display: block; font-size: 11.5px; color: #c88aa5; letter-spacing: 1px; margin-bottom: 4px; }
+.task-why p { font-size: 12.5px; color: var(--ink-2); line-height: 1.8; }
+.task-actions { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-height: 44px; }
+/* 任务终态提示（完成后替换操作按钮） */
+.done-note { font-size: 13px; color: var(--teal-ink); letter-spacing: 1px; opacity: 0; animation: noteIn 0.8s var(--ease-decay) 0.15s forwards; }
+
+/* 完成徽章 —— 与完成符号融合出现 */
+.task-state { position: absolute; top: 18px; right: 22px; width: 44px; height: 44px; }
+.task-state svg { width: 100%; height: 100%; }
+.task-state .ck-ring { fill: none; stroke: rgba(124,198,183,0.5); stroke-width: 2; stroke-dasharray: 132; stroke-dashoffset: 132; }
+.task-state .ck-path { fill: none; stroke: var(--purple); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; }
+/* 符号在粒子汇聚与光球之后自然浮现 */
+.task-card.done .ck-ring { animation: ringDraw 0.9s var(--ease-decay) 0.65s forwards; }
+.task-card.done .ck-path { animation: pathDraw 0.55s var(--ease-decay) 0.95s forwards; }
+.task-badge { display: none; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--purple-deep); letter-spacing: 1px; }
+.task-card.done .task-badge { display: inline-flex; animation: badgeIn 0.8s var(--ease-decay) 1.05s both; }
+.task-badge .bdot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: dotPulse 2.4s infinite; }
+.task-card.partial .task-badge { display: inline-flex; color: #c471b8; animation: badgeIn 0.8s var(--ease-decay) 0.4s both; }
+.task-card.skippedcard { opacity: 0.6; }
+.task-card.skippedcard .task-badge { display: inline-flex; color: var(--ink-3); }
+
+/* ---------- 右栏：AI 节奏呼吸 ---------- */
+.breath-card { padding: 24px 26px; text-align: center; overflow: hidden; }
+.breath-card h3 { font-family: var(--disp); font-weight: 600; font-size: 17px; letter-spacing: 3px; color: var(--ink); }
+.breath-card .sub { font-size: 11px; color: var(--ink-3); margin: 5px 0 10px; letter-spacing: 1px; }
+.breath-stage { position: relative; height: 190px; display: grid; place-items: center; margin: 4px 0; }
+.breath-core {
+  width: 118px; height: 118px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(255,255,255,0.95), rgba(255,183,197,0.75) 40%, rgba(201,168,235,0.55) 72%, rgba(255,196,163,0.35));
+  box-shadow: 0 0 34px rgba(247,143,176,0.4), 0 0 72px rgba(201,168,235,0.28), inset 0 0 24px rgba(255,255,255,0.6);
+  animation: breathCycle 9s infinite;
+  display: grid; place-items: center;
+}
+.breath-halo { position: absolute; width: 118px; height: 118px; border-radius: 50%; border: 1.5px solid rgba(242,123,164,0.28); animation: breathCycle 9s infinite; }
+.breath-halo.h2 { animation-delay: 0.18s; opacity: 0.55; }
+.breath-halo.h3 { animation-delay: 0.36s; opacity: 0.3; }
+.breath-label { position: absolute; bottom: 6px; left: 0; right: 0; font-size: 12.5px; letter-spacing: 4px; color: var(--ink-2); font-family: var(--disp); }
+.breath-count { font-family: var(--disp); font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgba(242,123,164,0.6); }
+.breath-tip { font-size: 11.5px; color: var(--ink-3); line-height: 1.8; border-top: 1px dashed rgba(255,183,197,0.5); padding-top: 12px; margin-top: 4px; }
+
+/* 右栏：今日节奏 */
+.rhythm-card { padding: 22px 24px; margin-top: 18px; }
+.rhythm-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 3px; }
+.rhythm-card .sub { font-size: 11px; color: var(--ink-3); margin-bottom: 14px; }
+.rhythm-item { display: flex; gap: 12px; position: relative; padding-bottom: 15px; }
+.rhythm-item:last-child { padding-bottom: 0; }
+.rhythm-item::before { content: ''; position: absolute; left: 5px; top: 15px; bottom: 0; width: 1.5px; background: rgba(255,183,197,0.55); }
+.rhythm-item:last-child::before { display: none; }
+.rhythm-time { font-size: 11px; color: var(--ink-3); width: 38px; flex: none; padding-top: 2px; }
+.rhythm-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; margin-top: 1px; background: #fff; border: 2.5px solid var(--pink); }
+.rhythm-item.now .rhythm-dot { border-color: var(--purple); animation: dotPulse 2.4s infinite; }
+.rhythm-txt { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.rhythm-txt b { color: var(--ink); font-weight: 500; display: block; }
+
+/* ---------- 响应式（今日页相关，自原型尾部媒体查询拆出） ---------- */
+@media (max-width: 960px) {
+  .today-grid { grid-template-columns: 1fr; }
+  .obs-stats { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .obs-stats { grid-template-columns: 1fr; }
+}

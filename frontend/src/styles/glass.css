@@ -1,0 +1,13 @@
+/* ==========================================================
+   微律 · 春日极光 — 玻璃卡片基底
+   迁移自 ui-prototypes/02-sakura-spring.html 的「通用卡片（降噪版）」。
+   带有 backdrop-filter 的玻璃表面（.topbar / .nav-pill / .q-bubble / .proto-tag）
+   分属 navigation.css / assistant.css / onboarding.css，声明均原样保留。
+   ========================================================== */
+/* ---------- 通用卡片（降噪版：更白更平，让背景色晕透进来） ---------- */
+.card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(147, 113, 138, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(89, 68, 82, 0.07);
+}

@@ -1,0 +1,6 @@
+/* ==========================================================
+   微律 · 春日极光 — reset
+   逐条迁移自 ui-prototypes/02-sakura-spring.html（原 <style> 首行规则）
+   ========================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }

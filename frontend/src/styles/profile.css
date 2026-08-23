@@ -1,0 +1,40 @@
+/* ==========================================================
+   微律 · 春日极光 — 我的画像
+   逐条迁移自 ui-prototypes/02-sakura-spring.html「我的画像」全段。
+   ========================================================== */
+.profile-wrap { max-width: 940px; margin: 0 auto; }
+.profile-head { margin: 26px 0 22px; }
+.profile-head h2 { font-family: var(--disp); font-weight: 600; font-size: 27px; }
+.profile-head p { color: var(--ink-2); font-size: 13px; margin-top: 8px; line-height: 1.9; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.p-card { padding: 24px 26px; }
+.p-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 14px; display: flex; gap: 9px; align-items: center; }
+.pref-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed rgba(255,183,197,0.5); font-size: 13px; }
+.pref-line:last-child { border-bottom: none; }
+.pref-line .k { color: var(--ink-2); }
+.pref-line .v { color: var(--ink); font-weight: 500; }
+.pref-line .v.up { color: var(--purple-deep); }
+.pref-line .v.down { color: var(--ink-3); }
+.stat-ring { display: flex; align-items: center; gap: 18px; }
+.ring-box { width: 88px; height: 88px; position: relative; flex: none; }
+.ring-box svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-box .rbg { fill: none; stroke: #ffe6ec; stroke-width: 8; }
+.ring-box .rfg { fill: none; stroke: #f27ba4; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 258; stroke-dashoffset: 258; }
+.ring-num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--disp); font-size: 18px; font-weight: 600; color: var(--pink-deep); }
+.stat-txt { font-size: 12.5px; color: var(--ink-2); line-height: 2; }
+.stat-txt b { color: var(--ink); }
+.mem-list { display: flex; flex-direction: column; gap: 10px; }
+.mem-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; background: #fff; border: 1px solid rgba(255,183,197,0.45); border-radius: 16px; transition: transform 0.5s var(--ease-decay), opacity 0.5s, max-height 0.5s, margin 0.5s, padding 0.5s; }
+.mem-item:hover { transform: translateX(4px) rotate(0.4deg); }
+.mem-item .mi-ic { flex: none; font-size: 15px; }
+.mem-item p { flex: 1; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.mem-item p b { color: var(--ink); font-weight: 500; }
+.mem-del { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid rgba(255,183,197,0.6); background: #fff; color: var(--ink-3); cursor: pointer; font-size: 12px; line-height: 1; transition: all 0.4s var(--ease-decay); font-family: var(--sans); }
+.mem-del:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: rotate(90deg) scale(1.1); }
+.mem-item.removing { opacity: 0; transform: translateX(36px) scale(0.9); max-height: 0; margin: -12px 0; padding: 0 15px; border-width: 0; }
+.consent { margin-top: 16px; font-size: 11.5px; color: var(--ink-3); line-height: 1.9; padding: 13px 16px; border-radius: 14px; background: var(--lav-soft); border: 1.5px dashed rgba(201,168,235,0.5); }
+
+/* ---------- 响应式（画像页相关，自原型尾部媒体查询拆出） ---------- */
+@media (max-width: 960px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}

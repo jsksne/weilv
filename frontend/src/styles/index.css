@@ -1,1 +1,24 @@
+/* ==========================================================
+   微律 · 春日极光 — 样式入口
+   main.ts 引入本文件；原 style.css（旧问卷 UI 仍在用）保留在最前，
+   其后按依赖顺序加载春日极光视觉系统（迁移自 ui-prototypes/02-sakura-spring.html）。
+   ========================================================== */
 @import '../style.css';
+
+/* 视觉系统分层：令牌 → 基础 → 材质 → 背景与特效 → 动画库 → 结构 → 视图 → 无障碍 */
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './typography.css';
+@import './glass.css';
+@import './aurora.css';
+@import './effects.css';
+@import './animations.css';
+@import './navigation.css';
+@import './layout.css';
+@import './today.css';
+@import './assistant.css';
+@import './profile.css';
+@import './weekly.css';
+@import './onboarding.css';
+@import './accessibility.css';

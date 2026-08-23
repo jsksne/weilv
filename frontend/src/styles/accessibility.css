@@ -1,0 +1,11 @@
+/* ==========================================================
+   微律 · 春日极光 — 无障碍（Reduced Motion）
+   逐条迁移自 ui-prototypes/02-sakura-spring.html 的
+   prefers-reduced-motion 媒体查询（CSS 侧冻结动画与过渡）。
+   JS 侧降级（RAF / interval / timeout 主动停止）由 composables 实现：
+   · composables/useMotionPulse.ts   —— 检测到 reduce 时跳过逐帧动画
+   · composables/useDecorativeField.ts —— 检测到 reduce 时停用装饰粒子循环
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; transition-duration: 0.01s !important; }
+}

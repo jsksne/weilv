@@ -1,0 +1,11 @@
+/* ==========================================================
+   微律 · 春日极光 — 排印基础
+   迁移自 ui-prototypes/02-sakura-spring.html 的 body 排印声明与 ::selection。
+   （body 的画布 / 背景声明见 base.css；字体栈变量见 tokens.css）
+   ========================================================== */
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(255, 183, 197, 0.55); }

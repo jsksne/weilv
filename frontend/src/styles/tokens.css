@@ -1,0 +1,30 @@
+/* ==========================================================
+   微律 · 春日极光 — 设计令牌（tokens）
+   逐条迁移自 ui-prototypes/02-sakura-spring.html 的 :root 块。
+   所有颜色 / 渐变 / 缓动曲线 / 字体栈保持原值，禁止重命名或重新设计。
+   ========================================================== */
+:root {
+  --ink: #594452;
+  --ink-2: #93718a;
+  --ink-3: #bfa8b5;
+  --pink: #ffb7c5;
+  --pink-deep: #f27ba4;
+  --pink-soft: #ffdbe4;
+  --peach: #ffc4a3;
+  --peach-soft: #ffe9db;
+  --lav: #b79ae8;
+  --lav-soft: #ede4fb;
+  --purple: #9d7bdf;
+  --purple-deep: #8f6fd0;
+  --teal: #7cc6b7;
+  --teal-soft: #e4f3ef;
+  --teal-ink: #46958a;
+  --cream: #fffaf5;
+  --card: rgba(255, 255, 255, 0.66);
+  --card-border: rgba(255, 183, 197, 0.42);
+  --grad-aurora: linear-gradient(100deg, #ffa8bd 0%, #f78fb0 42%, #b9a7ea 100%);  /* v21：粉 → 玫 → 蓝紫（去桃橙的粉蓝渐变） */
+  --ease-rise: cubic-bezier(0.55, 0.055, 0.675, 0.19); /* 先慢后快 */
+  --ease-decay: cubic-bezier(0.16, 1, 0.3, 1);          /* 指数长尾 */
+  --disp: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}

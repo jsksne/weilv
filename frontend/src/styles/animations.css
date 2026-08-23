@@ -1,0 +1,97 @@
+/* ==========================================================
+   微律 · 春日极光 — 关键帧动画库
+   收录 ui-prototypes/02-sakura-spring.html 全部 @keyframes（按原型出现顺序，
+   逐条原样迁移，缓动曲线一律保留原 cubic-bezier / timing-function）。
+   另含原型由 JS 注入的两条周度图表关键帧（dotPop / valIn，原脚本
+   startChartAnim 动态写入 <style>，此处收口为静态资产）。
+   引用位置：
+   · aurora.css      ← petalSpin / blobIn / blobFloat / gridPulse / dustTwinkle
+   · navigation.css  ← flowerSway
+   · layout.css      ← viewIn
+   · today.css       ← heroArcDrift / hlPulse / dotPulse / checkFocus /
+                        noteIn / ringDraw / pathDraw / badgeIn / breathCycle
+   · assistant.css   ← askDrift / orbBreath / orbSpin / msgIn / nodePulse /
+                        typeDot / glowSpread
+   · base.css        ← toastIn / toastOut
+   · weekly.css      ← chartDraw / areaFade / dotPop / valIn
+   · onboarding.css  ← obStepIn / ringSpin
+   ========================================================== */
+
+/* ---------- 统一背景层 ---------- */
+@keyframes petalSpin { to { transform: rotate(360deg); } }
+@keyframes blobIn { to { opacity: 1; } }
+@keyframes blobFloat { from { transform: translateY(0) scale(1); } to { transform: translateY(-38px) scale(1.12); } }
+@keyframes gridPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+@keyframes dustTwinkle {
+  0%   { opacity: 0;   transform: scale(0.4); animation-timing-function: var(--ease-rise); }
+  20%  { opacity: var(--o, 0.8); transform: scale(1); animation-timing-function: var(--ease-decay); }
+  100% { opacity: 0.12; transform: scale(0.5); }
+}
+
+/* ---------- 顶部漂浮导航 ---------- */
+@keyframes flowerSway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(8deg); } }
+
+/* ---------- 布局与视图切换 ---------- */
+@keyframes viewIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- 今日页 ---------- */
+@keyframes heroArcDrift { from { transform: translateX(0) scaleX(1); opacity: 0.88; } to { transform: translateX(16px) scaleX(1.04); opacity: 1; } }
+@keyframes hlPulse { 0%,100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(1.04); opacity: 0.75; } }
+@keyframes dotPulse {
+  0% { transform: scale(1); opacity: 1; animation-timing-function: var(--ease-rise); }
+  20% { transform: scale(1.8); opacity: 1; animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+@keyframes checkFocus {
+  0%,100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 14px 40px rgba(247,143,176,0.13); }
+  30% { box-shadow: 0 0 0 5px rgba(157,123,223,0.18), 0 0 44px rgba(157,123,223,0.32); }
+}
+@keyframes noteIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ringDraw { to { stroke-dashoffset: 0; } }
+@keyframes pathDraw { to { stroke-dashoffset: 0; } }
+@keyframes badgeIn { from { opacity: 0; transform: translateY(8px); filter: blur(3px); text-shadow: 0 0 18px rgba(157,123,223,0.9); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes breathCycle {
+  0%   { transform: scale(1); animation-timing-function: var(--ease-rise); }
+  20%  { transform: scale(1.24); animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- 问问薇薇 ---------- */
+@keyframes askDrift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-28px, 22px) scale(1.12); } }
+@keyframes orbBreath {
+  0%   { transform: scale(1); animation-timing-function: var(--ease-rise); }
+  20%  { transform: scale(1.2); animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); }
+}
+@keyframes orbSpin { to { transform: rotate(360deg); } }
+@keyframes msgIn { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes nodePulse {
+  0%   { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 0 rgba(255,183,197,0.4); animation-timing-function: var(--ease-rise); }
+  20%  { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 8px rgba(255,183,197,0.14); animation-timing-function: var(--ease-decay); }
+  100% { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 0 rgba(255,183,197,0); }
+}
+@keyframes typeDot {
+  0% { transform: translateY(0); opacity: 0.4; animation-timing-function: var(--ease-rise); }
+  20% { transform: translateY(-6px); opacity: 1; animation-timing-function: var(--ease-decay); }
+  100% { transform: translateY(0); opacity: 0.4; }
+}
+@keyframes glowSpread {
+  0%   { transform: scale(0.4); opacity: 0; animation-timing-function: var(--ease-rise); }
+  20%  { opacity: 0.9; animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* ---------- Toast ---------- */
+@keyframes toastIn { from { opacity: 0; transform: translateY(18px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(12px) scale(0.94); } }
+
+/* ---------- 周度变化 ---------- */
+@keyframes chartDraw { to { stroke-dashoffset: 0; } }
+@keyframes areaFade { to { opacity: 1; } }
+/* 以下两条为原型脚本 startChartAnim 运行时注入的关键帧，原样收口 */
+@keyframes dotPop { 0% { r: 0; } 100% { r: 5.5; } }
+@keyframes valIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
+
+/* ---------- Onboarding ---------- */
+@keyframes obStepIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+@keyframes ringSpin { to { transform: rotate(360deg); } }

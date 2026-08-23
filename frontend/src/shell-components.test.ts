@@ -104,11 +104,12 @@ describe('Sprint 2R brand and icon shell', () => {
 describe('Sprint 2R docked progress', () => {
   it('observes the progress row, docks when hidden, and disconnects on unmount', async () => {
     let observeTarget: Element | null = null
-    let intersectionCallback: ((entries: Array<{ isIntersecting: boolean }>) => void) | null = null
+    type FakeIntersectionEntry = Pick<IntersectionObserverEntry, 'isIntersecting' | 'boundingClientRect'>
+    let intersectionCallback: ((entries: FakeIntersectionEntry[]) => void) | null = null
     const disconnect = vi.fn()
 
     class FakeIntersectionObserver {
-      constructor(callback: (entries: Array<{ isIntersecting: boolean }>) => void) {
+      constructor(callback: (entries: FakeIntersectionEntry[]) => void) {
         intersectionCallback = callback
       }
 
@@ -127,11 +128,21 @@ describe('Sprint 2R docked progress', () => {
     })
 
     expect(observeTarget).toBe(wrapper.get('[data-testid="progress-row"]').element)
-    intersectionCallback?.([{ isIntersecting: true }])
+    intersectionCallback?.([
+      { isIntersecting: true, boundingClientRect: { bottom: 600 } as DOMRect },
+    ])
     await nextTick()
     expect(document.body.classList.contains('tb-dock')).toBe(false)
 
-    intersectionCallback?.([{ isIntersecting: false }])
+    intersectionCallback?.([
+      { isIntersecting: false, boundingClientRect: { bottom: 600 } as DOMRect },
+    ])
+    await nextTick()
+    expect(document.body.classList.contains('tb-dock')).toBe(false)
+
+    intersectionCallback?.([
+      { isIntersecting: false, boundingClientRect: { bottom: -1 } as DOMRect },
+    ])
     await nextTick()
     expect(document.body.classList.contains('tb-dock')).toBe(true)
     expect(wrapper.get('[data-testid="docked-progress"]').attributes('aria-hidden')).toBe('false')
@@ -143,15 +154,19 @@ describe('Sprint 2R docked progress', () => {
 
   it('uses a scroll-position fallback when IntersectionObserver is unavailable', async () => {
     vi.stubGlobal('IntersectionObserver', undefined)
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
-      bottom: -1,
-    } as DOMRect)
+    const getBoundingClientRect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ bottom: 1 } as DOMRect)
 
     const wrapper = mount(DockedTaskProgress, {
       props: { progress: shellFixture.progress },
     })
     await nextTick()
 
+    expect(document.body.classList.contains('tb-dock')).toBe(false)
+    getBoundingClientRect.mockReturnValue({ bottom: -1 } as DOMRect)
+    window.dispatchEvent(new Event('scroll'))
+    await nextTick()
     expect(document.body.classList.contains('tb-dock')).toBe(true)
     wrapper.unmount()
   })

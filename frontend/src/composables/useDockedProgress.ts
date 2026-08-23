@@ -21,7 +21,9 @@ export function useDockedProgress(progressRow: Ref<HTMLElement | null>): DockedP
     if (typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(entries => {
         const entry = entries[0]
-        if (entry) isDocked.value = !entry.isIntersecting
+        if (entry) {
+          isDocked.value = !entry.isIntersecting && entry.boundingClientRect.bottom < 0
+        }
       })
       observer.observe(row)
       return

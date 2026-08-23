@@ -6,25 +6,28 @@ import DockedTaskProgress from '@/components/shell/DockedTaskProgress.vue'
 import IconSprite from '@/components/shell/IconSprite.vue'
 import PrototypeReplayControl from '@/components/shell/PrototypeReplayControl.vue'
 import ToastHost from '@/components/shell/ToastHost.vue'
-import { shellFixture } from '@/data/fixtures/shell.fixture'
 import type { ShellContract, ViewId } from '@/contracts'
 
 const emit = defineEmits<{
   replay: []
 }>()
 
-const props = withDefaults(
-  defineProps<{
-    shell?: ShellContract
-  }>(),
-  {
-    shell: () => shellFixture,
-  },
-)
+const unavailableShell: ShellContract = {
+  state: { status: 'unavailable', mode: 'production' },
+  navigation: [],
+  displayName: '',
+  dateLabel: '',
+  progress: { completed: 0, total: 0, note: '' },
+  toastExample: { id: 'unavailable-shell', message: '' },
+}
+
+const props = defineProps<{
+  shell?: ShellContract
+}>()
 
 const slots = useSlots()
 const activeView = ref<ViewId>('today')
-const shell = computed(() => props.shell)
+const shell = computed(() => props.shell ?? unavailableShell)
 const shellMode = computed(() =>
   (['today', 'assistant', 'profile', 'weekly'] as const).some(view => Boolean(slots[view])),
 )
@@ -109,21 +112,8 @@ defineExpose({ activeView, shell: props.shell, switchView })
   display: none;
 }
 
-.view[style*='display: block'] {
+.view.active {
   display: block;
-  animation: shellViewIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes shellViewIn {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 560px) {

@@ -6,6 +6,7 @@ import DockedTaskProgress from '@/components/shell/DockedTaskProgress.vue'
 import IconSprite from '@/components/shell/IconSprite.vue'
 import PrototypeReplayControl from '@/components/shell/PrototypeReplayControl.vue'
 import ToastHost from '@/components/shell/ToastHost.vue'
+import AuroraBackground from '@/components/effects/AuroraBackground.vue'
 import type { ShellContract, ViewId } from '@/contracts'
 
 const emit = defineEmits<{
@@ -44,6 +45,7 @@ defineExpose({ activeView, shell: props.shell, switchView })
 
 <template>
   <div class="weilv-app-shell" :class="{ 'weilv-shell-root': shellMode }">
+    <AuroraBackground />
     <template v-if="shellMode">
       <IconSprite />
       <AppNavigation
@@ -95,7 +97,11 @@ defineExpose({ activeView, shell: props.shell, switchView })
       <ToastHost />
       <PrototypeReplayControl @replay="emit('replay')" />
     </template>
-    <slot v-else />
+    <!-- legacy 内容为静态流式布局；包装层保证其位于 .bg（z-index 0）之上，
+         与冻结原型 .shell 的内容层级约定一致，不改变 legacy 自身布局 -->
+    <div v-else class="shell-content">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -114,6 +120,11 @@ defineExpose({ activeView, shell: props.shell, switchView })
 
 .view.active {
   display: block;
+}
+
+.shell-content {
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 560px) {

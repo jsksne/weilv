@@ -13,8 +13,8 @@ import { useDecorativeField } from './composables/useDecorativeField'
 import { useMotionPulse } from './composables/useMotionPulse'
 
 /* ------------------------------------------------------------------
-   Sprint 2 视觉系统测试
-   1. CSS 入口存在且在 Sprint 2R 保持视觉资产隔离
+   视觉系统测试
+   1. CSS 入口（Sprint 3 起正式激活冻结 Shell 资产，legacy 兼容保留在最前）
    2. tokens 可加载（关键令牌逐字校验 + 与原型全量声明比对）
    3. effects 组件可 mount（结构与原型一致）
    4. reduced-motion 逻辑存在（CSS + composable 双侧降级）
@@ -138,10 +138,33 @@ function prototypeCss(): string {
 /* ---------- 1. CSS 入口 ---------- */
 
 describe('visual system: css entrypoint', () => {
-  it('index.css keeps the legacy runtime isolated from the reviewed split assets', () => {
+  it('activates the frozen shell assets in an explicit cascade order, legacy first', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
     expect(entry).toContain("@import '../style.css'")
-    for (const name of STYLE_FILES) {
+
+    /* 冻结 Shell 资产按原型 <style> 源顺序激活；legacy 必须最先导入，
+       否则其 body{font/color/background} 会盖掉冻结视觉（同特异性后者胜） */
+    const activated = [
+      'reset',
+      'tokens',
+      'typography',
+      'base',
+      'glass',
+      'animations',
+      'aurora',
+      'effects',
+      'navigation',
+      'layout',
+      'accessibility',
+    ] as const
+    const imports = [...entry.matchAll(/@import '\.\/([a-z-]+)\.css'/g)].map(m => m[1])
+    expect(imports).toEqual([...activated])
+    expect(entry.indexOf("@import '../style.css'")).toBeLessThan(entry.indexOf("@import './reset.css'"))
+  })
+
+  it('keeps page-specific CSS unactivated until the page sprints', () => {
+    const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
+    for (const name of ['today', 'assistant', 'profile', 'weekly', 'onboarding']) {
       expect(entry).not.toContain(`@import './${name}.css'`)
     }
   })

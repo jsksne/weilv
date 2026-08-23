@@ -59,7 +59,8 @@ function createPetal(): Petal {
     opacity: 0.45 + depth * 0.5,
     colorFrom: colors[0],
     colorTo: colors[1],
-    spinSeconds: 5 + Math.random() * 6,
+    /* 原型 dur = (5 + Math.random() * 6).toFixed(1)：5.0~11.0 秒、保留一位小数 */
+    spinSeconds: Number((5 + Math.random() * 6).toFixed(1)),
     x: Math.random() * window.innerWidth,
     /* 初始即有约 2/3 花瓣落在视口内，首屏立刻可见；其余从上方陆续飘入 */
     y: (Math.random() * 1.6 - 0.6) * window.innerHeight,

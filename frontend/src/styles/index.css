@@ -1,6 +1,31 @@
 /*
- * Sprint 2R keeps one top-level entrypoint while the legacy application is
- * running. The reviewed Sprint 3 visual assets remain in their source files
- * and are activated only by a later visual-system migration sprint.
+ * 微律 UI Migration · Sprint 3 正式视觉激活入口。
+ *
+ * import order 决策（见 docs/ui-migration/records/sprint-03.md §13）：
+ *  - legacy style.css 必须最先导入：它与冻结 CSS 在 body 的
+ *    font-family/color/background 上同特异性冲突，后导入者胜，
+ *    冻结视觉必须生效，故 legacy 在前、冻结资产在后；
+ *  - legacy 其余规则（main/section/form/button 等）与冻结 CSS 无同名冲突，
+ *    旧业务在新视觉基底下保持可操作（Sprint 9 移除）；
+ *  - 冻结资产按原型 <style> 源顺序排列：reset → :root → body →
+ *    背景层 → topbar/navbar → shell/layout → reduced-motion 收尾；
+ *    animations.css 的 @keyframes 无层叠冲突，集中前置不影响级联。
+ *  - 页面 CSS（today/assistant/profile/weekly/onboarding）属 Sprint 4-7 资产，
+ *    本 Sprint 不激活。
  */
 @import '../style.css';
+
+@import './reset.css';
+@import './tokens.css';
+@import './typography.css';
+@import './base.css';
+
+@import './glass.css';
+@import './animations.css';
+@import './aurora.css';
+@import './effects.css';
+
+@import './navigation.css';
+@import './layout.css';
+
+@import './accessibility.css';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 
 import { useMotionPulse, type MotionPulse } from '@/composables/useMotionPulse'
 
@@ -19,7 +19,8 @@ import { useMotionPulse, type MotionPulse } from '@/composables/useMotionPulse'
  *     本组件以 fixed 定位的响应式元素渲染（CSS 见 styles/effects.css，
  *     z-index 95/96/97 与原型一致），状态由 ref 驱动；
  *   - 所有 RAF / timeout 经 useMotionPulse 登记，组件卸载自动清理；
- *   - prefers-reduced-motion 时 play() 直接跳过（JS 侧主动降级）。
+ *   - prefers-reduced-motion 时 play() 直接跳过（JS 侧主动降级）；
+ *     播放途中切换到 reduce 也会立即取消并复位（FUTURE-S3-01）。
  */
 
 const emit = defineEmits<{
@@ -167,6 +168,16 @@ function reset(): void {
   halo.value.visible = false
   running = false
 }
+
+/* FUTURE-S3-01：播放途中系统切到 prefers-reduced-motion 时，useMotionPulse
+   已取消全部 RAF/timer，但瞬态 FX 状态与 running 必须同步复位，
+   否则组件永久卡在 running、特效 DOM 残留；复位后恢复 motion 仍可再次 play() */
+watch(reducedMotion, reduced => {
+  if (reduced && running) {
+    dispose()
+    reset()
+  }
+})
 
 onUnmounted(() => {
   dispose()

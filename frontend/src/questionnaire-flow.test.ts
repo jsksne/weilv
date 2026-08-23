@@ -190,6 +190,11 @@ describe('useQuestionnaire', () => {
 })
 
 describe('Questionnaire web flow', () => {
+  beforeEach(() => {
+    /* Sprint 4：legacy 表单流由 ?legacy=1 查询参数承载 */
+    window.history.pushState({}, '', '/?legacy=1')
+  })
+
   it('completes the questionnaire, saves answers, and hides it', async () => {
     const { save } = mockServices()
     const wrapper = mount(App)

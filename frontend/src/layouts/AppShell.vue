@@ -2,7 +2,6 @@
 import { computed, ref, useSlots } from 'vue'
 
 import AppNavigation from '@/components/shell/AppNavigation.vue'
-import DockedTaskProgress from '@/components/shell/DockedTaskProgress.vue'
 import IconSprite from '@/components/shell/IconSprite.vue'
 import PrototypeReplayControl from '@/components/shell/PrototypeReplayControl.vue'
 import ToastHost from '@/components/shell/ToastHost.vue'
@@ -63,7 +62,6 @@ defineExpose({ activeView, shell: props.shell, switchView })
           :class="{ active: activeView === 'today' }"
           data-view="today"
         >
-          <DockedTaskProgress :progress="shell.progress" />
           <slot name="today" />
         </section>
         <section

@@ -44,6 +44,8 @@ describe('useUserProfile', () => {
 
 describe('Profile consent web flow', () => {
   it('shows missing state, saves explicit consent, and syncs recommendation identity', async () => {
+    /* Sprint 4：legacy 表单流由 ?legacy=1 查询参数承载 */
+    window.history.pushState({}, '', '/?legacy=1')
     vi.spyOn(api, 'healthCheck').mockResolvedValue({ status: 'ok' })
     vi.spyOn(api, 'getUserProfile').mockRejectedValue(
       new ApiError(404, '请求未能完成', 'profile_not_found'),

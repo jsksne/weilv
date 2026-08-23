@@ -1,158 +1,75 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
-import FeedbackForm from '@/components/FeedbackForm.vue'
-import FeedbackResult from '@/components/FeedbackResult.vue'
-import ColdStartQuestionnaire from '@/components/ColdStartQuestionnaire.vue'
-import RecommendationForm from '@/components/RecommendationForm.vue'
-import RecommendationResult from '@/components/RecommendationResult.vue'
-import SafetyResult from '@/components/SafetyResult.vue'
-import ServiceStatus from '@/components/ServiceStatus.vue'
-import UserProfileSettings from '@/components/UserProfileSettings.vue'
-import { useFeedbackFlow } from '@/composables/useFeedbackFlow'
-import { useQuestionnaire } from '@/composables/useQuestionnaire'
-import { useRecommendationFlow } from '@/composables/useRecommendationFlow'
-import { useServiceHealth } from '@/composables/useServiceHealth'
-import { useUserProfile } from '@/composables/useUserProfile'
 import AppShell from '@/layouts/AppShell.vue'
-import type { UserProfile } from '@/api/types'
+import TodayView from '@/views/TodayView.vue'
+import LegacyConsole from '@/views/LegacyConsole.vue'
+import { shellFixture } from '@/data/fixtures/shell.fixture'
+import { todayFixture } from '@/data/fixtures/today.fixture'
+import { useDailyTasks } from '@/composables/useDailyTasks'
+import type { ShellContract } from '@/contracts'
 
-const { loading: serviceLoading, connected, refresh } = useServiceHealth()
-const profile = useUserProfile()
-const questionnaire = useQuestionnaire()
-const {
-  form,
-  loading: recommendationLoading,
-  result,
-  error,
-  submittedRequest,
-  updateField,
-  submit: submitRecommendation,
-  reset: resetRecommendation,
-} = useRecommendationFlow()
+/**
+ * Sprint 4：产品运行态切换为 Shell + TodayView（fixture-driven Demo，
+ * 不请求 API）。真实 Shell 导航（导航胶囊 / glider / 日期 / avatar）
+ * 首次在实际产品运行态可见。
+ *
+ * legacy 表单流保留在 ?legacy=1 查询参数之后（可回滚 backup，
+ * 既有 flow 测试经该入口继续覆盖；Sprint 9 移除）。
+ */
 
-const {
-  input: feedbackInput,
-  loading: feedbackLoading,
-  result: feedbackResult,
-  error: feedbackError,
-  updateField: updateFeedbackField,
-  submit: submitFeedback,
-  reset: resetFeedback,
-} = useFeedbackFlow()
+const legacyMode =
+  typeof window !== 'undefined' &&
+  typeof window.location !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('legacy')
 
-const showQuestionnaire = computed(() => {
-  if (profile.status.value !== 'saved') return false
-  return ['active', 'loading', 'error'].includes(questionnaire.status.value)
-})
+/* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从这里取数 */
+const daily = useDailyTasks(todayFixture)
 
-function syncRecommendationIdentity(saved: UserProfile | null): void {
-  if (!saved) return
-  updateField('user_id', saved.user_id)
-  updateField('target_stage', saved.target_stage)
+/* 原型 navDate：冻结「4 月 22 日」+ 按当前日期计算星期 */
+const frozenDateLabel = (): string => {
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][new Date().getDay()]
+  return `4 月 22 日 · 星期${weekday}`
 }
 
-onMounted(async () => {
-  const saved = await profile.load()
-  if (saved) await questionnaire.load(saved.user_id)
-})
+const shell = computed<ShellContract>(() => ({
+  state: shellFixture.state,
+  navigation: shellFixture.navigation,
+  displayName: shellFixture.displayName,
+  dateLabel: frozenDateLabel(),
+  progress: {
+    completed: daily.completed.value,
+    total: daily.total.value,
+    note: daily.dockedProgressNote.value,
+  },
+  toastExample: shellFixture.toastExample,
+}))
 
-const feedbackEligible = computed(
-  () =>
-    result.value?.status === 'allowed' &&
-    result.value.feedback_available &&
-    result.value.recommendation_id !== null &&
-    submittedRequest.value !== null,
-)
-
-async function requestRecommendation(): Promise<void> {
-  resetFeedback()
-  await submitRecommendation()
-}
-
-function resetAll(): void {
-  resetRecommendation()
-  resetFeedback()
-}
-
-async function recordFeedback(): Promise<void> {
-  if (!feedbackEligible.value || !result.value?.recommendation_id || !submittedRequest.value) {
-    return
-  }
-  await submitFeedback(submittedRequest.value.user_id, result.value.recommendation_id)
-}
-
-async function saveProfile(): Promise<void> {
-  syncRecommendationIdentity(await profile.save())
-  await questionnaire.load(profile.form.user_id)
-}
+/* 未迁移页面：最小 placeholder/unavailable 结构态，不填业务数据 */
+const pendingViews = [
+  { id: 'assistant', label: '问问薇薇' },
+  { id: 'profile', label: '我的画像' },
+  { id: 'weekly', label: '周度变化' },
+] as const
 </script>
 
 <template>
-  <AppShell>
-  <main>
-    <h1>微律</h1>
-    <p>以微小行动，找到每个人更适合自己的健康节律。</p>
-    <ServiceStatus :loading="serviceLoading" :connected="connected" @refresh="refresh" />
-
-    <UserProfileSettings
-      :form="profile.form"
-      :status="profile.status.value"
-      @change="profile.updateField"
-      @save="saveProfile"
-    />
-
-    <ColdStartQuestionnaire
-      v-if="showQuestionnaire"
-      :flow="questionnaire"
-      :user-id="profile.form.user_id"
-    />
-
-    <RecommendationForm
-      :form="form"
-      :loading="recommendationLoading"
-      @change="updateField"
-      @submit="requestRecommendation"
-      @reset="resetAll"
-    />
-
-    <section v-if="error" role="alert">
-      <p>暂时无法获取微任务，请稍后重试。</p>
-      <button data-action="retry" type="button" @click="requestRecommendation">重试</button>
-    </section>
-
-    <template v-else-if="result?.status === 'allowed' && result.selected_task">
-      <RecommendationResult :result="result" />
-
-      <section v-if="feedbackEligible">
-        <FeedbackResult v-if="feedbackResult" :result="feedbackResult" />
-        <template v-else>
-          <FeedbackForm
-            :input="feedbackInput"
-            :loading="feedbackLoading"
-            @change="updateFeedbackField"
-            @submit="recordFeedback"
-          />
-          <div v-if="feedbackError" role="alert">
-            <p>反馈暂时没有提交成功，请重试。</p>
-            <button
-              data-action="feedback-retry"
-              type="button"
-              :disabled="feedbackLoading"
-              @click="recordFeedback"
-            >
-              重试
-            </button>
-          </div>
-        </template>
-      </section>
+  <AppShell v-if="!legacyMode" :shell="shell">
+    <template #today>
+      <TodayView :model="todayFixture" :daily="daily" />
     </template>
-
-    <SafetyResult
-      v-else-if="result && result.status !== 'allowed'"
-      :result="result"
-      @reset="resetAll"
-    />
-  </main>
+    <template v-for="view in pendingViews" :key="view.id" #[view.id]>
+      <div class="card" :data-view-pending="view.id" style="padding: 26px 30px; margin-top: 26px">
+        <h3 style="font-family: var(--disp); font-weight: 600; letter-spacing: 1px">
+          {{ view.label }}
+        </h3>
+        <p style="margin-top: 10px; font-size: 13px; color: var(--ink-2)">
+          该页面尚未迁移（后续 Sprint），此处为结构性占位，无演示数据。
+        </p>
+      </div>
+    </template>
+  </AppShell>
+  <AppShell v-else>
+    <LegacyConsole />
   </AppShell>
 </template>

@@ -26,10 +26,13 @@ export function useAppNavigation(initialView: ViewId = 'today'): AppNavigationCo
     const tab = tabs.get(view)
     if (!tab) return
 
-    gliderStyle.value = {
-      width: `${tab.offsetWidth}px`,
-      transform: `translateX(${tab.offsetLeft - 4}px)`,
-    }
+    const width = `${tab.offsetWidth}px`
+    const transform = `translateX(${tab.offsetLeft - 4}px)`
+    /* 值未变化时不赋新对象：函数 ref 每次 patch 都会重新调用 registerTab，
+       若每次 recalc 都触发重渲染会形成「重渲染→ref→recalc→重渲染」的
+       无限 nextTick 微任务链，饿死宏任务（setTimeout/rAF 永不执行） */
+    if (gliderStyle.value.width === width && gliderStyle.value.transform === transform) return
+    gliderStyle.value = { width, transform }
   }
 
   function scheduleRecalculation(): void {
@@ -45,8 +48,11 @@ export function useAppNavigation(initialView: ViewId = 'today'): AppNavigationCo
 
   function registerTab(view: ViewId, element: unknown): void {
     if (element instanceof HTMLElement) {
+      /* Vue 对函数 ref 会在每次 patch 时重新调用；同一元素重复注册
+         不再重新调度，避免与重渲染互相触发形成无限更新链 */
+      const unchanged = tabs.get(view) === element
       tabs.set(view, element)
-      if (view === activeView.value) scheduleRecalculation()
+      if (view === activeView.value && !unchanged) scheduleRecalculation()
     } else {
       tabs.delete(view)
     }

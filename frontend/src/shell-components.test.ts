@@ -1,4 +1,4 @@
-import { nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 
 import AppShell from './layouts/AppShell.vue'
@@ -8,6 +8,7 @@ import DockedTaskProgress from './components/shell/DockedTaskProgress.vue'
 import IconSprite from './components/shell/IconSprite.vue'
 import PrototypeReplayControl from './components/shell/PrototypeReplayControl.vue'
 import ToastHost from './components/shell/ToastHost.vue'
+import { useToast } from './composables/useToast'
 import { shellFixture } from './data/fixtures/shell.fixture'
 
 enableAutoUnmount(afterEach)
@@ -48,6 +49,23 @@ describe('Sprint 2R navigation', () => {
     const gliderStyle = wrapper.get('[data-testid="nav-glider"]').attributes('style') ?? ''
     expect(gliderStyle).toContain('width: 92px')
     expect(gliderStyle).toContain('translateX(8px)')
+  })
+
+  it('yields to the event loop after mount (no infinite nextTick chain)', async () => {
+    const wrapper = mount(AppNavigation, {
+      props: {
+        items: shellFixture.navigation,
+        displayName: shellFixture.displayName,
+        dateLabel: shellFixture.dateLabel,
+      },
+    })
+    await nextTick()
+
+    /* 若重渲染→函数 ref→registerTab→recalculate→赋新对象→再重渲染
+       形成无限微任务链，宏任务（setTimeout）将永远无法执行，测试挂起 */
+    await new Promise(resolve => setTimeout(resolve, 20))
+
+    expect(wrapper.find('[data-view="today"]').exists()).toBe(true)
   })
 
   it('cleans resize listeners when navigation unmounts', () => {
@@ -102,6 +120,18 @@ describe('Sprint 2R brand and icon shell', () => {
 })
 
 describe('Sprint 2R docked progress', () => {
+  /* Sprint 4：进度行归还 TodayHero，本组件通过 sentinel prop 观察
+     hero 进度行元素；测试用宿主组件提供该元素 */
+  const progressHost = defineComponent({
+    setup() {
+      const row = ref<HTMLElement | null>(null)
+      return () => [
+        h('div', { ref: row, 'data-testid': 'progress-row' }),
+        h(DockedTaskProgress, { progress: shellFixture.progress, sentinel: row.value }),
+      ]
+    },
+  })
+
   it('observes the progress row, docks when hidden, and disconnects on unmount', async () => {
     let observeTarget: Element | null = null
     type FakeIntersectionEntry = Pick<IntersectionObserverEntry, 'isIntersecting' | 'boundingClientRect'>
@@ -123,9 +153,8 @@ describe('Sprint 2R docked progress', () => {
     }
 
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
-    const wrapper = mount(DockedTaskProgress, {
-      props: { progress: shellFixture.progress },
-    })
+    const wrapper = mount(progressHost)
+    await nextTick()
 
     expect(observeTarget).toBe(wrapper.get('[data-testid="progress-row"]').element)
     intersectionCallback?.([
@@ -158,9 +187,7 @@ describe('Sprint 2R docked progress', () => {
       .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
       .mockReturnValue({ bottom: 1 } as DOMRect)
 
-    const wrapper = mount(DockedTaskProgress, {
-      props: { progress: shellFixture.progress },
-    })
+    const wrapper = mount(progressHost)
     await nextTick()
 
     expect(document.body.classList.contains('tb-dock')).toBe(false)
@@ -193,15 +220,19 @@ describe('Sprint 2R toast lifecycle', () => {
     vi.useRealTimers()
   })
 
-  it('cleans pending toast timers when the host unmounts', () => {
+  it('drains pending toasts through the singleton queue when the host unmounts', async () => {
+    /* Sprint 4：useToast 为模块级单例（对应冻结原型唯一 #toastBox），
+       宿主卸载不清理队列，由 toast 自身生命周期（2600ms + 500ms）收敛 */
     vi.useFakeTimers()
-    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     const wrapper = mount(ToastHost)
 
     wrapper.vm.push('待清理')
     wrapper.unmount()
 
-    expect(clearTimeoutSpy).toHaveBeenCalled()
+    vi.advanceTimersByTime(2600 + 500)
+    await nextTick()
+    const { toasts } = useToast()
+    expect(toasts.value).toHaveLength(0)
     vi.useRealTimers()
   })
 })

@@ -28,4 +28,8 @@
 @import './navigation.css';
 @import './layout.css';
 
+/* Sprint 4：Today 页面 CSS 正式激活（原型源顺序中今日页样式紧随布局之后）；
+   assistant / profile / weekly / onboarding 仍不激活 */
+@import './today.css';
+
 @import './accessibility.css';

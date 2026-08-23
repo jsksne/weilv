@@ -41,13 +41,15 @@ describe('Sprint 2R contract boundary', () => {
     expect(source).not.toMatch(/recommendation|health|memory|agentic|trace/i)
   })
 
-  it('activates the Sprint 3 shell visual assets but keeps page CSS out of the entrypoint', () => {
+  it('activates the Sprint 4 visual assets but keeps unmigrated page CSS out of the entrypoint', () => {
     const entry = readFileSync(join(srcDir, 'styles', 'index.css'), 'utf8')
 
     expect(entry).toContain("@import '../style.css'")
     for (const asset of ['tokens', 'typography', 'glass', 'animations', 'aurora', 'effects', 'accessibility']) {
       expect(entry).toContain(`@import './${asset}.css'`)
     }
-    expect(entry).not.toMatch(/@import ['"]\.\/(today|assistant|profile|weekly|onboarding)\.css/)
+    /* Sprint 4：today.css 随 Today 页迁移正式激活 */
+    expect(entry).toContain("@import './today.css'")
+    expect(entry).not.toMatch(/@import ['"]\.\/(assistant|profile|weekly|onboarding)\.css/)
   })
 })

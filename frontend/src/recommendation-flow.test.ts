@@ -13,6 +13,8 @@ import {
 } from './test/recommendationFixtures'
 
 function mountApp() {
+  /* Sprint 4：legacy 表单流由 ?legacy=1 查询参数承载 */
+  window.history.pushState({}, '', '/?legacy=1')
   vi.spyOn(api, 'healthCheck').mockResolvedValue({ status: 'ok' })
   return mount(App)
 }

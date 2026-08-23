@@ -100,9 +100,10 @@
 .mood-note b { color: var(--ink-2); }
 .check-focus { animation: checkFocus 1.6s var(--ease-decay); }
 
-/* 任务卡 */
+/* 任务卡（间距来自 .task-list gap:16px；margin-top 复位挡住 legacy
+   style.css 的 article{margin-top:2rem} 泄漏，否则每卡多 32px） */
 .task-list { display: flex; flex-direction: column; gap: 16px; }
-.task-card { padding: 24px 26px; position: relative; overflow: hidden; }
+.task-card { padding: 24px 26px; position: relative; overflow: hidden; margin-top: 0; }
 .task-card::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 99px; background: #f78fb0; }
 .task-card.t-eye::before { background: #6fbcae; }
 .task-card.t-move::before { background: #b79ae8; }

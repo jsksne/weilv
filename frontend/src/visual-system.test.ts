@@ -143,7 +143,8 @@ describe('visual system: css entrypoint', () => {
     expect(entry).toContain("@import '../style.css'")
 
     /* 冻结 Shell 资产按原型 <style> 源顺序激活；legacy 必须最先导入，
-       否则其 body{font/color/background} 会盖掉冻结视觉（同特异性后者胜） */
+       否则其 body{font/color/background} 会盖掉冻结视觉（同特异性后者胜）。
+       Sprint 4 起 today.css 随 Today 页迁移正式激活 */
     const activated = [
       'reset',
       'tokens',
@@ -155,6 +156,7 @@ describe('visual system: css entrypoint', () => {
       'effects',
       'navigation',
       'layout',
+      'today',
       'accessibility',
     ] as const
     const imports = [...entry.matchAll(/@import '\.\/([a-z-]+)\.css'/g)].map(m => m[1])
@@ -164,7 +166,8 @@ describe('visual system: css entrypoint', () => {
 
   it('keeps page-specific CSS unactivated until the page sprints', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
-    for (const name of ['today', 'assistant', 'profile', 'weekly', 'onboarding']) {
+    expect(entry).toContain("@import './today.css'")
+    for (const name of ['assistant', 'profile', 'weekly', 'onboarding']) {
       expect(entry).not.toContain(`@import './${name}.css'`)
     }
   })
@@ -207,9 +210,29 @@ describe('visual system: tokens and fidelity', () => {
     /* 计划内收口：dotPop / valIn 在原型中由脚本运行时注入 <style>，此处为静态资产。 */
     const runtimeKeyframes = ['@keyframesdotPop{', '@keyframesvalIn{']
 
+    /* 计划内工程化差异（精确白名单，仅此一对）：`.view.active` 的 viewIn
+       fill `both → backwards`。fill:both 在动画结束后永久保留 translateY(0)
+       终态，使 `.view` 成为 fixed 后代（.topbar、fx 粒子）的包含块，引发
+       1080 视口横向溢出与完成特效错位；backwards 终态回归自然值，与原型
+       视觉零差异。原因记录于 docs/ui-migration/visual/sprint-04-fidelity.md。 */
+    const viewFillPrototype = '.view.active{animation:viewIn0.7svar(--ease-decay)both'
+    const viewFillMigrated = '.view.active{animation:viewIn0.7svar(--ease-decay)backwards'
+
+    /* 计划内 legacy 泄漏复位（精确白名单，原型无对应声明）：legacy
+       style.css 的裸元素选择器 main{width:min(40rem,…)}/section{margin-top:2rem}/
+       article{margin-top:2rem} 命中冻结页的 main.shell / section.view /
+       article.task-card，需 class 级显式复位（layout.css / today.css），
+       legacy 流程不受影响。原因记录于 sprint-04-fidelity.md「QA 发现并已修复的差异」。 */
+    const legacyLeakOverrides = [
+      '.shell{width:auto',
+      '.view{margin-top:0',
+      '.task-card{margin-top:0',
+    ]
+
     const missing: string[] = []
     for (const [key, count] of prototypeCounts) {
       if (key === splitMediaRule) continue
+      if (key === viewFillPrototype) continue
       if ((migratedCounts.get(key) ?? 0) < count) missing.push(key)
     }
 
@@ -217,6 +240,8 @@ describe('visual system: tokens and fidelity', () => {
     for (const [key, count] of migratedCounts) {
       if (splitParts.includes(key)) continue
       if (runtimeKeyframes.some(prefix => key.startsWith(prefix))) continue
+      if (key === viewFillMigrated) continue
+      if (legacyLeakOverrides.includes(key)) continue
       if ((prototypeCounts.get(key) ?? 0) < count) extra.push(key)
     }
 

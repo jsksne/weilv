@@ -6,9 +6,19 @@
    @keyframes viewIn 见 animations.css。
    ========================================================== */
 /* ---------- 布局与视图切换（同步 05：直接切换 + 上浮渐入） ---------- */
-.shell { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 40px 22px 110px; }
-.view { display: none; }
-.view.active { display: block; animation: viewIn 0.7s var(--ease-decay) both; }
+/* width/margin-top 显式复位：legacy style.css 的裸元素选择器
+   main{width:min(40rem,…)}=640px 与 section{margin-top:2rem} 会命中
+   main.shell / section.view（.shell 只声明 max-width 未声明 width），
+   导致 1080 视口下 Today 内容被压成 640px 居中列、视图顶部多 32px。
+   class 特异性覆盖元素选择器，legacy 流程（.shell-content）不受影响。 */
+.shell { position: relative; z-index: 1; width: auto; max-width: 1080px; margin: 0 auto; padding: 40px 22px 110px; }
+.view { display: none; margin-top: 0; }
+/* fill 用 backwards 而非 both：both 会把 to{translateY(0)} 终态永久保留，
+   使 .view 成为 fixed 后代（吸附顶栏 .topbar、TaskCompletionFx 粒子）的
+   包含块，导致它们相对 .view 而非视口定位（1080 视口横向溢出 1238px、
+   完成特效错位的根因）。backwards 只保入场前初始帧，终态回归自然值
+   （opacity:1 / transform:none），与冻结原型视觉零差异。 */
+.view.active { display: block; animation: viewIn 0.7s var(--ease-decay) backwards; }
 
 /* 级联入场（同步 05：五级延迟） */
 .stagger > * { animation: viewIn 0.8s var(--ease-decay) both; }

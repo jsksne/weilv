@@ -14,7 +14,7 @@ import { useMotionPulse } from './composables/useMotionPulse'
 
 /* ------------------------------------------------------------------
    Sprint 2 视觉系统测试
-   1. CSS 入口存在且引入全部拆分文件
+   1. CSS 入口存在且在 Sprint 2R 保持视觉资产隔离
    2. tokens 可加载（关键令牌逐字校验 + 与原型全量声明比对）
    3. effects 组件可 mount（结构与原型一致）
    4. reduced-motion 逻辑存在（CSS + composable 双侧降级）
@@ -138,11 +138,11 @@ function prototypeCss(): string {
 /* ---------- 1. CSS 入口 ---------- */
 
 describe('visual system: css entrypoint', () => {
-  it('index.css exists and imports every split file plus the legacy style.css', () => {
+  it('index.css keeps the legacy runtime isolated from the reviewed split assets', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
     expect(entry).toContain("@import '../style.css'")
     for (const name of STYLE_FILES) {
-      expect(entry).toContain(`@import './${name}.css'`)
+      expect(entry).not.toContain(`@import './${name}.css'`)
     }
   })
 

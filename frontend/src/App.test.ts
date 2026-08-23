@@ -36,18 +36,15 @@ describe('App shell runtime (default)', () => {
     expect(wrapper.findAll('.task-card')).toHaveLength(3)
   })
 
-  it('renders structural placeholders for unmigrated views without business data', async () => {
+  it('renders Assistant and keeps later views as structural placeholders', async () => {
     resetUrl()
     const wrapper = mount(App)
     await flushPromises()
 
-    expect(wrapper.get('[data-view-pending="assistant"]').text()).toContain('问问薇薇')
+    expect(wrapper.get('[data-view="assistant"] .ask-wrap').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('非真实 Agent trace')
     expect(wrapper.get('[data-view-pending="profile"]').text()).toContain('我的画像')
     expect(wrapper.get('[data-view-pending="weekly"]').text()).toContain('周度变化')
-    /* 未迁移页面不得出现假业务数据（无任务卡 / 无图表 / 无对话） */
-    const pending = wrapper.get('[data-view-pending="assistant"]')
-    expect(pending.find('.task-card').exists()).toBe(false)
-    expect(pending.find('.q-bubble').exists()).toBe(false)
   })
 
   it('never touches the API in the demo runtime', async () => {
@@ -57,6 +54,24 @@ describe('App shell runtime (default)', () => {
     await flushPromises()
 
     expect(health).not.toHaveBeenCalled()
+  })
+
+  it('keeps the Assistant suggestion display-only and leaves Today unchanged', async () => {
+    vi.useFakeTimers()
+    try {
+      resetUrl()
+      vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+      const wrapper = mount(App)
+      await wrapper.get('nav .tab[data-view="assistant"]').trigger('click')
+      await wrapper.get('[data-prompt="exam"]').trigger('click')
+      await vi.advanceTimersByTimeAsync(4050)
+      await flushPromises()
+
+      expect(wrapper.get('[data-testid="docked-progress"] .tb-num').text()).toBe('0 / 3')
+      expect(wrapper.get('[data-testid="suggested-mini-task"] button').attributes('disabled')).toBeDefined()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('syncs the docked topbar progress from the Today local state', async () => {

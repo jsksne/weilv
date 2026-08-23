@@ -3,9 +3,11 @@ import { computed } from 'vue'
 
 import AppShell from '@/layouts/AppShell.vue'
 import TodayView from '@/views/TodayView.vue'
+import AssistantView from '@/views/AssistantView.vue'
 import LegacyConsole from '@/views/LegacyConsole.vue'
 import { shellFixture } from '@/data/fixtures/shell.fixture'
 import { todayFixture } from '@/data/fixtures/today.fixture'
+import { assistantFixture } from '@/data/fixtures/assistant.fixture'
 import { useDailyTasks } from '@/composables/useDailyTasks'
 import type { ShellContract } from '@/contracts'
 
@@ -47,7 +49,6 @@ const shell = computed<ShellContract>(() => ({
 
 /* 未迁移页面：最小 placeholder/unavailable 结构态，不填业务数据 */
 const pendingViews = [
-  { id: 'assistant', label: '问问薇薇' },
   { id: 'profile', label: '我的画像' },
   { id: 'weekly', label: '周度变化' },
 ] as const
@@ -57,6 +58,9 @@ const pendingViews = [
   <AppShell v-if="!legacyMode" :shell="shell">
     <template #today>
       <TodayView :model="todayFixture" :daily="daily" />
+    </template>
+    <template #assistant>
+      <AssistantView :model="assistantFixture" />
     </template>
     <template v-for="view in pendingViews" :key="view.id" #[view.id]>
       <div class="card" :data-view-pending="view.id" style="padding: 26px 30px; margin-top: 26px">

@@ -10,8 +10,7 @@
  *  - 冻结资产按原型 <style> 源顺序排列：reset → :root → body →
  *    背景层 → topbar/navbar → shell/layout → reduced-motion 收尾；
  *    animations.css 的 @keyframes 无层叠冲突，集中前置不影响级联。
- *  - 页面 CSS（today/assistant/profile/weekly/onboarding）属 Sprint 4-7 资产，
- *    本 Sprint 不激活。
+ *  - 页面 CSS（today/assistant/profile/weekly/onboarding）按页面 Sprint 激活。
  */
 @import '../style.css';
 
@@ -28,8 +27,9 @@
 @import './navigation.css';
 @import './layout.css';
 
-/* Sprint 4：Today 页面 CSS 正式激活（原型源顺序中今日页样式紧随布局之后）；
-   assistant / profile / weekly / onboarding 仍不激活 */
+/* Sprint 4/5：Today 与 Assistant 页面 CSS 正式激活；
+   profile / weekly / onboarding 仍不激活 */
 @import './today.css';
+@import './assistant.css';
 
 @import './accessibility.css';

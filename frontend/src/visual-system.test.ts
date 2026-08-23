@@ -157,6 +157,7 @@ describe('visual system: css entrypoint', () => {
       'navigation',
       'layout',
       'today',
+      'assistant',
       'accessibility',
     ] as const
     const imports = [...entry.matchAll(/@import '\.\/([a-z-]+)\.css'/g)].map(m => m[1])
@@ -167,7 +168,7 @@ describe('visual system: css entrypoint', () => {
   it('keeps page-specific CSS unactivated until the page sprints', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
     expect(entry).toContain("@import './today.css'")
-    for (const name of ['assistant', 'profile', 'weekly', 'onboarding']) {
+    for (const name of ['profile', 'weekly', 'onboarding']) {
       expect(entry).not.toContain(`@import './${name}.css'`)
     }
   })

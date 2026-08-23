@@ -73,6 +73,20 @@ export interface RecommendationResponse {
   feedback_available: boolean
 }
 
+export interface AgenticDiagnostics {
+  agentic?: boolean
+  factor_count?: number
+  factor_domains?: string[]
+  analysis_fallback?: boolean
+  knowledge_chunk_ids_by_factor?: Record<string, string[]>
+  [key: string]: unknown
+}
+
+export interface AgenticRecommendationResponse extends RecommendationResponse {
+  agentic: boolean
+  diagnostics: AgenticDiagnostics
+}
+
 export interface UserProfileUpsertRequest {
   target_stage: TargetStage
   memory_enabled: boolean

@@ -48,8 +48,9 @@ describe('Sprint 2R contract boundary', () => {
     for (const asset of ['tokens', 'typography', 'glass', 'animations', 'aurora', 'effects', 'accessibility']) {
       expect(entry).toContain(`@import './${asset}.css'`)
     }
-    /* Sprint 4：today.css 随 Today 页迁移正式激活 */
+    /* Sprint 4/5：today.css 与 assistant.css 随页面迁移正式激活 */
     expect(entry).toContain("@import './today.css'")
-    expect(entry).not.toMatch(/@import ['"]\.\/(assistant|profile|weekly|onboarding)\.css/)
+    expect(entry).toContain("@import './assistant.css'")
+    expect(entry).not.toMatch(/@import ['"]\.\/(profile|weekly|onboarding)\.css/)
   })
 })

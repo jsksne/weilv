@@ -14,6 +14,7 @@ import { useQuestionnaire } from '@/composables/useQuestionnaire'
 import { useRecommendationFlow } from '@/composables/useRecommendationFlow'
 import { useServiceHealth } from '@/composables/useServiceHealth'
 import { useUserProfile } from '@/composables/useUserProfile'
+import AppShell from '@/layouts/AppShell.vue'
 import type { UserProfile } from '@/api/types'
 
 const { loading: serviceLoading, connected, refresh } = useServiceHealth()
@@ -88,6 +89,7 @@ async function saveProfile(): Promise<void> {
 </script>
 
 <template>
+  <AppShell>
   <main>
     <h1>微律</h1>
     <p>以微小行动，找到每个人更适合自己的健康节律。</p>
@@ -152,4 +154,5 @@ async function saveProfile(): Promise<void> {
       @reset="resetAll"
     />
   </main>
+  </AppShell>
 </template>

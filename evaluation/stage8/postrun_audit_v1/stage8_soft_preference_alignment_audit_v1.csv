@@ -1,0 +1,34 @@
+﻿case_id,system,gold_soft_preferences,selected_task_id,status,mechanical_rule,mechanically_scored,mechanical_alignment,human_review_required,notes
+AGX-001,basic,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-001,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-001,personal,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-001,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-001,agentic,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-002,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-004,basic,prefers light movement over vigorous activity,MT-BREAK-004,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-004,personal,prefers light movement over vigorous activity,MT-BREAK-004,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-004,agentic,prefers light movement over vigorous activity,MT-BREAK-004,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-007,basic,must finish one short important screen action before sleep,MT-SLEEP-004,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied
+AGX-007,personal,must finish one short important screen action before sleep,MT-SLEEP-004,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied
+AGX-007,agentic,must finish one short important screen action before sleep,MT-SLEEP-004,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied
+AGX-008,basic,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-008,personal,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-008,agentic,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,allowed,no_movement,True,False,False,deterministic rule applied
+AGX-009,basic,prefers a combined rest addressing both eyes and sitting,MT-SED-001,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-009,personal,prefers a combined rest addressing both eyes and sitting,MT-REC-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-009,agentic,prefers a combined rest addressing both eyes and sitting,MT-REC-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-011,basic,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-001,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-011,personal,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-011,agentic,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-014,basic,wants to sleep in later on weekend,MT-SLEEP-003,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-014,personal,wants to sleep in later on weekend,MT-SLEEP-003,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-014,agentic,wants to sleep in later on weekend,MT-SLEEP-003,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-015,basic,prefers a rest without the far-view-only pattern,MT-REC-002,allowed,avoid_task MT-BREAK-001,True,True,False,deterministic rule applied
+AGX-015,personal,prefers a rest without the far-view-only pattern,MT-REC-002,allowed,avoid_task MT-BREAK-001,True,True,False,deterministic rule applied
+AGX-015,agentic,prefers a rest without the far-view-only pattern,MT-REC-002,allowed,avoid_task MT-BREAK-001,True,True,False,deterministic rule applied
+AGX-016,basic,indoor-only light movement; outdoor not possible,MT-REC-002,allowed,indoor_only,True,True,False,deterministic rule applied
+AGX-016,personal,indoor-only light movement; outdoor not possible,MT-REC-002,allowed,indoor_only,True,True,False,deterministic rule applied
+AGX-016,agentic,indoor-only light movement; outdoor not possible,MT-REC-002,allowed,indoor_only,True,True,False,deterministic rule applied
+AGX-019,basic,wants to keep reading after posture fix,MT-EYE-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-019,personal,wants to keep reading after posture fix,MT-EYE-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-019,agentic,wants to keep reading after posture fix,MT-EYE-002,allowed,,False,,True,no deterministic contradiction rule; human review needed
+AGX-020,basic,must finish a short screen task before sleep,MT-SLEEP-004,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied
+AGX-020,personal,must finish a short screen task before sleep,MT-EYE-002,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied
+AGX-020,agentic,must finish a short screen task before sleep,MT-EYE-002,allowed,avoid_task MT-SLEEP-001,True,True,False,deterministic rule applied

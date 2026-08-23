@@ -1,0 +1,10 @@
+﻿metric,value
+macro_required_factor_coverage,0.75
+micro_required_factor_coverage,0.7538461538461538
+all_factors_covered_rate,0.4
+all_factors_covered_wilson_95_ci,"(0.21880653237281705, 0.6134184992377469)"
+covered_factors_total,49
+required_factors_total,65
+all_covered_case_count,8
+eligible_case_count,20
+per_case_rates,"{""AGX-001"": 1.0, ""AGX-002"": 1.0, ""AGX-003"": 0.6666666666666666, ""AGX-004"": 1.0, ""AGX-005"": 0.3333333333333333, ""AGX-006"": 1.0, ""AGX-007"": 0.75, ""AGX-008"": 0.6666666666666666, ""AGX-009"": 1.0, ""AGX-010"": 1.0, ""AGX-011"": 0.75, ""AGX-012"": 0.6666666666666666, ""AGX-013"": 0.6666666666666666, ""AGX-014"": 1.0, ""AGX-015"": 0.3333333333333333, ""AGX-016"": 0.3333333333333333, ""AGX-017"": 0.6666666666666666, ""AGX-018"": 0.6666666666666666, ""AGX-019"": 1.0, ""AGX-020"": 0.5}"

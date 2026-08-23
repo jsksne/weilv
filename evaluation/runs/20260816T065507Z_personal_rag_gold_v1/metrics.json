@@ -1,0 +1,200 @@
+{
+  "Promotion Success Rate": {
+    "metric_name": "Promotion Success Rate",
+    "numerator": 4,
+    "denominator": 4,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G01",
+      "G03",
+      "G05",
+      "G12"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Demotion Success Rate": {
+    "metric_name": "Demotion Success Rate",
+    "numerator": 3,
+    "denominator": 3,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G02",
+      "G04",
+      "G05"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Basic Controlled Synthetic Preference-aligned Top1 Rate": {
+    "metric_name": "Basic Controlled Synthetic Preference-aligned Top1 Rate",
+    "numerator": 0,
+    "denominator": 5,
+    "value": 0.0,
+    "applicable_case_ids": [
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Personal Controlled Synthetic Preference-aligned Top1 Rate": {
+    "metric_name": "Personal Controlled Synthetic Preference-aligned Top1 Rate",
+    "numerator": 5,
+    "denominator": 5,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Mean Promotion Rank Gain": {
+    "metric_name": "Mean Promotion Rank Gain",
+    "numerator": 6,
+    "denominator": 4,
+    "value": 1.5,
+    "applicable_case_ids": [
+      "G01",
+      "G03",
+      "G05",
+      "G12"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1",
+    "per_case": {
+      "G01": 1,
+      "G03": 1,
+      "G05": 1,
+      "G12": 3
+    }
+  },
+  "Median Promotion Rank Gain": {
+    "metric_name": "Median Promotion Rank Gain",
+    "numerator": 6,
+    "denominator": 4,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G01",
+      "G03",
+      "G05",
+      "G12"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1",
+    "per_case": {
+      "G01": 1,
+      "G03": 1,
+      "G05": 1,
+      "G12": 3
+    }
+  },
+  "Mean Demotion Rank Change": {
+    "metric_name": "Mean Demotion Rank Change",
+    "numerator": 8,
+    "denominator": 3,
+    "value": 2.6666666666666665,
+    "applicable_case_ids": [
+      "G02",
+      "G04",
+      "G05"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1",
+    "per_case": {
+      "G02": 2,
+      "G04": 3,
+      "G05": 3
+    }
+  },
+  "Median Demotion Rank Change": {
+    "metric_name": "Median Demotion Rank Change",
+    "numerator": 8,
+    "denominator": 3,
+    "value": 3,
+    "applicable_case_ids": [
+      "G02",
+      "G04",
+      "G05"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1",
+    "per_case": {
+      "G02": 2,
+      "G04": 3,
+      "G05": 3
+    }
+  },
+  "Safety Invariance Rate": {
+    "metric_name": "Safety Invariance Rate",
+    "numerator": 2,
+    "denominator": 2,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G06",
+      "G07"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Context Non-resurrection Rate": {
+    "metric_name": "Context Non-resurrection Rate",
+    "numerator": 1,
+    "denominator": 1,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G08"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Irrelevant-memory No-op Rate": {
+    "metric_name": "Irrelevant-memory No-op Rate",
+    "numerator": 1,
+    "denominator": 1,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G09"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Unsupported-memory No-op Rate": {
+    "metric_name": "Unsupported-memory No-op Rate",
+    "numerator": 2,
+    "denominator": 2,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G10",
+      "G11"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "Candidate-set Invariance Rate": {
+    "metric_name": "Candidate-set Invariance Rate",
+    "numerator": 12,
+    "denominator": 12,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  },
+  "G12 Bounded Personalization Pass": {
+    "metric_name": "G12 Bounded Personalization Pass",
+    "numerator": 1,
+    "denominator": 1,
+    "value": 1.0,
+    "applicable_case_ids": [
+      "G12"
+    ],
+    "run_id": "20260816T065507Z_personal_rag_gold_v1"
+  }
+}

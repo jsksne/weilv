@@ -1,0 +1,69 @@
+{
+  "artifact": "stage8_gold_draft_validation_v1",
+  "status": "PASS",
+  "validated_at": "2026-08-17",
+  "validator": "evaluation/runners/_stage8_validate_gold_draft.py",
+  "gold_status": "READY_FOR_GOLD_AUDIT",
+  "counts": {
+    "case_count": 24,
+    "task_cases": 20,
+    "safety_cases": 4,
+    "memory_cases": 9,
+    "three_plus_factor_cases": 20,
+    "cases_with_at_least_two_factors": 24
+  },
+  "mechanical_checks": {
+    "case_count_equals_24": true,
+    "task_cases_equals_20": true,
+    "safety_cases_equals_4": true,
+    "case_ids_sequential_unique_AGX-001_to_AGX-024": true,
+    "every_task_case_has_at_least_one_preferred": true,
+    "preferred_and_acceptable_disjoint": true,
+    "preferred_acceptable_ids_exist_in_formal_corpus": true,
+    "full_partition_over_23_formal_tasks_per_task_case": true,
+    "no_context_mismatch_in_preferred": true,
+    "no_duration_mismatch_in_preferred": true,
+    "no_explicit_safety_violation_in_preferred": true,
+    "synthetic_memory_uses_only_supported_schema": true,
+    "memory_semantics_within_task_preference_and_task_feedback_only": true,
+    "no_unsupported_task_ids": true,
+    "no_stage_output_fields": true,
+    "no_ranking_or_result_leakage": true,
+    "no_basic_personal_agentic_calls": true,
+    "review_table_rows_24": true,
+    "review_reviewer_fields_blank": true,
+    "review_status_pending_multi_reviewer_consensus": true,
+    "audit_table_rows_460": true,
+    "audit_rows_23_per_task_case": true,
+    "audit_partition_complete": true
+  },
+  "model_calls": {
+    "embedding": 0,
+    "reranker": 0,
+    "qwen_plus": 0
+  },
+  "frozen_references": {
+    "task_corpus": "micro_tasks_v1",
+    "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+    "task_count": 23,
+    "corpus_record": "evaluation/manifests/task_gold_task_corpus_v1.json",
+    "safety_rules": "data/metadata/safety_rules_v0.1.json",
+    "personal_rag_ranking_semantics": "task_preference prefer_task/avoid_task; task_feedback helpfulness/completion_status/burden"
+  },
+  "known_corpus_limitations_respected": {
+    "all_tasks_support_all_three_stages": true,
+    "no_stage_mismatch_gold_constructed": true,
+    "durations_only_1_2_5_10_minutes": true,
+    "no_contraindication_dependent_gold": true,
+    "no_SR008_orchestration_matcher_dependent_gold": true,
+    "no_clinical_scenarios": true
+  },
+  "provenance": {
+    "input_provenance": "synthetic_constructed",
+    "gold_provenance": "AI_assisted_semantic_draft_pending_multi_reviewer_consensus",
+    "review_status": "pending_multi_reviewer_consensus",
+    "claims_do_not_claim_human_reviewed_or_consensus": true,
+    "claims_do_not_claim_real_user_or_clinical_validation": true
+  },
+  "issue_count": 0
+}

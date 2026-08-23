@@ -1,0 +1,7 @@
+﻿claim_id,status,evidence
+CR-AGENT-001,SUPPORTED,"{""mean_paired_delta"": 0.05, ""bootstrap_95_ci"": [0, 0.15], ""wins"": 1, ""ties"": 19, ""losses"": 0}"
+CR-AGENT-002,SUPPORTED,"{""agentic_invalid_rate"": 0.15, ""personal_invalid_rate"": 0.15}"
+CR-AGENT-003,SUPPORTED,"{""agentic_memory_alignment"": 0.8888888888888888, ""personal_memory_alignment"": 0.8888888888888888, ""filtered_task_resurrected"": false}"
+CR-AGENT-004,SUPPORTED,"{""unsafe_escape_rate"": 0.0}"
+CR-AGENT-005,SUPPORTED,"{""evidence_contamination"": 0.0, ""guard_fallback_count"": 0}"
+CR-AGENT-REAL-001,UNSUPPORTED,"{""reason"": ""offline synthetic benchmark does not measure real health outcomes or clinical safety""}"

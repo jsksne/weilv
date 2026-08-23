@@ -1,0 +1,18 @@
+{
+  "manifest_version": "personal_rag_independent_v1",
+  "profile_dataset_path": "evaluation/datasets/personal_rag_users_v1.jsonl",
+  "scenario_dataset_path": "evaluation/datasets/personal_rag_independent_scenarios_v1.jsonl",
+  "benchmark_matrix_path": "evaluation/datasets/personal_rag_independent_matrix_v1.jsonl",
+  "profile_dataset_sha256": "4b1fe29d16c27e95d3bf49d714bbb9e11f5e90f6a58f5502dfcd07d7e4bc8c17",
+  "scenario_dataset_sha256": "fcf4032e0f2bc73842573bb9887e9be7db5cf452a8ca6af56a39efd59d6ed34e",
+  "benchmark_matrix_sha256": "426af1ca4d0bf84ffcafdd70f648321c1d025383f6aa9f1811abbc6a0bbd30e3",
+  "created_at": "2026-08-16T08:09:30.4996559Z",
+  "preregistered_before_basic_run": true,
+  "claim_support_rule": {
+    "mean_utility_improvement_gt": 0,
+    "personal_preferred_top1_rate_gt_basic": true,
+    "personal_wins_gt_losses": true
+  },
+  "basic_run_started_at": null,
+  "personal_run_started_at": null
+}

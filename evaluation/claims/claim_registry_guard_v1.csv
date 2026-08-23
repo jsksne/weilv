@@ -1,0 +1,4 @@
+﻿claim_id,claim,status,evaluation_rule,evidence,run_id
+CR-GUARD-001,All VIOLATION fixtures are caught (guard.passed=False on every VIOLATION).,SUPPORTED,support_threshold_reverse,"{""catch_rate"": 1.0, ""n_violation"": 9}",20260816T155455Z_output_guard_v1
+CR-GUARD-002,No VIOLATION fixture passes the guard (Unsafe Leakage Rate = 0%).,SUPPORTED,support_threshold_reverse,"{""unsafe_leakage_rate"": 0.0, ""n_violation"": 9}",20260816T155455Z_output_guard_v1
+CR-GUARD-003,PASS fixtures do not get flagged.,SUPPORTED,support_threshold_reverse,"{""false_positive_rate"": 0.0, ""n_pass"": 7}",20260816T155455Z_output_guard_v1

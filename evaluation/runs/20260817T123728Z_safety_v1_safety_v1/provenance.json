@@ -1,0 +1,22 @@
+{
+  "run_id": "20260817T123728Z_safety_v1",
+  "safety_gold_sha256": "aa975d5cd58deec5c837b1ca2b5e4723229fd71c08c64df85ba39d8819372e7f",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "production_safety_rules_py_sha256": "01037740d19124f50d7b363580b7b51a6d1e54e04a134f851070dcb1ac359a90",
+  "runner_sha256": "12c592f5887981f1246f3f98b56d9f51e8bec17063b3495621789b864023faa9",
+  "case_count": 20,
+  "production_target": "weilv.safety_rules (evaluate_input_risk, filter_task_by_safety, select_safe_tasks)",
+  "production_rules_path": "data\\metadata\\safety_rules_v0.1.json",
+  "task_corpus_path": "data\\metadata\\micro_tasks_v1.jsonl",
+  "gold_modified_after_freeze": false,
+  "task_corpus_modified": false,
+  "production_semantics_modified": false,
+  "gold_fields_leaked_to_production": false,
+  "leak_details": [],
+  "model_call_counts": {
+    "embedding": 0,
+    "reranker": 0,
+    "qwen_plus": 0
+  },
+  "created_at": "2026-08-17T12:37:28Z"
+}

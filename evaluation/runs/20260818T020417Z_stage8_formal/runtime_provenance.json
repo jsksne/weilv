@@ -1,0 +1,44 @@
+{
+  "run_id": "20260818T020417Z_stage8_formal",
+  "created_at": "2026-08-18T02:04:17.568326+00:00",
+  "phase": "execute",
+  "gold_dataset": "agentic_complex_gold_frozen_v1_2.jsonl",
+  "gold_frozen_sha256": "6c6aa6552059035c123ad8325ca7ea74b1e4496a4c5a2b0c788dfdd81655340a",
+  "gold_manifest_sha256": "6c6aa6552059035c123ad8325ca7ea74b1e4496a4c5a2b0c788dfdd81655340a",
+  "safety_gold_sha256": "aa975d5cd58deec5c837b1ca2b5e4723229fd71c08c64df85ba39d8819372e7f",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "expected_executions": 72,
+  "completed_executions": 72,
+  "git_commit": "unavailable:not-a-git-worktree",
+  "source_tree_sha256": "6ad68e07b202a64d18c1407457fa1546c59e1b95e02fabab0fdc9ba794654490",
+  "production_file_hashes": {
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/basic_rag.py": "557bd4ce39f76648d096947d7365a017649ac9a34f2fb516f8496ec4aec864cc",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/personal_rag.py": "d9c71a99dcb6231624612b246c5beaa2a696ec82ae896f48669c6c17fbde1456",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/agentic_rag.py": "d78cd9c8b41a32830683727b38c34e37fd37a448c5ca99c8b76a873a9e3dfb5c",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/agent_graph.py": "7cc766a746a94e8f7925d9a0874592cf3bae222d38d2cf7df09ff0066ae4b7f7",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/safety_rules.py": "01037740d19124f50d7b363580b7b51a6d1e54e04a134f851070dcb1ac359a90",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/output_guard.py": "982163a4c746aeecdf65bd78b81c675f2b9b57b4b19fe29c782614f8ee550516",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/retrieval.py": "b4cca748126012fd8d8284f69411b24d3b850316b4c068b0ff846f028bd6927d",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/dashscope_models.py": "3b2ba728a187423ebbe431c75c3f62c98acc0ffa26883a9cf5d32ad2d03bf6b1",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/user_memory.py": "fbfc52b2ef6394ce93e1aee734d610c294b22d7be0a71a8138e44827fe88d9e4",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/personal_memory_retrieval.py": "c60103e57fb7f7bd6a73ef8a7b7eebf2de88a412460fa4bb4d3e06410c981532",
+    "C:/Users/Thinkpad/Desktop/NewWeb AI智护/src/weilv/micro_tasks.py": "4660899afb62178a7c65e8d1a28fe7a1af6abb1f8e8b43d21a14da87386e73ac"
+  },
+  "python_version": "3.12.13",
+  "embedding_model": "text-embedding-v4",
+  "embedding_dim": 1024,
+  "rerank_model": "qwen3-rerank",
+  "llm_model": "qwen-plus",
+  "system_order": [
+    "basic",
+    "personal",
+    "agentic"
+  ],
+  "execution_order": "deterministic AGX-001..AGX-024, Basic->Personal->Agentic",
+  "retry_policy": {
+    "trigger": "infrastructure failures only (network/timeout/ES 5xx)",
+    "max_retries_per_execution": 1,
+    "never_retry": "semantic outcomes (wrong task, guard rejection, no_safe_task, coverage)"
+  },
+  "total_injection_embedding_calls": 0
+}

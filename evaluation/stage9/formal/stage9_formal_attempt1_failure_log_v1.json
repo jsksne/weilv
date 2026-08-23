@@ -1,0 +1,18 @@
+{
+  "record_id": "stage9_formal_attempt1_failure_log_v1",
+  "classification": "FORMAL_RUN_FAILED_REVIEW_REQUIRED",
+  "formal_attempt_number": 1,
+  "exact_command": "$env:PYTHONPATH=(Get-Location).Path; .venv\\Scripts\\python.exe evaluation/stage9/run_stage9_external_cf.py --formal --no-download",
+  "exit_code": 1,
+  "started": true,
+  "run_directory": "none",
+  "partial_artifacts": "none",
+  "stdout": "[runner] integrity gates: {\n  \"heartsteps_hashes\": \"PASS\",\n  \"duplicates\": 0,\n  \"users\": 37,\n  \"raw_rows\": 8274,\n  \"final_rows\": 5905\n}",
+  "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\run_stage9_external_cf.py\", line 1322, in <module>\n    raise SystemExit(_cli())\n  File \"C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\run_stage9_external_cf.py\", line 1312, in _cli\n    results = run_formal(analysis_rows, integrity_gates, run_dir)\n  File \"C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\run_stage9_external_cf.py\", line 1163, in run_formal\n    raise RuntimeError(\nRuntimeError: FORMAL run blocked by integrity gates: {\"heartsteps_hashes\": \"PASS\", \"duplicates\": 0, \"users\": 37, \"raw_rows\": 8274, \"final_rows\": 5905}",
+  "failure_type": "frozen_evaluator_integrity_gate_defect",
+  "root_cause": "check_integrity_gates() (run_stage9_external_cf.py:889-902) returns no 'schema_ok' key, but run_formal() (line 1155-1165) requires integrity_gates.get('schema_ok') is True before writing any run. _cli() (line 1289) passes check_integrity_gates() output directly to run_formal(), so the FORMAL path always raises 'FORMAL run blocked by integrity gates'. The frozen test suite (tests/test_stage9_external_cf.py) never exercises run_formal().",
+  "repaired": false,
+  "rerun": false,
+  "code_or_method_changed": false,
+  "frozen_shas_unchanged": true
+}

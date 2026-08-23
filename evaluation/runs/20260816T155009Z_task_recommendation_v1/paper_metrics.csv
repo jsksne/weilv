@@ -1,0 +1,12 @@
+﻿experiment,metric,value,n,provenance_level,run_id
+task_recommendation_v1,Valid@1,0.9583333333333334,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Invalid Recommendation Rate,0.041666666666666664,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Preferred@1,0.8333333333333334,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,All-Valid@3,0.25,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Valid@3,0.5347222222222222,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Preferred-in-Top3,0.3958333333333333,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,No-Task Rate,0.0,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Mean Eligible Candidate Count (before filter),8.833333333333334,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Mean Eligible Candidate Count (after filter),8.791666666666666,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Median Eligible Candidate Count (before filter),11.0,24,A+B+C,20260816T155009Z_task_recommendation_v1
+task_recommendation_v1,Median Eligible Candidate Count (after filter),11.0,24,A+B+C,20260816T155009Z_task_recommendation_v1

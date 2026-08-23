@@ -1,0 +1,12 @@
+{
+  "fixtures": 24,
+  "expected_blocked": 11,
+  "expected_allowed": 13,
+  "catch_rate": 1.0,
+  "unsafe_leakage_rate": 0.0,
+  "false_positive_rate": 0.0,
+  "unsafe_leakage_count": 0,
+  "false_positive_count": 0,
+  "contract": "unsafe_leakage_rate == 0 and false_positive_rate == 0",
+  "contract_passed": true
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "rules": [
+    {"rule_id":"SR-001","name":"视力异常求助","category":"input_risk","priority":"critical","conditions":{"vision_abnormal":true},"actions":["stop_normal_eye_tasks","help_seeking","no_diagnosis"],"applicable_domains":["eye_health"],"evidence_chunk_ids":["KC-SRC-008-009"],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-002","name":"明显身体不适","category":"input_risk","priority":"high","conditions":{"physical_discomfort":true},"actions":["block_activity_tasks","no_treatment_or_rehabilitation","help_seeking_if_needed"],"applicable_domains":["physical_activity","light_recovery","outdoor"],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-003","name":"医疗诊断或治疗请求","category":"input_risk","priority":"critical","conditions":{"medical_request":true},"actions":["exit_normal_tasks","no_diagnosis_or_treatment"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-004","name":"学段不匹配","category":"task_filter","priority":"normal","conditions":{"target_stage_mismatch":true},"actions":["hard_filter"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-005","name":"执行场景不匹配","category":"task_filter","priority":"normal","conditions":{"execution_context_mismatch":true},"actions":["hard_filter"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-006","name":"可用时间不足","category":"task_filter","priority":"normal","conditions":{"available_minutes_insufficient":true},"actions":["hard_filter","do_not_shorten_task"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-007","name":"禁忌条件命中","category":"task_filter","priority":"high","conditions":{"contraindication_matched":true},"actions":["hard_filter"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-008","name":"停止条件命中","category":"task_stop","priority":"critical","conditions":{"stop_condition_matched":true},"actions":["stop_task","exit_normal_flow_if_needed"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-009","name":"当前不可活动","category":"task_filter","priority":"high","conditions":{"cannot_move":true},"actions":["filter_movement_tasks"],"applicable_domains":["physical_activity","light_recovery","outdoor"],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-010","name":"移动或不稳定环境","category":"task_filter","priority":"high","conditions":{"unstable_reading_or_screen":true},"actions":["allow_simple_pause_task_only","block_complex_tasks"],"applicable_domains":["eye_health"],"evidence_chunk_ids":["KC-SRC-003-002"],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-011","name":"睡眠安全边界","category":"task_filter","priority":"high","conditions":{"sleep_displaced_by_study":true},"actions":["block_continue_study_tasks"],"applicable_domains":["sleep"],"evidence_chunk_ids":["KC-SRC-004-003","KC-SRC-004-004"],"enabled":true,"version":"0.1"},
+    {"rule_id":"SR-012","name":"无安全白名单任务","category":"fallback","priority":"high","conditions":{"no_safe_task":true},"actions":["return_no_safe_task","do_not_create_task","do_not_lower_filters","explanation_or_help_seeking_if_needed"],"applicable_domains":[],"evidence_chunk_ids":[],"enabled":true,"version":"0.1"}
+  ]
+}

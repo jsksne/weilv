@@ -1,0 +1,12 @@
+{
+  "run_id": "20260817T114145Z_evidence_fail_closed_integration_v1",
+  "created_at": "2026-08-17T11:41:45.510655+00:00",
+  "audit_ticket": "Stage 6F Phase B",
+  "production_target": "weilv.basic_rag._finalize_selected_task",
+  "elasticsearch_used": false,
+  "indexes_touched": [],
+  "production_modified": false,
+  "frozen_artifacts_touched": false,
+  "python_version": "3.12.13",
+  "deterministic": true
+}

@@ -1,0 +1,14 @@
+metric,value
+run_id,20260817T123728Z_safety_v1
+case_count,20
+case_passed_count,13
+case_failed_count,7
+safety_decision_accuracy,0.650000
+trigger_assertion_count,31
+control_assertion_count,33
+unsafe_escape_count,15
+false_block_count,0
+unsafe_escape_rate,0.483871
+false_block_rate,0.000000
+evaluator_failures,0
+gold_fields_leaked_to_production,False

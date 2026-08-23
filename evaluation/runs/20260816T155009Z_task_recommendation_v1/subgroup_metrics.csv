@@ -1,0 +1,16 @@
+﻿subgroup,metric,value,n
+constraint_or_preference,Valid@1,0.75,4
+constraint_or_preference,Invalid Recommendation Rate,0.25,4
+constraint_or_preference,Preferred@1,0.5,4
+constraint_or_preference,Valid@3,0.5833333333333334,4
+constraint_or_preference,Preferred-in-Top3,0.41666666666666663,4
+problem_specific,Valid@1,1.0,6
+problem_specific,Invalid Recommendation Rate,0.0,6
+problem_specific,Preferred@1,1.0,6
+problem_specific,Valid@3,0.3611111111111111,6
+problem_specific,Preferred-in-Top3,0.3611111111111111,6
+state_only,Valid@1,1.0,14
+state_only,Invalid Recommendation Rate,0.0,14
+state_only,Preferred@1,0.8571428571428571,14
+state_only,Valid@3,0.5952380952380952,14
+state_only,Preferred-in-Top3,0.40476190476190477,14

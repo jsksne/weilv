@@ -1,0 +1,12 @@
+{
+  "dataset_name": "personal_rag_screening_v1",
+  "dataset_version": "personal_rag_screening_v1",
+  "pipeline": "basic_rag_screening",
+  "memory": "off",
+  "personalization": "off",
+  "knowledge_retrieval": "off_not_required_by_task_ranking",
+  "knowledge_index": "health_knowledge_v1",
+  "task_index": "micro_tasks_v1",
+  "BM25_RECALL_K": 10,
+  "VECTOR_RECALL_K": 10
+}

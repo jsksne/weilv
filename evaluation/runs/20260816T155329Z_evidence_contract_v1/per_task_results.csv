@@ -1,0 +1,27 @@
+﻿fixture_id,task_id,fixture_type,caller_expected_evidence_ids,requested_evidence_ids,expected_evidence_ids,returned_evidence_ids,returned_count,exact_match,evidence_contamination,missing_evidence,all_review_status_content_reviewed,all_proposed_use_micro_task_evidence,expected_outcome,passed,description
+ET-MT-BREAK-001,MT-BREAK-001,exact_evidence_match,,,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003"", ""KC-SRC-008-006""]",2,True,False,False,True,True,,,
+ET-MT-BREAK-002,MT-BREAK-002,exact_evidence_match,,,"[""KC-SRC-003-004A"", ""KC-SRC-008-006"", ""KC-SRC-007-002""]","[""KC-SRC-003-004A"", ""KC-SRC-008-006"", ""KC-SRC-007-002""]",3,True,False,False,True,True,,,
+ET-MT-BREAK-003,MT-BREAK-003,exact_evidence_match,,,"[""KC-SRC-003-003""]","[""KC-SRC-003-003""]",1,True,False,False,True,True,,,
+ET-MT-BREAK-004,MT-BREAK-004,exact_evidence_match,,,"[""KC-SRC-008-004""]","[""KC-SRC-008-004""]",1,True,False,False,True,True,,,
+ET-MT-SED-001,MT-SED-001,exact_evidence_match,,,"[""KC-SRC-007-003""]","[""KC-SRC-007-003""]",1,True,False,False,True,True,,,
+ET-MT-SED-002,MT-SED-002,exact_evidence_match,,,"[""KC-SRC-007-003""]","[""KC-SRC-007-003""]",1,True,False,False,True,True,,,
+ET-MT-EYE-001,MT-EYE-001,exact_evidence_match,,,"[""KC-SRC-003-002"", ""KC-SRC-008-008""]","[""KC-SRC-003-002"", ""KC-SRC-008-008""]",2,True,False,False,True,True,,,
+ET-MT-EYE-002,MT-EYE-002,exact_evidence_match,,,"[""KC-SRC-003-002"", ""KC-SRC-008-008""]","[""KC-SRC-003-002"", ""KC-SRC-008-008""]",2,True,False,False,True,True,,,
+ET-MT-EYE-003,MT-EYE-003,exact_evidence_match,,,"[""KC-SRC-003-002""]","[""KC-SRC-003-002""]",1,True,False,False,True,True,,,
+ET-MT-EYE-004,MT-EYE-004,exact_evidence_match,,,"[""KC-SRC-003-002""]","[""KC-SRC-003-002""]",1,True,False,False,True,True,,,
+ET-MT-EYE-005,MT-EYE-005,exact_evidence_match,,,"[""KC-SRC-008-002A""]","[""KC-SRC-008-002A""]",1,True,False,False,True,True,,,
+ET-MT-EYE-006,MT-EYE-006,exact_evidence_match,,,"[""KC-SRC-008-002A""]","[""KC-SRC-008-002A""]",1,True,False,False,True,True,,,
+ET-MT-EYE-007,MT-EYE-007,exact_evidence_match,,,"[""KC-SRC-008-002A""]","[""KC-SRC-008-002A""]",1,True,False,False,True,True,,,
+ET-MT-EYE-008,MT-EYE-008,exact_evidence_match,,,"[""KC-SRC-008-002A""]","[""KC-SRC-008-002A""]",1,True,False,False,True,True,,,
+ET-MT-SLEEP-001,MT-SLEEP-001,exact_evidence_match,,,"[""KC-SRC-001-007"", ""KC-SRC-008-002B""]","[""KC-SRC-001-007"", ""KC-SRC-008-002B""]",2,True,False,False,True,True,,,
+ET-MT-SLEEP-002,MT-SLEEP-002,exact_evidence_match,,,"[""KC-SRC-001-006"", ""KC-SRC-007-004""]","[""KC-SRC-001-006"", ""KC-SRC-007-004""]",2,True,False,False,True,True,,,
+ET-MT-SLEEP-003,MT-SLEEP-003,exact_evidence_match,,,"[""KC-SRC-008-007"", ""KC-SRC-001-006""]","[""KC-SRC-008-007"", ""KC-SRC-001-006""]",2,True,False,False,True,True,,,
+ET-MT-SLEEP-004,MT-SLEEP-004,exact_evidence_match,,,"[""KC-SRC-008-002B"", ""KC-SRC-001-007""]","[""KC-SRC-008-002B"", ""KC-SRC-001-007""]",2,True,False,False,True,True,,,
+ET-MT-SLEEP-005,MT-SLEEP-005,exact_evidence_match,,,"[""KC-SRC-008-002B""]","[""KC-SRC-008-002B""]",1,True,False,False,True,True,,,
+ET-MT-SLEEP-006,MT-SLEEP-006,exact_evidence_match,,,"[""KC-SRC-008-002B""]","[""KC-SRC-008-002B""]",1,True,False,False,True,True,,,
+ET-MT-OUT-001,MT-OUT-001,exact_evidence_match,,,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003"", ""KC-SRC-008-006""]",2,True,False,False,True,True,,,
+ET-MT-REC-001,MT-REC-001,exact_evidence_match,,,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003"", ""KC-SRC-008-006""]",2,True,False,False,True,True,,,
+ET-MT-REC-002,MT-REC-002,exact_evidence_match,,,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003"", ""KC-SRC-008-006""]",2,True,False,False,True,True,,,
+FC-MISSING-001,MT-BREAK-001,fail_closed,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003""]",,"[""KC-SRC-003-003""]",1,,,,,,fail_closed_missing_detected,True,evidence IDs missing from production index should be detected
+FC-INVALID-001,MT-BREAK-001,fail_closed,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]","[""KC-SRC-003-003"", ""KC-SRC-008-006"", ""KC-DOES-NOT-EXIST-999""]",,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]",2,,,,,,fail_closed_contamination_detected,True,non-existent evidence ID should be detected as contamination
+FC-EMPTY-001,MT-BREAK-001,fail_closed,"[""KC-SRC-003-003"", ""KC-SRC-008-006""]",[],,[],0,,,,,,fail_closed_empty_detected,True,empty evidence list should be detected

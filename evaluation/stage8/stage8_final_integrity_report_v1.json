@@ -1,0 +1,21 @@
+{
+  "formal_run_rerun": false,
+  "production_model_calls": 0,
+  "raw_results_sha_unchanged": true,
+  "raw_results_sha256": "906b4ed190594e5db2831e6240180b57b93963408f38750f309eb3922a3ba84d",
+  "formal_executions_unchanged": true,
+  "stage8_gold_unchanged": true,
+  "stage6_safety_gold_unchanged": true,
+  "task_corpus_unchanged": true,
+  "production_modified": false,
+  "production_sources_unchanged": true,
+  "gold_leakage": 0,
+  "cross_system_memory_leakage": 0,
+  "cross_case_leakage": 0,
+  "temporary_profiles_remaining": 0,
+  "temporary_memories_remaining": 0,
+  "soft_preference_reviewer_rows": 33,
+  "human_reviewer_count": 3,
+  "unanimous_consensus": "33/33",
+  "factor_coverage_status": "NOT_EVALUATED_INSUFFICIENT_CAPTURED_DECOMPOSITION"
+}

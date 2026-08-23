@@ -1,0 +1,66 @@
+﻿case_id,gold_factor_position,gold_factor_type,gold_factor_description,agentic_factor_count,agentic_factor_summary,covered,evidence
+AGX-001,1,behavior_need,continuous study needs interruption,4,F1:study_break | F2:sedentary | F3:sleep | F4:light_recovery,true,F1(study_break): 连续用眼需休息
+AGX-001,2,time_constraint,only 10 minutes available,4,F1:study_break | F2:sedentary | F3:sleep | F4:light_recovery,true,F2/F3 subquery time consideration; explanation '当前可用时间较短'
+AGX-001,3,sleep_factor,bedtime in about one hour; avoid prolonging activity,4,F1:study_break | F2:sedentary | F3:sleep | F4:light_recovery,true,F3(sleep): explanation '后续睡眠准备'
+AGX-001,4,soft_preference,explicitly does not want activity; prefers quiet rest,4,F1:study_break | F2:sedentary | F3:sleep | F4:light_recovery,true,F2(sedentary): explanation '倾向安静…无需强体力投入'
+AGX-002,1,behavior_need,continuous writing needs eye relaxation,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:sedentary,true,F2(eye_health): 远眺缓解视疲劳
+AGX-002,2,behavior_need,prolonged sitting needs movement,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:sedentary,true,F3(physical_activity): 起身活动改善循环
+AGX-002,3,time_constraint,available break is 10 minutes,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:sedentary,true,F4: explanation '起身活动10分钟'
+AGX-003,1,behavior_need,screen too close during online class needs distance correction,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,F1(eye_health): 屏幕距离修正
+AGX-003,2,context_constraint,in study space using laptop,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,false,no explicit study-space context in recorded decomposition evidence
+AGX-003,3,time_constraint,only 1 minute before class starts,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,explanation '当前可用时间较短'
+AGX-004,1,behavior_need,prolonged sitting in class needs movement,4,F1:sedentary | F2:physical_activity | F3:physical_activity | F4:physical_activity,true,F1(sedentary): 久坐后需活动
+AGX-004,2,context_constraint,at school during free recess,4,F1:sedentary | F2:physical_activity | F3:physical_activity | F4:physical_activity,true,F2: explanation '课间离座…走出教室'
+AGX-004,3,soft_preference,"wants light movement, no vigorous running",4,F1:sedentary | F2:physical_activity | F3:physical_activity | F4:physical_activity,true,F3/F4: explanation '轻度活动…避免剧烈运动'
+AGX-005,1,behavior_need,prolonged sitting needs interruption,4,F1:physical_activity | F2:study_break | F3:physical_activity | F4:physical_activity,true,F1(physical_activity): 久坐后需轻度活动
+AGX-005,2,memory_preference,positive feedback prefers MT-REC-001 light activity,4,F1:physical_activity | F2:study_break | F3:physical_activity | F4:physical_activity,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-005,3,memory_preference,negative feedback dislikes MT-SED-001 standing task,4,F1:physical_activity | F2:study_break | F3:physical_activity | F4:physical_activity,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-006,1,behavior_need,continuous reading needs interruption,4,F1:sedentary | F2:eye_health | F3:study_break | F4:light_recovery,true,F1(sedentary): 久坐用眼后需休息
+AGX-006,2,safety_constraint,cannot move currently; movement tasks must be excluded,4,F1:sedentary | F2:eye_health | F3:study_break | F4:light_recovery,true,explanation '且无需起身' (cannot_move constraint)
+AGX-006,3,time_constraint,10 minutes available,4,F1:sedentary | F2:eye_health | F3:study_break | F4:light_recovery,true,explanation '休息约10分钟'
+AGX-007,1,behavior_need,reduce bright screen exposure before sleep,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,true,F1(sleep): 夜间减少高亮屏幕暴露
+AGX-007,2,context_constraint,in bed at bedtime,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,true,F1: explanation '已到就寝时间…卧姿'
+AGX-007,3,time_constraint,only 5 minutes before lights-out,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,false,no explicit 5-minute window in recorded decomposition evidence
+AGX-007,4,soft_preference,must finish one quick reply first,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,true,explanation '处理认知任务' (must-finish screen action)
+AGX-008,1,behavior_need,continuous study needs interruption,4,F1:study_break | F2:sleep | F3:light_recovery | F4:sedentary,true,F1(study_break): 连续学习后需休息
+AGX-008,2,sleep_factor,bedtime approaching; avoid stimulating activity,4,F1:study_break | F2:sleep | F3:light_recovery | F4:sedentary,true,F2(sleep): '避免兴奋影响入睡…睡前安静过渡'
+AGX-008,3,memory_preference,explicitly prefers MT-BREAK-001 far-view rest,4,F1:study_break | F2:sleep | F3:light_recovery | F4:sedentary,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-009,1,behavior_need,eye fatigue from close work needs relief,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:light_recovery,true,F2(eye_health): 远眺缓解眼肌紧张
+AGX-009,2,behavior_need,prolonged sitting needs movement,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:light_recovery,true,F3(physical_activity): 轻微活动改善循环
+AGX-009,3,soft_preference,wants a combined rest for eyes and sitting,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:light_recovery,true,F1/F4: explanation '10分钟组合休息' (combined rest)
+AGX-009,4,time_constraint,10 minutes available,4,F1:study_break | F2:eye_health | F3:physical_activity | F4:light_recovery,true,explanation '10分钟组合休息'
+AGX-010,1,behavior_need,screen too close needs distance correction,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,F1(eye_health): 屏幕距离修正
+AGX-010,2,context_constraint,in school computer room,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,explanation '机房环境允许立即微调'
+AGX-010,3,time_constraint,only 1 minute before class,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,explanation '当前可用时间较短'
+AGX-011,1,behavior_need,maintain fixed sleep schedule,4,F1:sleep | F2:sedentary | F3:light_recovery | F4:sleep,true,F1(sleep): 保持规律作息
+AGX-011,2,context_constraint,at usual bedtime in bedroom,4,F1:sleep | F2:sedentary | F3:light_recovery | F4:sleep,true,F1/F4: explanation '已到固定睡觉时间'
+AGX-011,3,memory_preference,found MT-SLEEP-002 helpful before,4,F1:sleep | F2:sedentary | F3:light_recovery | F4:sleep,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-011,4,soft_preference,habitually scrolls phone before bed,4,F1:sleep | F2:sedentary | F3:light_recovery | F4:sleep,true,explanation '刷手机习惯易干扰入睡'
+AGX-012,1,behavior_need,poor lighting harms reading eye health,4,F1:light_recovery | F2:study_break | F3:eye_health | F4:physical_activity,true,F1(light_recovery): 光线暗弱伤眼
+AGX-012,2,context_constraint,evening study at home,4,F1:light_recovery | F2:study_break | F3:eye_health | F4:physical_activity,true,explanation '晚间学习时台灯与顶灯同开'
+AGX-012,3,time_constraint,only 2 minutes to fix setup,4,F1:light_recovery | F2:study_break | F3:eye_health | F4:physical_activity,false,no explicit 2-minute window in recorded decomposition evidence
+AGX-013,1,behavior_need,continuous reading needs interruption,4,F1:study_break | F2:outdoor | F3:physical_activity | F4:eye_health,true,F1(study_break): 连续阅读后休息
+AGX-013,2,context_constraint,outdoor space accessible from home,4,F1:study_break | F2:outdoor | F3:physical_activity | F4:eye_health,true,F2(outdoor): explanation '阳台或楼下均满足户外条件'
+AGX-013,3,memory_preference,positive feedback prefers MT-OUT-001 outdoor rest,4,F1:study_break | F2:outdoor | F3:physical_activity | F4:eye_health,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-014,1,sleep_factor,weekend wake-time deviation from school days,4,F1:sleep | F2:sleep | F3:sleep | F4:sleep,true,F1(sleep): 周末起床时间偏差
+AGX-014,2,context_constraint,weekend at home,4,F1:sleep | F2:sleep | F3:sleep | F4:sleep,true,explanation '周末大幅推迟起床'
+AGX-014,3,soft_preference,wants to sleep in later on weekend,4,F1:sleep | F2:sleep | F3:sleep | F4:sleep,true,explanation '周末大幅推迟起床易扰乱节律' (sleep-in preference)
+AGX-015,1,behavior_need,eye fatigue from close work needs a break,4,F1:eye_health | F2:study_break | F3:light_recovery | F4:outdoor,true,F1(eye_health): 连续用眼视疲劳
+AGX-015,2,memory_preference,negative feedback dislikes far-view-only rest,4,F1:eye_health | F2:study_break | F3:light_recovery | F4:outdoor,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-015,3,soft_preference,wants a rest style that is easy to sustain,4,F1:eye_health | F2:study_break | F3:light_recovery | F4:outdoor,false,no explicit ease-to-sustain preference in recorded decomposition evidence
+AGX-016,1,behavior_need,continuous writing needs a break from close work,4,F1:study_break | F2:physical_activity | F3:outdoor | F4:sedentary,true,F1(study_break): 连续读写后需休息
+AGX-016,2,context_constraint,school recess with outdoor unavailable,4,F1:study_break | F2:physical_activity | F3:outdoor | F4:sedentary,false,no explicit outdoor-unavailable context in recorded decomposition evidence
+AGX-016,3,soft_preference,wants light indoor movement only,4,F1:study_break | F2:physical_activity | F3:outdoor | F4:sedentary,false,no explicit indoor-only movement preference in recorded decomposition evidence
+AGX-017,1,behavior_need,screen too close needs correction before class,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,F1(eye_health): 屏幕距离修正
+AGX-017,2,time_constraint,only 1 minute before class,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,true,explanation '当前可用时间较短'
+AGX-017,3,memory_preference,negative feedback finds MT-EYE-005 unhelpful,4,F1:eye_health | F2:study_break | F3:physical_activity | F4:light_recovery,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-018,1,behavior_need,entertainment sitting needs interruption,4,F1:sedentary | F2:physical_activity | F3:light_recovery | F4:study_break,true,F1(sedentary): 娱乐久坐需中断
+AGX-018,2,time_constraint,10-minute commercial break,4,F1:sedentary | F2:physical_activity | F3:light_recovery | F4:study_break,true,explanation '起身活动约10分钟'
+AGX-018,3,memory_preference,positive feedback enjoys MT-SED-002,4,F1:sedentary | F2:physical_activity | F3:light_recovery | F4:study_break,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"
+AGX-019,1,behavior_need,lying-down reading harms eye health,4,F1:sedentary | F2:eye_health | F3:physical_activity | F4:study_break,true,F2(eye_health): 卧床阅读伤眼
+AGX-019,2,context_constraint,"home, lying in bed",4,F1:sedentary | F2:eye_health | F3:physical_activity | F4:study_break,true,explanation '已躺卧较久…卧床阅读'
+AGX-019,3,soft_preference,wants to continue reading after fixing posture,4,F1:sedentary | F2:eye_health | F3:physical_activity | F4:study_break,true,explanation '先调整为坐姿再继续'
+AGX-020,1,behavior_need,lying screen use near bedtime needs correction,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,true,F1/F3: 临睡卧姿用屏需纠正
+AGX-020,2,sleep_factor,bedtime approaching,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,true,F1/F2(sleep): 高亮屏抑制褪黑素、临睡用屏
+AGX-020,3,time_constraint,5 minutes left to finish the task,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,false,no explicit 5-minute window in recorded decomposition evidence
+AGX-020,4,memory_preference,negative feedback dislikes MT-SLEEP-004 brightness approach,4,F1:sleep | F2:light_recovery | F3:sedentary | F4:study_break,false,"memory_preference hidden from query by design (leakage=0); handled by memory pipeline, not decomposition"

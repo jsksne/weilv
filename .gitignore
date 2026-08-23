@@ -1,0 +1,24 @@
+.env
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+# Frontend dependencies and build output.
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Additional local caches, logs, and temporary artifacts.
+pycache/
+**/pycache/
+*.log
+.tmp_*
+
+# 本地运行时与大文件不进入版本库。
+.runtime/
+data/raw/source_documents/*
+!data/raw/source_documents/README.md
+data/processed/

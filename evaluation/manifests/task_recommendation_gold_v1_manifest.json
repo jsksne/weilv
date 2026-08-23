@@ -1,0 +1,19 @@
+{
+  "manifest_version": "task_recommendation_gold_v1",
+  "created_at": "2026-08-16T12:00:00Z",
+  "dataset_path": "evaluation/datasets/task_recommendation_gold_v1.jsonl",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "gold_sha256": "cd1c3686be08adb576a75adce072270b9c4224a5749c5b064e0fe34a0316d282",
+  "case_count": 24,
+  "task_count": 23,
+  "preferred_judgments": 29,
+  "acceptable_judgments": 17,
+  "invalid_judgments": 506,
+  "reviewer_count": 3,
+  "consensus_case_count": 24,
+  "consensus_reached": true,
+  "input_provenance": "synthetic_constructed",
+  "gold_provenance": "author_and_multi_reviewer_consensus",
+  "task_rankings_seen_before_freeze": false,
+  "recommendation_results_seen_before_freeze": false
+}

@@ -1,0 +1,4 @@
+source,official_url,A_real_humans,B_public_access,C_license_usability,D_longitudinal,E_action_exposure,F_observable_response,G_context,H_user_continuity,I_CF_compatibility,J_weilv_domain_compatibility,total_10,decision,rationale
+HeartSteps V1,https://github.com/klasnja/HeartStepsV1,1,1,1,1,1,1,1,1,0.8,0.4,9.2,USE,"37 analyzed/public adults; repeated randomized walking/antisedentary/no-suggestion decisions with context, ratings and 30-minute steps. Valid for external mechanism validation only; not direct 23-task or youth validation."
+StudentLife 2013,https://studentlife.cs.dartmouth.edu/dataset.html,1,1,0.5,1,0,0,1,1,0.2,0.5,6.2,SECONDARY_ONLY,"48 analyzed students over 10 weeks with rich sensing/EMA and stable IDs, but no recommendation action exposure or attributable response. Explicit standalone dataset license was not found on the official page."
+

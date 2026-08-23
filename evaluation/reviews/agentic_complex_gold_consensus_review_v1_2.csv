@@ -1,0 +1,25 @@
+﻿case_id,case_type,reviewer_A_decision,reviewer_A_notes,reviewer_B_decision,reviewer_B_notes,reviewer_C_decision,reviewer_C_notes,consensus_status,consensus_notes,review_status
+AGX-001,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-002,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-003,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-004,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-005,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-006,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-007,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-008,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-009,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-010,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-011,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-012,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-013,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-014,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-015,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-016,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-017,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-018,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-019,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-020,task,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-021,safety,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-022,safety,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-023,safety,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed
+AGX-024,safety,AGREE,approved per human review gate,AGREE,approved per human review gate,AGREE,approved per human review gate,PASS,"24/24 approved, consensus PASS (Stage 8 ticket)",consensus_reviewed

@@ -1,0 +1,65 @@
+{
+  "classification": "non_formal_engineering_smoke",
+  "case_a": {
+    "status": "allowed",
+    "selected_task_id": "MT-SLEEP-002",
+    "factor_count": 4,
+    "factor_domains": ["study_break", "sleep", "physical_activity", "light_recovery"],
+    "analysis_fallback": false,
+    "memory_hit_count": 0,
+    "guard": {
+      "passed": false,
+      "fallback_used": true,
+      "reason_codes": ["adds_unsupported_quantity", "explanation_too_long"]
+    },
+    "model_calls": {
+      "decomposition": 1,
+      "knowledge_embedding": 4,
+      "knowledge_rerank": 4,
+      "task_embedding": 5,
+      "task_rerank": 1,
+      "memory_embedding": 0,
+      "memory_rerank": 0,
+      "explanation": 1
+    }
+  },
+  "case_b": {
+    "status": "allowed",
+    "selected_task_id": "MT-EYE-003",
+    "factor_count": 4,
+    "safety_reason_codes": ["unstable_context_complex_task_blocked"],
+    "guard": {
+      "passed": false,
+      "fallback_used": true,
+      "reason_codes": ["adds_unsupported_quantity"]
+    }
+  },
+  "case_c": {
+    "status": "allowed",
+    "selected_task_id": "MT-EYE-004",
+    "preferred_task_id": "MT-EYE-004",
+    "preferred_task_delta": 3,
+    "memory_hit_count": 1,
+    "candidate_invariance": true,
+    "base_task_ranking": [
+      "MT-EYE-001", "MT-EYE-004", "MT-EYE-005", "MT-EYE-002", "MT-EYE-007",
+      "MT-EYE-006", "MT-SLEEP-002", "MT-SLEEP-004", "MT-SLEEP-003", "MT-EYE-003",
+      "MT-SLEEP-001", "MT-SLEEP-005", "MT-SLEEP-006", "MT-EYE-008"
+    ],
+    "personal_task_ranking": [
+      "MT-EYE-004", "MT-EYE-001", "MT-EYE-005", "MT-EYE-002", "MT-EYE-007",
+      "MT-EYE-006", "MT-SLEEP-002", "MT-SLEEP-004", "MT-SLEEP-003", "MT-EYE-003",
+      "MT-SLEEP-001", "MT-SLEEP-005", "MT-SLEEP-006", "MT-EYE-008"
+    ],
+    "guard": {
+      "passed": false,
+      "fallback_used": true,
+      "reason_codes": ["adds_unsupported_quantity"]
+    }
+  },
+  "cleanup": {
+    "temporary_profiles_remaining": 0,
+    "temporary_memories_remaining": 0
+  },
+  "claims": "none"
+}

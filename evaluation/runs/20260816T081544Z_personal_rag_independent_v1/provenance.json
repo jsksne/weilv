@@ -1,0 +1,47 @@
+{
+  "run_id": "20260816T081544Z_personal_rag_independent_v1",
+  "created_at": "2026-08-16T08:15:44.952497+00:00",
+  "basic_run_started_at": "2026-08-16T08:15:44.960992+00:00",
+  "profile_dataset_sha256": "4b1fe29d16c27e95d3bf49d714bbb9e11f5e90f6a58f5502dfcd07d7e4bc8c17",
+  "scenario_dataset_sha256": "fcf4032e0f2bc73842573bb9887e9be7db5cf452a8ca6af56a39efd59d6ed34e",
+  "benchmark_matrix_sha256": "426af1ca4d0bf84ffcafdd70f648321c1d025383f6aa9f1811abbc6a0bbd30e3",
+  "preregistration_manifest_sha256": "4c183392f0c32043ee2d330f319f4a6404cc3e5802bb5223b90935b369fef34b",
+  "source_tree_sha256": "7a70ca73909a2473e2de1ec682fe1422a5b83a9118b5c38a3773312068698539",
+  "runner_sha256": "2af088f7fbea6e75801f1802e2d6d9e59ce0ec2ff4875c6e69d3dba47a0de95a",
+  "uv_lock_sha256": "1a2ab2e53b8338d1d33261b5079c9b8e0910dbb025504f55979d543fb229e57a",
+  "git_commit": "unavailable:not-a-git-worktree",
+  "python_version": "3.12.13",
+  "embedding_model": "text-embedding-v4",
+  "embedding_dim": 1024,
+  "task_reranker_model": "qwen3-rerank",
+  "memory_reranker_model": "qwen3-rerank",
+  "personalization_weights": {
+    "prefer_task": 3,
+    "avoid_task": -3
+  },
+  "personalization_clamp": [
+    -5,
+    5
+  ],
+  "tie_break_contract": [
+    "adjusted_rank ASC",
+    "base_rank ASC",
+    "task_id ASC"
+  ],
+  "profiles_modified_after_basic_seen": false,
+  "scenarios_modified_after_basic_seen": false,
+  "gold_modified_after_basic_seen": false,
+  "gold_modified_after_personal_seen": false,
+  "model_call_counts": {
+    "task_embedding": 8,
+    "task_reranker": 8,
+    "qwen_plus": 0,
+    "memory_document_embedding": 12,
+    "memory_query_embedding": 24,
+    "memory_reranker": 24
+  },
+  "cleanup": {
+    "completed": true,
+    "failures": []
+  }
+}

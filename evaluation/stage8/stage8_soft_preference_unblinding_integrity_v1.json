@@ -1,0 +1,13 @@
+{
+  "blinded_review_rows": 33,
+  "mapping_rows": 33,
+  "unblinded_result_rows": 33,
+  "bijection_valid": true,
+  "basic_rows": 11,
+  "personal_rows": 11,
+  "agentic_rows": 11,
+  "review_decisions_unchanged_after_unblinding": true,
+  "system_identity_not_in_reviewer_sheet": true,
+  "private_mapping_not_in_reviewer_package": true,
+  "generated_at": "2026-08-18T05:37:40.963112+00:00"
+}

@@ -1,0 +1,12 @@
+﻿metric,value,ci_lower,ci_upper,n,ci_method
+Valid@1,0.9583333333333334,0.7975777375115778,0.992606734645195,24,wilson_95
+Invalid Recommendation Rate,0.041666666666666664,0.007393265354805112,0.20242226248842232,24,wilson_95
+Preferred@1,0.8333333333333334,0.6414652961213058,0.9332143199927109,24,wilson_95
+All-Valid@3,0.25,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci
+Valid@3,0.5347222222222222,0.41666666666666663,0.6597222222222222,24,case_bootstrap_95_seed_20260816_iterations_10000
+Preferred-in-Top3,0.3958333333333333,0.3055555555555555,0.5069444444444444,24,case_bootstrap_95_seed_20260816_iterations_10000
+No-Task Rate,0.0,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci
+Mean Eligible Candidate Count (before filter),8.833333333333334,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci
+Mean Eligible Candidate Count (after filter),8.791666666666666,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci
+Median Eligible Candidate Count (before filter),11.0,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci
+Median Eligible Candidate Count (after filter),11.0,"(0.0, 0.0)","(0.0, 0.0)",24,not_measured_for_ci

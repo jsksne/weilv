@@ -1,0 +1,24 @@
+{
+  "run_id": "20260816T061751Z_personal_rag_screening_v1",
+  "created_at": "2026-08-16T06:17:51.339583+00:00",
+  "git_commit": "unavailable:not-a-git-worktree",
+  "dataset_name": "personal_rag_screening_v1",
+  "dataset_version": "personal_rag_screening_v1",
+  "dataset_sha256": "e173985aa44288888c8717d1b9ae47ee554dcfbf12000ec92e78d0540df8b66f",
+  "pipeline": "basic_rag_screening",
+  "memory": "off",
+  "personalization": "off",
+  "BM25_RECALL_K": 10,
+  "VECTOR_RECALL_K": 10,
+  "embedding_model": "text-embedding-v4",
+  "embedding_dim": 1024,
+  "reranker_model": "qwen3-rerank",
+  "qwen_plus_used": false,
+  "model_call_counts": {
+    "text_embedding_v4": 24,
+    "qwen3_rerank": 24,
+    "qwen_plus": 0,
+    "memory_retrieval": 0,
+    "personalization": 0
+  }
+}

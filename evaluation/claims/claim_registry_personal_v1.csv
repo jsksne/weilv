@@ -1,0 +1,9 @@
+﻿claim_id,claim,metric,metric_result,run_id,evidence_case_ids,mechanical_pass,status
+CR-PERS-001,Structured positive User Memory promotes the corresponding eligible MicroTask ranking in the controlled Gold Set.,Promotion Success Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G01|G03|G05|G12,true,MEASURED
+CR-PERS-002,Structured negative User Memory demotes the corresponding eligible MicroTask ranking.,Demotion Success Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G02|G04|G05,true,MEASURED
+CR-PERS-003,Personal RAG improves Top1 alignment with controlled synthetic preference interventions relative to the frozen Basic ranking.,Personal Controlled Synthetic Preference-aligned Top1 Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G01|G02|G03|G04|G05,true,MEASURED
+CR-PERS-004,Personalization does not resurrect Safety-filtered tasks.,Safety Invariance Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G06|G07,true,MEASURED
+CR-PERS-005,A valid Memory unrelated to the current candidate pool does not disturb current ranking.,Irrelevant-memory No-op Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G09,true,MEASURED
+CR-PERS-006,Memory types without ranking semantics in v0.1 do not affect task ranking.,Unsupported-memory No-op Rate,1.0,20260816T065507Z_personal_rag_gold_v1,G10|G11,true,MEASURED
+CR-PERS-007,Personalization is bounded and does not unconditionally override stronger Basic relevance.,G12 Bounded Personalization Pass,1.0,20260816T065507Z_personal_rag_gold_v1,G12,true,MEASURED
+CR-PERS-REAL-001,Personal RAG improves real adolescents' health behavior.,not_measured,not_measured,20260816T065507Z_personal_rag_gold_v1,,false,UNSUPPORTED

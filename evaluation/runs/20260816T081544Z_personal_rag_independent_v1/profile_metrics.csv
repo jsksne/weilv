@@ -1,0 +1,7 @@
+﻿profile_id,basic_mean_utility,personal_mean_utility,utility_improvement,wins,ties,losses,run_id
+P01,0.25,0.75,0.5,2,2,0,20260816T081544Z_personal_rag_independent_v1
+P02,-0.25,1,1.25,4,0,0,20260816T081544Z_personal_rag_independent_v1
+P03,-0.25,0.5,0.75,2,2,0,20260816T081544Z_personal_rag_independent_v1
+P04,0.25,0.25,0.0,0,4,0,20260816T081544Z_personal_rag_independent_v1
+P05,0.25,0.25,0.0,0,4,0,20260816T081544Z_personal_rag_independent_v1
+P06,0.25,0.75,0.5,2,2,0,20260816T081544Z_personal_rag_independent_v1

@@ -1,0 +1,12 @@
+{
+  "experiment": "personal_rag_independent_v1",
+  "profiles": 6,
+  "scenarios": 8,
+  "cases": 24,
+  "profile_target_stage_adapter": "junior_high_fixed; not used by memory ranking",
+  "cluster_bootstrap": {
+    "seed": 20260816,
+    "resamples": 10000
+  },
+  "qwen_plus": "off"
+}

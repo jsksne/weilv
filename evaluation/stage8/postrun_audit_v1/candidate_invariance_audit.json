@@ -1,0 +1,8 @@
+{
+  "total_agentic_records": 24,
+  "candidate_invariance_cases": 21,
+  "candidate_invariance_passed": 21,
+  "candidate_invariance_failed_cases": [],
+  "resurrected_filtered_task_count": 0,
+  "method": "safe candidate set before personalization (task_candidate_ids) vs candidate set after personalization (personal_task_ranking), from frozen raw Agentic diagnostics"
+}

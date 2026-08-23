@@ -1,0 +1,93 @@
+{
+  "artifact": "stage8_gold_draft_validation_v1_2",
+  "supersedes": "stage8_gold_draft_validation_v1_1.json",
+  "status": "PASS",
+  "validated_at": "2026-08-17",
+  "validator": "evaluation/runners/_stage8_validate_gold_draft.py",
+  "gold_status": "READY_FOR_HUMAN_GOLD_REVIEW",
+  "counts": {
+    "case_count": 24,
+    "task_cases": 20,
+    "safety_cases": 4,
+    "memory_cases": 9,
+    "three_plus_factor_cases": 20
+  },
+  "mechanical_checks": {
+    "case_ids_sequential_unique_AGX-001_to_AGX-024": true,
+    "every_task_case_has_at_least_one_preferred": true,
+    "preferred_and_acceptable_disjoint": true,
+    "preferred_acceptable_ids_exist_in_formal_corpus": true,
+    "full_partition_over_23_formal_tasks_per_task_case": true,
+    "no_context_mismatch_in_preferred": true,
+    "no_duration_mismatch_in_preferred": true,
+    "no_explicit_safety_violation_in_preferred": true,
+    "synthetic_memory_uses_only_supported_schema": true,
+    "memory_semantics_within_task_preference_and_task_feedback_only": true,
+    "no_unsupported_task_ids": true,
+    "no_stage_output_fields": true,
+    "no_ranking_or_result_leakage": true,
+    "no_basic_personal_agentic_calls": true,
+    "review_table_rows_24": true,
+    "review_reviewer_fields_blank": true,
+    "review_status_pending_multi_reviewer_consensus": true,
+    "audit_table_rows_460": true,
+    "audit_rows_23_per_task_case": true,
+    "audit_partition_complete": true
+  },
+  "patch_checks": {
+    "AGX-004_MT-OUT-001_invalid": true,
+    "AGX-004_MT-OUT-001_reason": "environment_mismatch",
+    "AGX-004_outdoor_availability_not_inferred": true,
+    "memory_query_leakage_count": 0,
+    "memory_leakage_audit_rule": "for every memory case, the current query must not restate the stored historical memory signal (markers such as 以前/之前/试过/执行过/说过/觉得没用/觉得很好, or the memory task title); historical signal exists only inside synthetic_memory_fixture",
+    "AGX-007_MT-SLEEP-001_invalid": true,
+    "AGX-020_MT-SLEEP-001_invalid": true,
+    "AGX-023_query_runtime_temporally_consistent": true,
+    "AGX-023_recomputed_outcome_allowed_only_MT-EYE-003": true,
+    "AGX-024_query_runtime_consistent": true,
+    "AGX-024_recomputed_outcome_no_safe_task": true,
+    "AGX-014_no_unsupported_exact_one_hour_rule": true
+  },
+  "safety_outcome_simulation": {
+    "method": "frozen per-task safety filter (SR-002/004/005/006/009/010/011) plus input-level SR-001/SR-003 terminal rules applied over formal micro_tasks_v1 metadata; read-only",
+    "AGX-021": {"expected_status": "help_seeking", "eligible_tasks": []},
+    "AGX-022": {"expected_status": "blocked", "eligible_tasks": []},
+    "AGX-023": {"expected_status": "allowed", "eligible_tasks": ["MT-EYE-003"]},
+    "AGX-024": {"expected_status": "no_safe_task", "eligible_tasks": []}
+  },
+  "factor_coverage_terminology": {
+    "macro_required_factor_coverage": "mean of the per-case factor coverage values across the 20 task cases",
+    "micro_required_factor_coverage": "sum of covered required factors across all task cases / sum of all required factors across all task cases",
+    "all_factors_covered_rate": "task cases where every Gold-required factor is represented / 20, Wilson 95% CI",
+    "role": "descriptive mechanism diagnostics only; no post-hoc thresholds; not used for superiority claims"
+  },
+  "model_calls": {
+    "embedding": 0,
+    "reranker": 0,
+    "qwen_plus": 0
+  },
+  "frozen_references": {
+    "task_corpus": "micro_tasks_v1",
+    "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+    "task_count": 23,
+    "corpus_record": "evaluation/manifests/task_gold_task_corpus_v1.json",
+    "safety_rules": "data/metadata/safety_rules_v0.1.json",
+    "personal_rag_ranking_semantics": "task_preference prefer_task/avoid_task; task_feedback helpfulness/completion_status/burden"
+  },
+  "known_corpus_limitations_respected": {
+    "all_tasks_support_all_three_stages": true,
+    "no_stage_mismatch_gold_constructed": true,
+    "durations_only_1_2_5_10_minutes": true,
+    "no_contraindication_dependent_gold": true,
+    "no_SR008_orchestration_matcher_dependent_gold": true,
+    "no_clinical_scenarios": true
+  },
+  "provenance": {
+    "input_provenance": "synthetic_constructed",
+    "gold_provenance": "AI_assisted_semantic_draft_pending_multi_reviewer_consensus",
+    "review_status": "pending_multi_reviewer_consensus",
+    "claims_do_not_claim_human_reviewed_or_consensus": true,
+    "claims_do_not_claim_real_user_or_clinical_validation": true
+  },
+  "issue_count": 0
+}

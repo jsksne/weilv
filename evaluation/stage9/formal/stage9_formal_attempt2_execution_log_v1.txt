@@ -1,0 +1,19 @@
+STAGE 9 FORMAL ATTEMPT #2 — EXACT EXECUTION LOG (stdout/stderr)
+command: $env:PYTHONPATH=(Get-Location).Path; .venv\Scripts\python.exe evaluation/stage9/run_stage9_external_cf.py --formal --no-download
+start: 2026-08-19T10:34:47Z   end: 2026-08-19T10:35:27Z   exit code: 0
+
+[runner] integrity gates: {
+  "heartsteps_hashes": "PASS",
+  "duplicates": 0,
+  "users": 37,
+  "raw_rows": 8274,
+  "final_rows": 5905
+}
+{
+  "run_dir": "evaluation\\runs\\20260819T103447Z_stage9_formal",
+  "primary_status": "EVALUATED",
+  "claim": {
+    "CR-CF-001": "UNSUPPORTED",
+    "reason": "bootstrap_ci_lower_not_greater_than_zero"
+  }
+}

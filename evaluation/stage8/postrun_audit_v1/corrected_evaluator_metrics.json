@@ -1,0 +1,78 @@
+{
+  "primary_results_unchanged": {
+    "basic_gold_utility_at_1": 1.3,
+    "personal_gold_utility_at_1": 1.45,
+    "agentic_gold_utility_at_1": 1.5,
+    "agentic_minus_personal_mean_delta": 0.05,
+    "wins": 1,
+    "ties": 19,
+    "losses": 0,
+    "winning_case_ids": [
+      "AGX-006"
+    ]
+  },
+  "soft_preference_alignment": {
+    "applicable_cases": 11,
+    "rows": 33,
+    "mechanically_scored_rows": 18,
+    "mechanical_alignment_true": 12,
+    "mechanical_alignment_false": 6,
+    "human_review_required_rows": 15,
+    "previous_11_of_11": "PROVISIONAL_NOT_VALIDATED"
+  },
+  "soft_preference_alignment_previous_11_of_11": "PROVISIONAL_NOT_VALIDATED",
+  "guard": {
+    "basic": {
+      "output_guard_pass_count": 15,
+      "guard_fallback_count": 6,
+      "unsafe_leakage_count": 0,
+      "unsafe_leakage_case_ids": [],
+      "corroborated_other_task_mention_count": 0
+    },
+    "personal": {
+      "output_guard_pass_count": 15,
+      "guard_fallback_count": 6,
+      "unsafe_leakage_count": 0,
+      "unsafe_leakage_case_ids": [],
+      "corroborated_other_task_mention_count": 0
+    },
+    "agentic": {
+      "output_guard_pass_count": 21,
+      "guard_fallback_count": 0,
+      "unsafe_leakage_count": 0,
+      "unsafe_leakage_case_ids": [],
+      "corroborated_other_task_mention_count": 0
+    }
+  },
+  "safety": {
+    "combined_12_execution_unsafe_escape_rate": 0.0,
+    "combined_denominator": 12,
+    "agentic_only_unsafe_escape_count": 0,
+    "agentic_only_denominator": 4,
+    "false_block_count": 0
+  },
+  "factor_coverage": {
+    "macro_required_factor_coverage": 0.75,
+    "micro_required_factor_coverage": 0.7538461538461538,
+    "all_factors_covered_rate": 0.4,
+    "status": "PROVISIONAL_NOT_HUMAN_VALIDATED",
+    "note": "previous values were produced by AI/hardcoded judgment; superseded by evaluation/reviews/stage8_agentic_factor_coverage_human_review_v1.csv (65 rows, reviewer fields blank, pending 3-reviewer consensus)"
+  },
+  "evidence": {
+    "matcher_bug": "previous matcher used TASK_ID_PATTERN (MT-[A-Z]+-\\d{3}) with a startswith('KC-') guard, which can never match any KC-* id; the KC-* explanation check was dead code. Corrected to KC_ID_PATTERN = re.compile(r'KC-[A-Za-z0-9_-]+').",
+    "unexpected_KC_reference_count": 0,
+    "unexpected_KC_references": [],
+    "sources_mismatch_count": 0,
+    "sources_mismatch_cases": [],
+    "method": "scan served explanations for KC-* ids not in the selected task's frozen evidence_chunk_ids; verify sources == frozen evidence ids"
+  },
+  "candidate_invariance": {
+    "total_agentic_records": 24,
+    "candidate_invariance_cases": 21,
+    "candidate_invariance_passed": 21,
+    "candidate_invariance_failed_cases": [],
+    "resurrected_filtered_task_count": 0,
+    "method": "safe candidate set before personalization (task_candidate_ids) vs candidate set after personalization (personal_task_ranking), from frozen raw Agentic diagnostics"
+  },
+  "generated_at": "2026-08-18T02:59:27.300600+00:00"
+}

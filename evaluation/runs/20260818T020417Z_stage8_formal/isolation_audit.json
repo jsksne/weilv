@@ -1,0 +1,8 @@
+{
+  "cross_system_memory_leakage": 0,
+  "cross_case_memory_leakage": 0,
+  "cross_system_profile_leakage": 0,
+  "cross_case_profile_leakage": 0,
+  "leaks_found": [],
+  "method": "per isolated user, every visible memory must be one of the injected fixture memory ids for that same user"
+}

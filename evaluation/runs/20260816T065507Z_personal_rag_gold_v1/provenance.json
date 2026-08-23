@@ -1,0 +1,51 @@
+{
+  "run_id": "20260816T065507Z_personal_rag_gold_v1",
+  "created_at": "2026-08-16T06:55:07.775601+00:00",
+  "git_commit": "unavailable:not-a-git-worktree",
+  "source_tree_sha256": "3c38acbd188780402bbe03128cf93e62383b522d55ef379ed3cff9511dfcd754",
+  "gold_dataset_sha256": "92e2b7df9e4e9a447647a2f855e9c8a7ffdfa4275a01cb4361e08ea1eb86997c",
+  "baseline_results_sha256": "8c8dd2888be720b22ce6dc39f915e0f6e52297ef8f6412d12e740aaf73a52bec",
+  "runner_sha256": "1bab0d3444aeb77f0a544699195939ad5e2e5f065425f3560016655993060445",
+  "uv_lock_sha256": "1a2ab2e53b8338d1d33261b5079c9b8e0910dbb025504f55979d543fb229e57a",
+  "python_version": "3.12.13",
+  "dataset_version": "personal_rag_gold_v1",
+  "baseline_run_id": "20260816T061751Z_personal_rag_screening_v1",
+  "baseline_dataset_sha256": "e173985aa44288888c8717d1b9ae47ee554dcfbf12000ec92e78d0540df8b66f",
+  "embedding_model": "text-embedding-v4",
+  "embedding_dim": 1024,
+  "memory_reranker_model": "qwen3-rerank",
+  "personalization_weights": {
+    "prefer_task": 3,
+    "avoid_task": -3,
+    "helpfulness_gte_4": 2,
+    "completed": 1,
+    "easy": 1,
+    "helpfulness_lte_2": -2,
+    "skipped": -1,
+    "hard": -1
+  },
+  "personalization_clamp": [
+    -5,
+    5
+  ],
+  "tie_break_contract": [
+    "adjusted_rank ASC",
+    "base_rank ASC",
+    "task_id ASC"
+  ],
+  "model_call_counts": {
+    "memory_document_embedding": 13,
+    "memory_query_embedding": 12,
+    "memory_embedding": 25,
+    "memory_reranker": 12,
+    "task_embedding": 0,
+    "task_reranker": 0,
+    "qwen_plus": 0
+  },
+  "gold_modified_after_personal_results_seen": false,
+  "baseline_modified": false,
+  "cleanup": {
+    "completed": true,
+    "failures": []
+  }
+}

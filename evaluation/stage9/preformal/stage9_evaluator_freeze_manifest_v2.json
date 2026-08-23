@@ -1,0 +1,112 @@
+{
+  "manifest_id": "stage9_evaluator_freeze_manifest_v2",
+  "schema_version": "1.1",
+  "supersedes": "stage9_evaluator_freeze_manifest_v1",
+  "refrozen_at": "2026-08-19",
+  "purpose": "refresh the Stage 9B freeze after the Stage 9B.1 fail-closed product adapter repair; the product adapter and its adapter tests changed, so the v1 manifest can no longer be treated as the current complete freeze",
+  "reason_for_refreeze": "Stage 9B.1 fail-closed product adapter repair after independent preformal audit",
+  "formal_mode_executed": false,
+  "formal_results_computed": false,
+  "changed_since_v1": [
+    "product/collaborative_ranking.py",
+    "product/tests/test_collaborative_ranking.py"
+  ],
+  "files": {
+    "evaluator/preprocess_heartsteps_v1.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\preprocess_heartsteps_v1.py",
+      "sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4",
+      "unchanged_vs_v1": true
+    },
+    "evaluator/run_stage9_external_cf.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\run_stage9_external_cf.py",
+      "sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+      "unchanged_vs_v1": true
+    },
+    "evaluator/_stage9b_preflight.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\runners\\_stage9b_preflight.py",
+      "sha256": "9937defb49cb005b5ae8fd42e0ea945427c171baecfc674c3c5e46ec076455d4",
+      "unchanged_vs_v1": true
+    },
+    "evaluator/_stage9b_preformal_bundle.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\runners\\_stage9b_preformal_bundle.py",
+      "sha256": "32703b92c65de5a389809e0d4bd5b1cc4f23bca61360cb561153f7224263c0de",
+      "unchanged_vs_v1": true
+    },
+    "product/collaborative_ranking.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\src\\weilv\\collaborative_ranking.py",
+      "sha256": "bafbb13958f3d45ecc7b4269680375fe5e5ab754f6ac3ccd03f9f2a5f85281bf",
+      "unchanged_vs_v1": false,
+      "v1_sha256": "71f8b67ae3e0a661894d44e50b887c3b4676a2b3f1c28e524eef92a52665c835",
+      "note": "Stage 9B.1 fail-closed repair (audit F-001/F-002)"
+    },
+    "methodology/stage9_metric_preregistration_v1_1.json": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\manifests\\stage9_metric_preregistration_v1_1.json",
+      "sha256": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d",
+      "unchanged_vs_v1": true
+    },
+    "methodology/stage9_methodology_decision_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_methodology_decision_v1_1.md",
+      "sha256": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6",
+      "unchanged_vs_v1": true
+    },
+    "methodology/stage9_implementation_contract_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_implementation_contract_v1_1.md",
+      "sha256": "47618931b55508d5cf5a7cc1748a9073a834198806b099aa84a7f4752e2156fb",
+      "unchanged_vs_v1": true
+    },
+    "methodology/stage9_safety_integration_contract_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_safety_integration_contract_v1_1.md",
+      "sha256": "281c497e4c1b7d6f97eaea03678fd686312e63d7c158ec0e1bbf6e1e19054282",
+      "unchanged_vs_v1": true
+    },
+    "methodology/claim_registry_cf_draft_v1_1.csv": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\claims\\claim_registry_cf_draft_v1_1.csv",
+      "sha256": "7ba6e7112ac1e4c061eb541ba47fd093517bc280337d870ef849ebd5e1fa3582",
+      "unchanged_vs_v1": true
+    },
+    "evaluator/tests/test_stage9_heartsteps_preprocessing.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_stage9_heartsteps_preprocessing.py",
+      "sha256": "67049fa49f38ec8b99ad938d5d5fa79ee9df4153de6b98d7af7a1ab6a5dbf612",
+      "unchanged_vs_v1": true
+    },
+    "evaluator/tests/test_stage9_external_cf.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_stage9_external_cf.py",
+      "sha256": "a1f10ac3baa8d43e9565427f541ba544a70a1d251b4dad4b2fae7ad3a1c969b8",
+      "unchanged_vs_v1": true
+    },
+    "product/tests/test_collaborative_ranking.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_collaborative_ranking.py",
+      "sha256": "51411379f450ef1dc92046590aad913d42620c27a771938f7d24a828721df8c1",
+      "unchanged_vs_v1": false,
+      "v1_sha256": "878985323026f42a3d67f6059933f7ad48d5b3399a33a1e17e7203175c9dfa1b",
+      "note": "Stage 9B.1 regression tests added (audit F-001/F-002)"
+    },
+    "product/tests/conftest.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\conftest.py",
+      "sha256": "af9f84c4d8eed1c74daaecccf77fc5610830d7de90bc7ebd2390b79f198321ea",
+      "unchanged_vs_v1": true
+    }
+  },
+  "methodology_manifest_sha256": {
+    "metric_preregistration": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d",
+    "methodology_decision": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6"
+  },
+  "methodology_reference": {
+    "metric_preregistration": "stage9_metric_preregistration_v1_1.json",
+    "methodology_decision": "stage9_methodology_decision_v1_1.md",
+    "implementation_contract": "stage9_implementation_contract_v1_1.md",
+    "safety_contract": "stage9_safety_integration_contract_v1_1.md",
+    "claim_registry": "claim_registry_cf_draft_v1_1.csv"
+  },
+  "heartsteps_source": {
+    "name": "HeartSteps V1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477",
+    "hashes": {
+      "users.csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+      "suggestions.csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+      "gfsteps.csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+      "jbsteps.csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3"
+    }
+  },
+  "interpretation_label": "ONE-STEP CONTEXTUAL OFF-POLICY VALUE UNDER THE RANDOMIZED LOGGED-HISTORY DISTRIBUTION; not 35-day deployment value, not long-term efficacy, not causal 微律 CF value, not youth effectiveness"
+}

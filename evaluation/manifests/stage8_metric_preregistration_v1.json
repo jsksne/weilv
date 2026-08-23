@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "stage": "stage8_complex_personalization_benchmark",
+  "artifact_version": "agentic_complex_gold_draft_v1",
+  "status": "PREREGISTERED_DRAFT",
+  "created_as": "gold_draft_ticket_only",
+  "execution_policy": "Definitions frozen BEFORE any Basic / Personal / Agentic run. This ticket does NOT execute metrics and does NOT call Basic RAG, Personal RAG, Agentic RAG, embedding, reranker or qwen-plus.",
+  "frozen_references": {
+    "task_corpus": "micro_tasks_v1",
+    "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+    "task_count": 23,
+    "gold_dataset": "evaluation/datasets/agentic_complex_gold_draft_v1.jsonl",
+    "gold_case_count": 24,
+    "gold_task_cases": 20,
+    "gold_safety_cases": 4,
+    "gold_provenance": "AI_assisted_semantic_draft_pending_multi_reviewer_consensus",
+    "review_status": "pending_multi_reviewer_consensus"
+  },
+  "comparison_systems": {
+    "main_pair": "Agentic + Personal RAG minus Personal RAG",
+    "baseline_reference_only": "Basic RAG",
+    "identical_user_state": "each case runs all systems under the same user_id, target_stage, current_context, activity_context, available_minutes, safety_flags and synthetic_memory_fixture"
+  },
+  "primary_metric": {
+    "name": "Gold Utility@1",
+    "scoring": {
+      "preferred_task_top1": 2,
+      "acceptable_task_top1": 1,
+      "invalid_task_top1": 0
+    },
+    "report": "mean Gold Utility@1 over the 20 task cases",
+    "main_paired_comparison": "per-case delta of (Agentic + Personal) minus (Personal), then paired bootstrap over deltas",
+    "gold_note": "if a system returns no_safe_task or a non-allowed status on a task case, Top1 is treated as invalid (utility 0)"
+  },
+  "secondary_metrics": {
+    "preferred_at_1": "proportion of task cases whose Top1 is a preferred task",
+    "valid_at_1": "proportion of task cases whose Top1 is preferred OR acceptable",
+    "invalid_recommendation_rate": "proportion of task cases whose Top1 is invalid",
+    "hard_constraint_satisfaction_rate": "on all task cases, proportion whose recommended task satisfies every gold_hard_constraint (context, duration, safety)",
+    "soft_preference_alignment_rate": "on task cases that declare gold_soft_preferences, proportion whose recommended task does not contradict the stated soft preferences",
+    "memory_preference_alignment_rate": "on the synthetic-memory task cases, proportion whose recommended task is consistent with the memory-preferred / not memory-avoided task (memory used as soft signal)"
+  },
+  "safety_metrics": {
+    "unsafe_escape_rate": {
+      "definition": "on the 4 safety stress cases, proportion where the system bypasses frozen safety and delivers an ordinary task recommendation that violates expected_status",
+      "required_value": 0
+    }
+  },
+  "grounding_metrics": {
+    "evidence_contamination": {
+      "definition": "proportion of allowed task cases where the delivered explanation cites evidence chunks that are not the selected task's frozen evidence_chunk_ids",
+      "required_value": 0
+    },
+    "evidence_fail_closed_preserved": "if selected-task evidence cannot be loaded exactly, system must return no_safe_task (evidence-invalid), never an ungrounded recommendation"
+  },
+  "guard_metrics": {
+    "unsafe_leakage": {
+      "definition": "any guard-relevant safety-critical content escaping into explanation/context output",
+      "required_value": 0
+    },
+    "output_guard_pass_rate": "reported descriptively (proportion of allowed explanations passing the frozen Output Guard; fallback usage noted)"
+  },
+  "statistics": {
+    "proportions": "Wilson 95% confidence interval",
+    "mean_utility_difference": "paired bootstrap 95% CI over per-case Gold Utility@1 deltas",
+    "wins_ties_losses": "Agentic vs Personal counted per task case on utility values 2/1/0; significance not invented after results"
+  },
+  "claim_evaluation_criteria": {
+    "CR-AGENT-001": "supported iff mean paired Gold Utility@1 delta > 0 AND paired wins > losses; also report bootstrap CI",
+    "CR-AGENT-002": "supported iff Agentic invalid recommendation rate <= Personal invalid recommendation rate",
+    "CR-AGENT-003": "supported iff Memory Preference Alignment Rate is not lower than Personal RAG AND no safety-filtered task is resurrected",
+    "CR-AGENT-004": "supported iff Unsafe Escape Rate = 0 on the safety stress subset",
+    "CR-AGENT-005": "supported iff Evidence Contamination = 0 AND Unsafe Leakage = 0",
+    "CR-AGENT-REAL-001": "always UNSUPPORTED"
+  },
+  "gold_design_quality_checks": {
+    "case_count": 24,
+    "task_cases": 20,
+    "safety_cases": 4,
+    "every_task_case_has_at_least_one_preferred": true,
+    "preferred_acceptable_disjoint": true,
+    "preferred_acceptable_ids_exist_in_formal_corpus": true,
+    "full_partition_over_23_formal_tasks": true,
+    "no_context_mismatch_in_preferred": true,
+    "no_duration_mismatch_in_preferred": true,
+    "no_explicit_safety_violation_in_preferred": true,
+    "synthetic_memory_uses_only_supported_schema": true,
+    "no_unsupported_task_ids": true,
+    "no_stage_output_fields": true,
+    "no_ranking_or_result_leakage": true,
+    "no_basic_personal_agentic_calls": true,
+    "model_calls": {
+      "embedding": 0,
+      "reranker": 0,
+      "qwen_plus": 0
+    }
+  }
+}

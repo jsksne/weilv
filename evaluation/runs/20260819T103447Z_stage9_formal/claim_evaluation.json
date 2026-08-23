@@ -1,0 +1,27 @@
+{
+  "claim_id": "CR-CF-001",
+  "status": "UNSUPPORTED",
+  "reason": "bootstrap_ci_lower_not_greater_than_zero",
+  "policies": {
+    "comparator": "EXTERNAL_PERSONAL_HISTORY",
+    "method": "EXTERNAL_PERSONAL_PLUS_CF",
+    "note": "EXTERNAL personal means HeartSteps target-user history, NOT 微律 Personal RAG."
+  },
+  "delta_v": 0.010054412642364471,
+  "bootstrap": {
+    "mean": 0.010054412642364471,
+    "ci_lower": -0.08176908093327724,
+    "ci_upper": 0.09949781128525453,
+    "replicates": 10000,
+    "seed": 20260818
+  },
+  "zero_support_users": [],
+  "evaluable": true,
+  "interpretation": "ONE-STEP CONTEXTUAL OFF-POLICY VALUE UNDER THE RANDOMIZED LOGGED-HISTORY DISTRIBUTION",
+  "not_proof_of": [
+    "35-day deployment value",
+    "long-term intervention efficacy",
+    "causal value of deploying weilv CF",
+    "youth effectiveness"
+  ]
+}

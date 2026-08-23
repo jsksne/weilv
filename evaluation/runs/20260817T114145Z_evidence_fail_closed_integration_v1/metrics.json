@@ -1,0 +1,14 @@
+{
+  "fixtures_total": 5,
+  "fail_closed_fixtures": 4,
+  "fail_closed_all_passed": true,
+  "positive_control_passed": true,
+  "qwen_plus_not_called_on_fail_closed_paths": true,
+  "model_call_counts": {
+    "text_embedding_v4": 0,
+    "qwen3_rerank": 0,
+    "qwen_plus": 0
+  },
+  "production_path_invoked": "weilv.basic_rag._finalize_selected_task",
+  "cr_evid_002_status": "SUPPORTED"
+}

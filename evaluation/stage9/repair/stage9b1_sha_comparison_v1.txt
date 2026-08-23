@@ -1,0 +1,26 @@
+Stage 9B.1 SHA comparison report v1 (post-repair)
+Generated: 2026-08-19
+
+External evaluator (must be UNCHANGED):
+evaluation/stage9/preprocess_heartsteps_v1.py
+  frozen v1 : 69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4
+  current   : 69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4
+  status    : UNCHANGED
+
+evaluation/stage9/run_stage9_external_cf.py
+  frozen v1 : 99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714
+  current   : 99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714
+  status    : UNCHANGED
+
+Expected changes (repair):
+src/weilv/collaborative_ranking.py
+  frozen v1 : 71f8b67ae3e0a661894d44e50b887c3b4676a2b3f1c28e524eef92a52665c835
+  current   : bafbb13958f3d45ecc7b4269680375fe5e5ab754f6ac3ccd03f9f2a5f85281bf
+  status    : CHANGED (Stage 9B.1 fail-closed repair, audit F-001/F-002)
+
+tests/test_collaborative_ranking.py
+  frozen v1 : 878985323026f42a3d67f6059933f7ad48d5b3399a33a1e17e7203175c9dfa1b
+  current   : 51411379f450ef1dc92046590aad913d42620c27a771938f7d24a828721df8c1
+  status    : CHANGED (Stage 9B.1 regression tests added)
+
+All other files in stage9_evaluator_freeze_manifest_v2: UNCHANGED vs v1.

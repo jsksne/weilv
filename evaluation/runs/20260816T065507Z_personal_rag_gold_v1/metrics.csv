@@ -1,0 +1,15 @@
+﻿metric_name,numerator,denominator,value,applicable_case_ids,run_id
+Promotion Success Rate,4,4,1.0,G01|G03|G05|G12,20260816T065507Z_personal_rag_gold_v1
+Demotion Success Rate,3,3,1.0,G02|G04|G05,20260816T065507Z_personal_rag_gold_v1
+Basic Controlled Synthetic Preference-aligned Top1 Rate,0,5,0.0,G01|G02|G03|G04|G05,20260816T065507Z_personal_rag_gold_v1
+Personal Controlled Synthetic Preference-aligned Top1 Rate,5,5,1.0,G01|G02|G03|G04|G05,20260816T065507Z_personal_rag_gold_v1
+Mean Promotion Rank Gain,6,4,1.5,G01|G03|G05|G12,20260816T065507Z_personal_rag_gold_v1
+Median Promotion Rank Gain,6,4,1.0,G01|G03|G05|G12,20260816T065507Z_personal_rag_gold_v1
+Mean Demotion Rank Change,8,3,2.6666666666666665,G02|G04|G05,20260816T065507Z_personal_rag_gold_v1
+Median Demotion Rank Change,8,3,3,G02|G04|G05,20260816T065507Z_personal_rag_gold_v1
+Safety Invariance Rate,2,2,1.0,G06|G07,20260816T065507Z_personal_rag_gold_v1
+Context Non-resurrection Rate,1,1,1.0,G08,20260816T065507Z_personal_rag_gold_v1
+Irrelevant-memory No-op Rate,1,1,1.0,G09,20260816T065507Z_personal_rag_gold_v1
+Unsupported-memory No-op Rate,2,2,1.0,G10|G11,20260816T065507Z_personal_rag_gold_v1
+Candidate-set Invariance Rate,12,12,1.0,G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12,20260816T065507Z_personal_rag_gold_v1
+G12 Bounded Personalization Pass,1,1,1.0,G12,20260816T065507Z_personal_rag_gold_v1

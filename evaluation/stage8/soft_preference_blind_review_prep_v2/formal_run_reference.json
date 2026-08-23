@@ -1,0 +1,9 @@
+{
+  "original_frozen_run_id": "20260818T020417Z_stage8_formal",
+  "raw_results_sha256": "906b4ed190594e5db2831e6240180b57b93963408f38750f309eb3922a3ba84d",
+  "gold_dataset": "agentic_complex_gold_frozen_v1_2.jsonl",
+  "source_rows": 33,
+  "blinding_seed": 20260818,
+  "private_mapping_path": "evaluation/reviews/private/stage8_soft_preference_blind_mapping_v2.csv",
+  "note": "system-blinded soft preference human review prep; derived artifacts only; no production rerun"
+}

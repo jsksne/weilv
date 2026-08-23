@@ -1,0 +1,10 @@
+{
+  "dataset_version": "personal_rag_gold_v1",
+  "baseline_run_id": "20260816T061751Z_personal_rag_screening_v1",
+  "baseline_results_path": "evaluation/runs/20260816T061751Z_personal_rag_screening_v1/per_case_results.jsonl",
+  "task_retrieval": "off",
+  "task_reranker": "off",
+  "qwen_plus": "off",
+  "memory_retrieval": "production",
+  "personalization": "production"
+}

@@ -1,0 +1,43 @@
+{
+  "run_id": "20260816T094822Z_retrieval_ablation_v1",
+  "created_at": "2026-08-16T09:48:22.000007+00:00",
+  "gold_sha256": "2fb07424641826c98f2c722e3e13dedf5a95c12fccad726fa32ddb9f3f9599b0",
+  "corpus_sha256": "e04e27a27175211d32c57f36b715bc19faf45ca6be7ccd8e993a86a668392938",
+  "source_tree_sha256": "fee6ba11a712bd4bb8db4b293f611bed460a833797acd6af891c06ff2eeac072",
+  "runner_sha256": "971f56974be07c90a83b3e5350ccca28acc5a424126e0693ef221e3d2648390b",
+  "uv_lock_sha256": "1a2ab2e53b8338d1d33261b5079c9b8e0910dbb025504f55979d543fb229e57a",
+  "git_commit": "unavailable:not-a-git-worktree",
+  "python_version": "3.12.13",
+  "BM25_RECALL_K": 10,
+  "VECTOR_RECALL_K": 10,
+  "embedding_model": "text-embedding-v4",
+  "embedding_dim": 1024,
+  "vector_similarity": "cosine",
+  "reranker_model": "qwen3-rerank",
+  "RRF_K": 60,
+  "RRF_semantics": "evaluation_only_not_production_ranking",
+  "RRF_evaluation_only": true,
+  "RRF_production_ranking_semantics": false,
+  "model_call_counts": {
+    "text_embedding_v4": 24,
+    "qwen3_rerank": 24,
+    "qwen_plus": 0
+  },
+  "cases_executed": 24,
+  "failed_cases": 0,
+  "index_snapshot": {
+    "index": "health_knowledge_v1",
+    "filtered_chunk_count": 27,
+    "id_set_matches_frozen_corpus": true,
+    "content_and_metadata_match": true,
+    "embedding_model": "text-embedding-v4",
+    "embedding_dim": 1024
+  },
+  "latency_not_for_primary_claim": true,
+  "warmup_performed": false,
+  "gold_modified_after_results_seen": false,
+  "corpus_modified": false,
+  "production_semantics_modified": false,
+  "rrf_added_to_production": false,
+  "qwen_plus_executed": false
+}

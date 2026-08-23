@@ -1,0 +1,73 @@
+{
+  "manifest_id": "stage9_formal_run",
+  "generated_at": "2026-08-19T10:35:27.619230+00:00",
+  "mode": "FORMAL",
+  "source": {
+    "name": "HeartSteps V1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477"
+  },
+  "hashes": {
+    "users.csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+    "suggestions.csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+    "gfsteps.csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+    "jbsteps.csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3"
+  },
+  "policies": {
+    "comparator": "EXTERNAL_PERSONAL_HISTORY",
+    "method": "EXTERNAL_PERSONAL_PLUS_CF",
+    "note": "EXTERNAL personal means HeartSteps target-user history, NOT 微律 Personal RAG."
+  },
+  "interpretation": "ONE-STEP CONTEXTUAL OFF-POLICY VALUE UNDER THE RANDOMIZED LOGGED-HISTORY DISTRIBUTION",
+  "constants": {
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260818,
+    "shrinkage_denom": 10.0,
+    "min_common_cells": 3,
+    "max_neighbors": 5,
+    "min_contributors": 3,
+    "assignment_probabilities": {
+      "none": 0.4,
+      "walking": 0.3,
+      "antisedentary": 0.3
+    },
+    "score_tie_order": [
+      "none",
+      "antisedentary",
+      "walking"
+    ],
+    "target_adaptation_days": [
+      1,
+      7
+    ],
+    "target_test_days": [
+      8,
+      42
+    ]
+  },
+  "integrity_gates": {
+    "heartsteps_hashes": "PASS",
+    "duplicates": 0,
+    "users": 37,
+    "raw_rows": 8274,
+    "final_rows": 5905,
+    "schema_ok": true
+  },
+  "leakage_violations": {
+    "held_out_user_in_source": 0,
+    "future_target_history": 0,
+    "future_source_rows": 0,
+    "post_response_features": 0
+  },
+  "preregistration_amendments": [
+    {
+      "amendment": "AM-001",
+      "title": "is.randomized SNIPS scope",
+      "decision": "The released field is.randomized is a required nonblank OPERATIONAL/data-quality field per the frozen v1.1 ticket; it is never used as an inclusion filter (the randomized action space at an eligible available decision point is none/walking/antisedentary with p=0.4/0.3/0.3).  The primary SNIPS estimand therefore covers all primary-cohort rows.  As a sensitivity, SNIPS restricted to rows with is.randomized == True is reported as a SECONDARY metric and never affects the primary claim."
+    }
+  ],
+  "primary_status": "EVALUATED",
+  "claim": {
+    "CR-CF-001": "UNSUPPORTED",
+    "reason": "bootstrap_ci_lower_not_greater_than_zero"
+  }
+}

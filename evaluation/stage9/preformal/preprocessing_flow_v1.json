@@ -1,0 +1,39 @@
+{
+  "manifest_id": "stage9_preprocessing_flow_v1",
+  "schema_version": "1.1",
+  "source": {
+    "name": "HeartSteps V1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477",
+    "raw_rows": 8274
+  },
+  "flow": {
+    "raw_rows": 8274,
+    "rows_with_operational_fields": 7538,
+    "rows_after_travel_or_technical": 7215,
+    "day_1_42_rows": 6759,
+    "available_rows": 5905,
+    "action_consistent_rows": 5905,
+    "final_primary_rows": 5905
+  },
+  "action_counts": {
+    "none": 2397,
+    "walking": 1969,
+    "antisedentary": 1539
+  },
+  "invalid_action_rows": 0,
+  "duplicates": 0,
+  "participant_continuity": {
+    "unique_users_in_suggestions": 37,
+    "unique_users_in_users_table": 37,
+    "users_with_primary_rows": 37,
+    "expected_public_users": 37
+  },
+  "study_day_source": "derived_from_utime",
+  "paper_comparison_only": {
+    "paper_included_decision_points": 7540,
+    "paper_available_decision_points": 6061,
+    "note": "comparison targets only; no identity is claimed"
+  },
+  "primary_outcome": "ln(jbsteps30.zero + 0.5)",
+  "formal_cf_result_computed": false
+}

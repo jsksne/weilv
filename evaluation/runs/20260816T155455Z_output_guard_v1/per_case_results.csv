@@ -1,0 +1,17 @@
+﻿fixture_id,category,rule_under_test,explanation,guard_passed,guard_reason_codes,expected,passed,rationale
+GUARD-V-FOREIGN-ID,violation,mentions_other_task,请按MT-EYE-001的方法操作。,False,['mentions_other_task'],BLOCK,True,explanation contains another task id (MT-EYE-001)
+GUARD-V-FOREIGN-TITLE,violation,mentions_other_task,请按停止躺着看书或看屏幕的方法操作。,False,['mentions_other_task'],BLOCK,True,explanation contains another task title
+GUARD-V-FOREIGN-TITLE-2,violation,mentions_other_task,建议使用电子学习后的离屏远眺，效果会更好。,False,['mentions_other_task'],BLOCK,True,explanation mentions a foreign task title
+GUARD-V-INVENT-ACTION,violation,adds_unsupported_action,建议做深蹲和跳绳来缓解。,False,['adds_unsupported_action'],BLOCK,True,explanation introduces unsupported action terms
+GUARD-V-INVENT-ACTION-2,violation,adds_unsupported_action,建议进行颈肩拉伸和呼吸训练。,False,['adds_unsupported_action'],BLOCK,True,explanation introduces unsupported rehabilitation terms
+GUARD-V-NEW-QUANTITY,violation,adds_unsupported_quantity,建议连续30分钟做这个练习。,False,['adds_unsupported_quantity'],BLOCK,True,explanation adds 30分钟 which is not in grounding
+GUARD-V-NEW-QUANTITY-2,violation,adds_unsupported_quantity,距离书本保持35厘米更合适。,False,['adds_unsupported_quantity'],BLOCK,True,explanation adds 35厘米 which is not in grounding
+GUARD-V-LONG,violation,explanation_too_long,请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。请按连续读写后的远眺休息执行。,False,['explanation_too_long'],BLOCK,True,explanation length exceeds 200 chars
+GUARD-V-DIAGNOSIS,violation,adds_unsupported_action,你这是慢性结膜炎，需要接受治疗。,False,['adds_unsupported_action'],BLOCK,True,explanation adds diagnosis / treatment terms
+GUARD-P-SELECTED-TITLE,pass,none,建议按连续读写后的远眺休息进行。,True,[],PASS,True,explanation contains only the selected task title
+GUARD-P-WORDING,pass,none,连续读书或写字约40分钟后，暂停当前任务约10分钟，并看向较远处休息。,True,[],PASS,True,explanation restates the selected task instruction
+GUARD-P-QUANTITY,pass,none,建议连续读写约40分钟后暂停约10分钟并远眺。,True,[],PASS,True,explanation uses 40分钟 / 10分钟 which appear in grounding
+GUARD-P-CONCISE,pass,none,请按当前任务的指令执行。,True,[],PASS,True,ordinary concise explanation without restricted terms
+GUARD-P-EVIDENCE,pass,none,根据已审核的证据，连续读写40分钟后暂停10分钟。,True,[],PASS,True,evidence-supported numbers/units
+GUARD-P-NO-TASK,pass,none,,True,[],PASS,True,empty explanation; no restricted content present
+GUARD-P-OTHER-FOREIGN-ID-NO-MATCH,pass,mentions_other_task,请参考儿童青少年近视防控指南中的相关建议。,True,[],PASS,True,no task ID or title pattern matches

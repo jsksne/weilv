@@ -1,0 +1,34 @@
+﻿review_id,case_id,system,gold_soft_preferences,selected_task_id,selected_task_title,consensus_alignment,consensus_status
+SP-001,AGX-009,basic,prefers a combined rest addressing both eyes and sitting,MT-SED-001,写作业久坐后的起身活动,ALIGNED,CONSENSUS_REACHED
+SP-002,AGX-008,personal,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-003,AGX-001,agentic,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-002,远眺加轻微活动的组合休息,MISALIGNED,CONSENSUS_REACHED
+SP-004,AGX-004,agentic,prefers light movement over vigorous activity,MT-BREAK-004,课间离开座位活动,ALIGNED,CONSENSUS_REACHED
+SP-005,AGX-004,basic,prefers light movement over vigorous activity,MT-BREAK-004,课间离开座位活动,ALIGNED,CONSENSUS_REACHED
+SP-006,AGX-019,agentic,wants to keep reading after posture fix,MT-EYE-002,停止躺着看书或看屏幕,ALIGNED,CONSENSUS_REACHED
+SP-007,AGX-016,agentic,indoor-only light movement; outdoor not possible,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-008,AGX-016,basic,indoor-only light movement; outdoor not possible,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-009,AGX-009,personal,prefers a combined rest addressing both eyes and sitting,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-010,AGX-014,agentic,wants to sleep in later on weekend,MT-SLEEP-003,周末起床时间别偏太多,ALIGNED,CONSENSUS_REACHED
+SP-011,AGX-004,personal,prefers light movement over vigorous activity,MT-BREAK-004,课间离开座位活动,ALIGNED,CONSENSUS_REACHED
+SP-012,AGX-014,basic,wants to sleep in later on weekend,MT-SLEEP-003,周末起床时间别偏太多,ALIGNED,CONSENSUS_REACHED
+SP-013,AGX-001,basic,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-001,读写后的轻微活动,MISALIGNED,CONSENSUS_REACHED
+SP-014,AGX-001,personal,prefers quiet rest and no movement | bedtime in about one hour; avoid heavy activity or screen,MT-REC-001,读写后的轻微活动,MISALIGNED,CONSENSUS_REACHED
+SP-015,AGX-015,personal,prefers a rest without the far-view-only pattern,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-016,AGX-011,agentic,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-002,今晚按平时固定时间睡觉,ALIGNED,CONSENSUS_REACHED
+SP-017,AGX-007,agentic,must finish one short important screen action before sleep,MT-SLEEP-004,夜间减少高亮电子屏暴露,ALIGNED,CONSENSUS_REACHED
+SP-018,AGX-019,basic,wants to keep reading after posture fix,MT-EYE-002,停止躺着看书或看屏幕,ALIGNED,CONSENSUS_REACHED
+SP-019,AGX-008,agentic,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-020,AGX-011,basic,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-001,睡前停止玩手机和电子产品,ALIGNED,CONSENSUS_REACHED
+SP-021,AGX-016,personal,indoor-only light movement; outdoor not possible,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-022,AGX-015,agentic,prefers a rest without the far-view-only pattern,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-023,AGX-008,basic,"bedtime approaching; prefer calm, low-stimulation rest",MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-024,AGX-020,agentic,must finish a short screen task before sleep,MT-EYE-002,停止躺着看书或看屏幕,ALIGNED,CONSENSUS_REACHED
+SP-025,AGX-011,personal,habitual pre-sleep phone scrolling should be interrupted,MT-SLEEP-002,今晚按平时固定时间睡觉,ALIGNED,CONSENSUS_REACHED
+SP-026,AGX-020,basic,must finish a short screen task before sleep,MT-SLEEP-004,夜间减少高亮电子屏暴露,ALIGNED,CONSENSUS_REACHED
+SP-027,AGX-020,personal,must finish a short screen task before sleep,MT-EYE-002,停止躺着看书或看屏幕,ALIGNED,CONSENSUS_REACHED
+SP-028,AGX-007,personal,must finish one short important screen action before sleep,MT-SLEEP-004,夜间减少高亮电子屏暴露,ALIGNED,CONSENSUS_REACHED
+SP-029,AGX-019,personal,wants to keep reading after posture fix,MT-EYE-002,停止躺着看书或看屏幕,ALIGNED,CONSENSUS_REACHED
+SP-030,AGX-009,agentic,prefers a combined rest addressing both eyes and sitting,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED
+SP-031,AGX-014,personal,wants to sleep in later on weekend,MT-SLEEP-003,周末起床时间别偏太多,ALIGNED,CONSENSUS_REACHED
+SP-032,AGX-007,basic,must finish one short important screen action before sleep,MT-SLEEP-004,夜间减少高亮电子屏暴露,ALIGNED,CONSENSUS_REACHED
+SP-033,AGX-015,basic,prefers a rest without the far-view-only pattern,MT-REC-002,远眺加轻微活动的组合休息,ALIGNED,CONSENSUS_REACHED

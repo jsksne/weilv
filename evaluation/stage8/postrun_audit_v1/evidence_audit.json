@@ -1,0 +1,8 @@
+{
+  "matcher_bug": "previous matcher used TASK_ID_PATTERN (MT-[A-Z]+-\\d{3}) with a startswith('KC-') guard, which can never match any KC-* id; the KC-* explanation check was dead code. Corrected to KC_ID_PATTERN = re.compile(r'KC-[A-Za-z0-9_-]+').",
+  "unexpected_KC_reference_count": 0,
+  "unexpected_KC_references": [],
+  "sources_mismatch_count": 0,
+  "sources_mismatch_cases": [],
+  "method": "scan served explanations for KC-* ids not in the selected task's frozen evidence_chunk_ids; verify sources == frozen evidence ids"
+}

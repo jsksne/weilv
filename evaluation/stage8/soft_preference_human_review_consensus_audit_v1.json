@@ -1,0 +1,20 @@
+{
+  "rows": 33,
+  "human_reviewer_count": 3,
+  "reviewer_A_completed_rows": 33,
+  "reviewer_B_completed_rows": 33,
+  "reviewer_C_completed_rows": 33,
+  "unanimous_rows": 33,
+  "disagreement_rows": 0,
+  "consensus_completed_rows": 33,
+  "aligned_consensus": 30,
+  "misaligned_consensus": 3,
+  "misaligned_review_ids": [
+    "SP-003",
+    "SP-013",
+    "SP-014"
+  ],
+  "shadow_review_not_counted": true,
+  "status": "CONSENSUS_REACHED",
+  "generated_at": "2026-08-18T05:37:40.954118+00:00"
+}

@@ -1,0 +1,33 @@
+{
+  "manifest_version": "stage8_gold_v1_2",
+  "created_at": "2026-08-18T02:00:20Z",
+  "ticket": "微律 Stage 8 — Gold Freeze + Formal Basic vs Personal vs Agentic Evaluation",
+  "dataset_path": "evaluation/datasets/agentic_complex_gold_frozen_v1_2.jsonl",
+  "draft_source": "evaluation/datasets/agentic_complex_gold_draft_v1_2.jsonl",
+  "case_count": 24,
+  "task_cases": 20,
+  "safety_cases": 4,
+  "memory_cases": 9,
+  "reviewer_count": 3,
+  "consensus_case_count": 24,
+  "consensus_reached": true,
+  "consensus_review_round": "stage8_gold_consensus_v1_2",
+  "review_status": "consensus_reviewed",
+  "input_provenance": "synthetic_constructed",
+  "gold_provenance": "author_and_multi_reviewer_consensus",
+  "safety_results_seen_before_freeze": false,
+  "production_modified": false,
+  "labels_changed_at_freeze": false,
+  "shas": {
+    "gold_draft_sha256": "88b112446498a0b770d9df7290cf5446f7b2478c42bb9ba4138e6c12d31bdb41",
+    "gold_frozen_sha256": "6c6aa6552059035c123ad8325ca7ea74b1e4496a4c5a2b0c788dfdd81655340a",
+    "draft_review_sha256": "ca19063fd60207c919ad23e1ded7f7485b6cb114baeb685dda056b039f1c2717",
+    "consensus_review_sha256": "8fc27e357f918c06df8d4293cd4f52e9e3e96408ea7f4478bbdac1e482ea8ab2",
+    "task_audit_sha256": "63dea2042f8d02b78f9cf6a5a5b5d39f88142ebb5dfb8cc8414e3617dcad25e3",
+    "metric_preregistration_sha256": "6795b323f4e9c3a211603695a3c839158d4a054f0a82d18b353d04b7fc1544a6",
+    "claim_registry_sha256": "af5d3c1a2984e17dc90b093f46979ce17545725d76679bad54cb8bb56d44cb75",
+    "safety_gold_sha256": "aa975d5cd58deec5c837b1ca2b5e4723229fd71c08c64df85ba39d8819372e7f",
+    "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+    "task_corpus_recomputed_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48"
+  }
+}

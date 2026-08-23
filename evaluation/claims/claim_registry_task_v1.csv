@@ -1,0 +1,6 @@
+﻿claim_id,claim,status,evaluation_rule,evidence,run_id
+CR-TASK-001,"On the frozen consensus-reviewed synthetic benchmark, Valid@1 >= 0.90.",SUPPORTED,SUPPORTED iff Valid@1 >= 0.90; else NOT_SUPPORTED.,"{""value"": 0.9583333333333334, ""threshold"": 0.9}",20260816T155009Z_task_recommendation_v1
+CR-TASK-002,Invalid Recommendation Rate <= 0.10.,SUPPORTED,SUPPORTED iff Invalid Recommendation Rate <= 0.10; else NOT_SUPPORTED.,"{""value"": 0.041666666666666664, ""threshold"": 0.1}",20260816T155009Z_task_recommendation_v1
+CR-TASK-003,Preferred@1 >= 0.70.,SUPPORTED,SUPPORTED iff Preferred@1 >= 0.70; else NOT_SUPPORTED.,"{""value"": 0.8333333333333334, ""threshold"": 0.7}",20260816T155009Z_task_recommendation_v1
+CR-TASK-004,All-Valid@3 >= 0.80.,NOT_SUPPORTED,SUPPORTED iff All-Valid@3 >= 0.80; else NOT_SUPPORTED.,"{""value"": 0.25, ""threshold"": 0.8}",20260816T155009Z_task_recommendation_v1
+CR-TASK-REAL-001,High offline task-recommendation metrics prove real adolescents will follow the recommendations or achieve better health outcomes.,UNSUPPORTED,Always UNSUPPORTED because offline task-recommendation metrics do not measure real adolescent behavior or health outcomes.,"[""not_measured""]",20260816T155009Z_task_recommendation_v1

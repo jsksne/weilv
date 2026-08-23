@@ -1,0 +1,229 @@
+{
+  "audit_id": "stage9b2_targeted_reaudit_v1",
+  "audit_type": "NARROW_TARGETED_REAUDIT",
+  "generated_at": "2026-08-19",
+  "model_used": "GLM-5.3",
+  "scope": "Stage 9B.2 targeted post-repair re-audit: F-001/F-002 repair verification, regression tests, freeze v2 integrity, external evaluator unchanged, Personal/Agentic CF integration continuity, formal lock. No production code modified. --formal NOT run.",
+  "repair_bundle_verification": {
+    "zip_path": "evaluation/stage9b1_fail_closed_repair_acceptance_bundle.zip",
+    "expected_sha256": "b2ef59bae11197f93e643530a0da685c2582f16d322130063b641cab3a6ec692",
+    "actual_sha256": "b2ef59bae11197f93e643530a0da685c2582f16d322130063b641cab3a6ec692",
+    "status": "PASS",
+    "bundled_collaborative_ranking_py": {
+      "expected_sha256": "bafbb13958f3d45ecc7b4269680375fe5e5ab754f6ac3ccd03f9f2a5f85281bf",
+      "actual_sha256": "bafbb13958f3d45ecc7b4269680375fe5e5ab754f6ac3ccd03f9f2a5f85281bf",
+      "matches_freeze_manifest_v2": true,
+      "matches_current_workspace_file": true,
+      "status": "PASS"
+    },
+    "bundled_test_collaborative_ranking_py": {
+      "expected_sha256": "51411379f450ef1dc92046590aad913d42620c27a771938f7d24a828721df8c1",
+      "actual_sha256": "51411379f450ef1dc92046590aad913d42620c27a771938f7d24a828721df8c1",
+      "matches_freeze_manifest_v2": true,
+      "matches_current_workspace_file": true,
+      "status": "PASS"
+    }
+  },
+  "f001_verification": {
+    "finding_id": "F-001",
+    "original_severity": "MAJOR",
+    "old_crash_paths_confirmed_gone": true,
+    "source_inspection": {
+      "float_none_crash_gone": "cf_signal read via _coerce_float(value, NEUTRAL_CF_SIGNAL); None/non-numeric/bool/non-finite degrade to 0.0; never raises",
+      "mixed_type_sorted_crash_gone": "model_version/data_version read via _coerce_str before sorted(); sorted set is homogeneous str; never raises",
+      "validation_never_crashes": "validate_signals call wrapped in fail-closed try/except (validation_failed_fail_closed)",
+      "sort_never_crashes": "sorted() wrapped in try/except (sort_failed_fail_closed)"
+    },
+    "mechanical_reproduction": {
+      "script": "evaluation/stage9/audit/stage9b2_repro_f001_f002.py",
+      "results_file": "evaluation/stage9/audit/stage9b2_repro_results_v1.json",
+      "scenario_A_cf_signal_none": {
+        "no_exception": true,
+        "cf_applied_false": true,
+        "fallback_reason": "nonfinite_or_out_of_range_signal",
+        "original_ordering_preserved": true,
+        "candidate_multiset_identical": true,
+        "candidate_cardinality_identical": true,
+        "diag_signal_neutral_fallback": true,
+        "pass": true
+      },
+      "scenario_B_mixed_type_versions": {
+        "values_tested": [5, "v1", 20260818, "2026-08-18"],
+        "no_exception": true,
+        "cf_applied_true": true,
+        "diagnostics_safely_degrade": true,
+        "metadata_fallback_not_affect_ranking": true,
+        "pass": true
+      },
+      "scenario_C_malformed_values": {
+        "cf_signal_values_tested": ["list", "dict", "bool", "NaN", "+inf", "-inf"],
+        "all_no_exception": true,
+        "all_fail_closed_with_reason_nonfinite_or_out_of_range_signal": true,
+        "all_original_ordering_preserved": true,
+        "all_multiset_and_cardinality_identical": true,
+        "malformed_metadata_values_tested": {
+          "neighbor_count": ["list", "dict"],
+          "model_version": ["list", "bool"],
+          "data_version": ["dict", "bool"]
+        },
+        "metadata_ranking_unaffected": true,
+        "pass": true
+      }
+    },
+    "status": "CLOSED"
+  },
+  "f002_verification": {
+    "finding_id": "F-002",
+    "original_severity": "MINOR",
+    "mechanical_reproduction": {
+      "neighbor_count_values_tested": ["unknown (str)", "None", "{\"x\": 1} (dict)", "NaN", "+inf"],
+      "all_no_exception": true,
+      "all_fallback_neutral_zero": true,
+      "all_ranking_unaffected": true,
+      "cf_applied_true_when_signals_valid": true,
+      "pass": true
+    },
+    "status": "CLOSED"
+  },
+  "fail_closed_semantics": {
+    "malformed_cf_signal_not_clamped": true,
+    "malformed_cf_signal_not_treated_as_valid_learned_score": true,
+    "malformed_cf_signal_cannot_affect_ordering": true,
+    "returns_original_safe_ordering": true,
+    "out_of_range_above_fails_closed": "1.5 -> nonfinite_or_out_of_range_signal, original order",
+    "out_of_range_below_fails_closed": "-2.0 -> nonfinite_or_out_of_range_signal, original order",
+    "valid_cf_signal_contract_unchanged": "numeric, finite, within [-1, 1], non-boolean",
+    "metadata_fallbacks_neutralized_without_invalidating_valid_ranking": true
+  },
+  "ranking_contract": {
+    "sort_semantics": "adjusted_rank ascending -> cf_signal descending -> base_task_rank ascending -> task_id ascending",
+    "verified_by_mechanical_repro": true,
+    "cf_only_affects_exact_adjusted_rank_ties": true,
+    "candidate_multiset_identical": true,
+    "candidate_cardinality_identical": true,
+    "no_task_mutation": true,
+    "no_evidence_id_mutation": true,
+    "blocked_resurrection": 0,
+    "heartsteps_product_score_transfer": "NONE",
+    "provider_neutral_before_real_weilv_pilot": true
+  },
+  "external_evaluator_sha_gate": {
+    "preprocess_heartsteps_v1.py": {
+      "expected_sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4",
+      "actual_sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4",
+      "status": "UNCHANGED"
+    },
+    "run_stage9_external_cf.py": {
+      "expected_sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+      "actual_sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+      "status": "UNCHANGED"
+    }
+  },
+  "integration_snapshot": {
+    "src/weilv/personal_rag.py": {
+      "sha256": "6bb5b9eb2ec18e8491cd1034ebd4bb584f0d1ad80ab33d33c6759d71d74c6df9"
+    },
+    "src/weilv/agentic_rag.py": {
+      "sha256": "a96929252d6a47d734af7c85ebd0fafe0d546d85819f3c1baa3da1f349fd351c"
+    },
+    "integration_semantics": "safe candidate set -> Personal/Agentic ranking -> CF exact-tie adapter -> final selection",
+    "verified_by_source_inspection": true,
+    "heartsteps_scores_introduced": false,
+    "candidate_expansion_introduced": false,
+    "safety_bypass_introduced": false,
+    "terminal_state_bypass_introduced": false,
+    "evidence_mutation_introduced": false,
+    "personal_terminal_states_short_circuit_before_cf": true,
+    "agentic_terminal_states_short_circuit_before_cf": true,
+    "production_default_cf_provider_is_none_strict_noop": true
+  },
+  "test_results": {
+    "adapter_suite": {
+      "command": "pytest tests/test_collaborative_ranking.py -q",
+      "result": "32 passed",
+      "expected_repaired_baseline": "32 passed",
+      "status": "PASS"
+    },
+    "stage9_suite": {
+      "command": "pytest tests/test_stage9_heartsteps_preprocessing.py tests/test_stage9_external_cf.py tests/test_collaborative_ranking.py -q",
+      "result": "74 passed",
+      "expected_repaired_baseline": "74 passed",
+      "status": "PASS"
+    },
+    "full_unit_regression": {
+      "command": "pytest -m \"not integration and not live_model\" -q",
+      "result": "329 passed, 13 deselected",
+      "previous_repaired_baseline": "329 passed, 13 deselected",
+      "status": "PASS"
+    },
+    "integration_suite": {
+      "command": "pytest -m integration -q",
+      "result": "13 passed, 329 deselected",
+      "previous_repaired_baseline": "13 passed",
+      "status": "PASS"
+    },
+    "lint": {
+      "command": "ruff check src/weilv/collaborative_ranking.py tests/test_collaborative_ranking.py",
+      "result": "All checks passed",
+      "status": "PASS"
+    }
+  },
+  "freeze_v2_verification": {
+    "manifest": "evaluation/stage9/preformal/stage9_evaluator_freeze_manifest_v2.json",
+    "reason_for_refreeze": "Stage 9B.1 fail-closed product adapter repair after independent preformal audit",
+    "reason_matches_ticket": true,
+    "formal_mode_executed": false,
+    "formal_results_computed": false,
+    "files_listed": 14,
+    "files_matching_sha": 14,
+    "mismatches": 0,
+    "changed_vs_v1_files": [
+      "product/collaborative_ranking.py",
+      "product/tests/test_collaborative_ranking.py"
+    ],
+    "changed_vs_v1_matches_expected_exactly": true,
+    "methodology_or_evaluator_changes": "NONE",
+    "status": "PASS"
+  },
+  "formal_lock": {
+    "formal_flag_run": false,
+    "stage9_formal_run_manifest_exists": false,
+    "stage9_run_directory_exists": false,
+    "delta_v_computed": false,
+    "real_bootstrap_ci_computed": false,
+    "cr_cf_001_formally_evaluated": false,
+    "evidence": [
+      "stage9_formal_run string appears only inside run_stage9_external_cf.py writer function, never in any output artifact",
+      "no evaluation/runs/*stage9* directory exists",
+      "freeze v2: formal_mode_executed=false, formal_results_computed=false",
+      "stage9_leakage_test_report_v1.json: formal_result_computed=false, delta_v_computed=false",
+      "stage9_preformal_integrity_v1.json: formal_result_executed=NO, formal_result_fields_present=NO, formal_cf_result_computed=false"
+    ]
+  },
+  "findings": {
+    "blocker": 0,
+    "major": 0,
+    "minor": 0,
+    "notes": "No new findings. F-001 (MAJOR) and F-002 (MINOR) from stage9b_audit_findings_v1.csv are verified CLOSED by mechanical reproduction against the repaired SHA."
+  },
+  "verdict": "READY_FOR_FORMAL_RUN",
+  "acceptance_bundle": {
+    "path": "evaluation/stage9b2_targeted_reaudit_acceptance_bundle.zip",
+    "sha256": "recorded in evaluation/stage9b2_targeted_reaudit_acceptance_bundle_sha256.txt (written next to the ZIP, outside it, to avoid a self-referential hash)",
+    "contents": [
+      "stage9b2_targeted_reaudit_v1.md",
+      "stage9b2_targeted_reaudit_v1.json",
+      "stage9b2_repro_f001_f002.py",
+      "stage9b2_repro_results_v1.json",
+      "stage9b2_test_result_summary_v1.md",
+      "stage9_evaluator_freeze_manifest_v2.json",
+      "stage9b1_finding_closure_v1.csv",
+      "stage9b1_sha_comparison_v1.txt"
+    ],
+    "excluded": [
+      "raw HeartSteps CSV",
+      ".env / API keys",
+      "formal results (none exist)"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+﻿metric,value,n_violation,n_violation_caught,n_violation_leaked,n_pass,n_pass_blocked,target,passed
+Catch Rate,1.0,9,9,,,,,
+Unsafe Leakage Rate,0.0,9,,0,,,0.0,True
+False Positive Rate,0.0,,,,7,0,,

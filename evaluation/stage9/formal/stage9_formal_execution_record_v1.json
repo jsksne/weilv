@@ -1,0 +1,79 @@
+{
+  "record_id": "stage9_formal_execution_record_v1",
+  "created_at": "2026-08-19T00:00:00+00:00",
+  "pre_execution": {
+    "authorized": true,
+    "authorization_ticket": "微律 Stage 9C — ONE-SHOT FORMAL External CF Run",
+    "freeze_manifest": "stage9_evaluator_freeze_manifest_v2.json",
+    "freeze_files_match": 14,
+    "freeze_mismatches": 0,
+    "formal_mode_executed_at_launch": false,
+    "formal_results_computed_at_launch": false,
+    "evaluator_shas": {
+      "preprocess_heartsteps_v1.py": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4",
+      "run_stage9_external_cf.py": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714"
+    },
+    "heartsteps_source_hashes": {
+      "users.csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+      "suggestions.csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+      "gfsteps.csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+      "jbsteps.csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3"
+    },
+    "heartsteps_source_verification": "4/4 PASS",
+    "targeted_audit_verdict": "READY_FOR_FORMAL_RUN",
+    "targeted_audit_zip_sha256": "708c315e765824a53eed8b7c6126a23850a03806a7f6a398b9865cb0427fd646",
+    "prior_formal_run": "none",
+    "formal_attempt_number": 1
+  },
+  "execution": {
+    "attempt_0": {
+      "classification": "PRE_FORMAL_LAUNCH_FAILURE",
+      "command": ".venv\\Scripts\\python.exe evaluation/stage9/run_stage9_external_cf.py --formal --no-download",
+      "exit_code": 1,
+      "error": "ModuleNotFoundError: No module named 'evaluation'",
+      "notes": "launch-environment failure only: workspace root not on sys.path for direct script invocation; occurred before any evaluator computation; preserved in terminal log job-21f48339c7094cb79d73fac02bc6f88d",
+      "formal_run_dir": "none",
+      "formal_completed": false,
+      "code_or_method_changed": false,
+      "frozen_shas_unchanged": true
+    },
+    "attempt_1": {
+      "classification": "FORMAL_RUN_FAILED_REVIEW_REQUIRED",
+      "command": "$env:PYTHONPATH=(Get-Location).Path; .venv\\Scripts\\python.exe evaluation/stage9/run_stage9_external_cf.py --formal --no-download",
+      "start_time": "2026-08-19 (Asia/Shanghai)",
+      "exit_code": 1,
+      "error": "RuntimeError: FORMAL run blocked by integrity gates: {\"heartsteps_hashes\": \"PASS\", \"duplicates\": 0, \"users\": 37, \"raw_rows\": 8274, \"final_rows\": 5905}",
+      "integrity_gates_at_launch": {
+        "heartsteps_hashes": "PASS",
+        "duplicates": 0,
+        "users": 37,
+        "raw_rows": 8274,
+        "final_rows": 5905
+      },
+      "formal_run_dir": "none",
+      "formal_completed": false,
+      "partial_artifacts": "none",
+      "failure_log": "stage9_formal_attempt1_failure_log_v1.json",
+      "code_or_method_changed": false,
+      "frozen_shas_unchanged": true,
+      "repaired": false,
+      "rerun": false
+    },
+    "attempt_2": {
+      "formal_attempt_number": 2,
+      "command": "$env:PYTHONPATH=(Get-Location).Path; .venv\\Scripts\\python.exe evaluation/stage9/run_stage9_external_cf.py --formal --no-download",
+      "start_time": "2026-08-19T10:34:47Z",
+      "end_time": "2026-08-19T10:35:27Z",
+      "exit_code": 0,
+      "formal_run_dir": "evaluation/runs/20260819T103447Z_stage9_formal",
+      "formal_completed": true,
+      "source_shas_unchanged": true,
+      "internal_sha_manifest_valid": true,
+      "primary_status": "EVALUATED",
+      "claim": {
+        "CR-CF-001": "UNSUPPORTED",
+        "reason": "bootstrap_ci_lower_not_greater_than_zero"
+      }
+    }
+  }
+}

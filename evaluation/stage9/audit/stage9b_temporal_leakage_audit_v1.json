@@ -1,0 +1,69 @@
+{
+  "manifest_id": "stage9b_temporal_leakage_audit_v1",
+  "audit_date": "2026-08-18",
+  "auditor": "independent preformal code audit (Stage 9B, GLM-5.3)",
+  "audited_file": "evaluation/stage9/run_stage9_external_cf.py",
+  "sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+  "design": "DESIGN C - External Mechanism Validation",
+  "outer_split": {
+    "scheme": "37-fold Leave-One-Participant-Out (LOPO)",
+    "target_adaptation_window": "study days 1-7 (initial adaptation, excluded from evaluation)",
+    "evaluation_window": "study days 8-42",
+    "verified": true
+  },
+  "checks": {
+    "target_history_strictly_prior": {
+      "status": "PASS",
+      "mechanism": "target history mask uses utime < t; target evaluation events enter history only after they occur; per-prediction-time censoring verified in fold driver"
+    },
+    "source_history_strictly_prior_relative": {
+      "status": "PASS",
+      "mechanism": "source rows masked by relative study time < t (relative to each source participant's own study start); applies to every source-derived object"
+    },
+    "per_t_base_means": {
+      "status": "PASS",
+      "mechanism": "base = smoothed action/context means recomputed from censored source history at each prediction time t; no full-period groupby reuse"
+    },
+    "per_t_action_and_context_means": {"status": "PASS", "mechanism": "recomputed per t from strictly-prior source rows with shrinkage n/(n+10)"},
+    "personal_residual_strictly_prior": {"status": "PASS", "mechanism": "personal signal uses only target residuals with utime < t"},
+    "neighbor_vectors_per_t": {"status": "PASS", "mechanism": "neighbor representation = action x decision-slot residual means computed from censored source histories at t"},
+    "co_observed_cells_and_similarity_per_t": {"status": "PASS", "mechanism": "cosine over co-observed cells built per t from strictly-prior rows only; similarity shrinkage n_common/(n_common+10)"},
+    "fallback_means_per_t": {"status": "PASS", "mechanism": "action-slot -> action -> overall fallback chain computed from censored history at t"},
+    "residual_clipping_percentiles_per_t": {
+      "status": "PASS",
+      "mechanism": "5th/95th residual clipping percentiles computed from source history only, at prediction time t (no global percentile cache)"
+    },
+    "no_full_period_precache": {
+      "status": "PASS",
+      "searched_for": ["groupby over full source dataset", "global percentile computation", "cached source statistics", "precomputed neighbor matrices", "full-period residual vectors"],
+      "finding": "none found; all source-derived statistics are computed inside the per-t prediction loop from censored histories"
+    },
+    "no_future_target_objects": {
+      "status": "PASS",
+      "checked": ["current outcome", "post-response variables", "future target outcome", "future target action", "future target context", "future rating", "future sensor response"],
+      "finding": "none accessible at prediction time; masks enforce utime < t"
+    },
+    "held_out_user_isolation": {
+      "status": "PASS",
+      "mechanism": "per LOPO fold, target participant excluded from source fitting, neighbor construction, source residuals, source statistics, source fallback, source clipping distribution, source similarity space; only allowed use is target prior history in the Personal baseline"
+    },
+    "context_features_allowed_only": {
+      "status": "PASS",
+      "allowed": ["decision slot", "activity (STILL/ON_FOOT/IN_VEHICLE/other/unknown)", "location (home/work/other/unknown)", "weather (precipitation_or_snow/other/unknown)", "prior 30-minute step bucket (missing/0/1-199/>=200)", "study week"],
+      "forbidden_found": ["future step response", "current outcome", "message rating", "returned.message semantics", "raw GPS", "demographic expansion", "post-response field"],
+      "finding": "none of the forbidden fields enter model features"
+    }
+  },
+  "preformal_leakage_report": {
+    "file": "evaluation/stage9/preformal/stage9_leakage_test_report_v1.json",
+    "held_out_user_in_source": 0,
+    "future_target_history": 0,
+    "future_source_rows": 0,
+    "post_response_features": 0,
+    "time_ordering_violations": 0,
+    "total_violations": 0,
+    "note": "PRECHECK verifies leakage structure over the full cohort via strictly-causal masks (utime < t / relative < t) exercised by synthetic driver tests; model math runs on synthetic fixtures only"
+  },
+  "blocker_count": 0,
+  "verdict": "PASS"
+}

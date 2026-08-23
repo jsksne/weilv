@@ -1,0 +1,60 @@
+{
+  "audit_version": "task_recommendation_metric_audit_v1",
+  "audited_run_id": "20260816T155009Z_task_recommendation_v1",
+  "gold_sha256": "cd1c3686be08adb576a75adce072270b9c4224a5749c5b064e0fe34a0316d282",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "audit_date": "2026-08-17",
+  "recomputed_metrics": {
+    "valid_at_1": {"success": 23, "total": 24, "value": 0.9583333},
+    "invalid_recommendation_rate": {"failures": 1, "total": 24, "value": 0.0416667},
+    "preferred_at_1": {"success": 20, "total": 24, "value": 0.8333333},
+    "valid_at_3_macro": {"sum": 12.8333333, "total": 24, "value": 0.5347222}
+  },
+  "all_valid_at_3_audit": {
+    "gold_valid_count_distribution": {"1_valid": 16, "2_valid": 3, "3_or_more_valid": 5},
+    "cases_with_3_or_more_valid": ["TRG-001", "TRG-006", "TRG-007", "TRG-012", "TRG-024"],
+    "theoretical_maximum_strict": {"value": 0.2083333, "formula": "5/24"},
+    "theoretical_maximum_conditional": {"value": 0.2380952, "formula": "5/21"},
+    "complete_top3_case_count": 21,
+    "short_top3_case_count": 3,
+    "short_top3_cases": [
+      {"case_id": "TRG-002", "returned": 1},
+      {"case_id": "TRG-014", "returned": 2},
+      {"case_id": "TRG-015", "returned": 1}
+    ],
+    "strict_all_valid_top3_success_count": 4,
+    "strict_success_cases": ["TRG-006", "TRG-007", "TRG-012", "TRG-024"],
+    "strict_all_valid_at_3": {"value": 0.1666667, "formula": "4/24"},
+    "conditional_all_valid_at_3": {"value": 0.1904762, "formula": "4/21"},
+    "original_runner_value": {"value": 0.25, "formula": "6/24", "status": "INVALID_counted_short_returns_as_success"},
+    "missed_ceiling_case": "TRG-001"
+  },
+  "claim_handling": {
+    "CR-TASK-004": {
+      "preregistered_threshold": "All-Valid@3 >= 0.80",
+      "status": "NOT_SUPPORTED",
+      "status_changed": false,
+      "threshold_changed": false,
+      "audit_note": "Metric has a Gold-set ceiling of 5/24 = 0.2083 because 19/24 cases contain fewer than three valid tasks. Remains NOT_SUPPORTED; All-Valid@3 should not be used as a primary full-benchmark metric in later paper interpretation."
+    }
+  },
+  "invalid_top1_diagnosis": {
+    "case_id": "TRG-004",
+    "query": "在家连续读了四十分钟，现在有十分钟。我今天不想做额外活动，只想安静休息一下，怎么安排比较合适？",
+    "query_style": "constraint_or_preference",
+    "system_top1": "MT-REC-002",
+    "top1_label": "invalid",
+    "gold_preferred": ["MT-BREAK-003"],
+    "gold_acceptable": ["MT-BREAK-001"],
+    "ranked_order_head": ["MT-REC-002", "MT-REC-001", "MT-OUT-001", "MT-BREAK-001", "MT-BREAK-003"],
+    "safety_status": "allowed",
+    "likely_cause": "Negative constraint in query not modeled by BM25/embedding/rerank; MT-REC-002 surface semantics overlap rest/recovery vocabulary; gold break tasks ranked 4th/5th.",
+    "action": "diagnosed_only_no_tuning"
+  },
+  "integrity": {
+    "frozen_run_modified": false,
+    "gold_modified_after_freeze": false,
+    "task_corpus_modified": false,
+    "run_reexecuted": false
+  }
+}

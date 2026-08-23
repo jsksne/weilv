@@ -1,0 +1,157 @@
+{
+  "manifest_id": "stage9_product_cf_contract_report_v1",
+  "schema_version": "1.1",
+  "generated_at": "2026-08-18T14:16:03.878535+00:00",
+  "provenance_level": "synthetic_engineering_evidence_plus_product_contract_tests",
+  "contract_matrix": [
+    {
+      "item": "neutral_scores",
+      "status": "PASS",
+      "covering_tests": "test_neutral_provider_returns_bounded_zero_signals, test_neutral_signals_never_reorder"
+    },
+    {
+      "item": "exact_tie_reorder",
+      "status": "PASS",
+      "covering_tests": "test_exact_tie_reorder_within_tie_only"
+    },
+    {
+      "item": "no_tie_noop",
+      "status": "PASS",
+      "covering_tests": "test_no_tie_noop"
+    },
+    {
+      "item": "deterministic_tie_behavior",
+      "status": "PASS",
+      "covering_tests": "test_deterministic_tie_behavior"
+    },
+    {
+      "item": "extra_task_from_provider",
+      "status": "PASS",
+      "covering_tests": "test_extra_task_from_provider_fails_closed"
+    },
+    {
+      "item": "duplicate_task",
+      "status": "PASS",
+      "covering_tests": "test_duplicate_candidate_fails_closed"
+    },
+    {
+      "item": "nan_signal",
+      "status": "PASS",
+      "covering_tests": "test_nonfinite_signal_fails_closed[nan]"
+    },
+    {
+      "item": "infinity_signal",
+      "status": "PASS",
+      "covering_tests": "test_nonfinite_signal_fails_closed[inf]"
+    },
+    {
+      "item": "score_below_minus_one",
+      "status": "PASS",
+      "covering_tests": "test_out_of_range_signal_fails_closed"
+    },
+    {
+      "item": "score_above_one",
+      "status": "PASS",
+      "covering_tests": "test_out_of_range_signal_fails_closed"
+    },
+    {
+      "item": "missing_cf_artifact",
+      "status": "PASS",
+      "covering_tests": "test_missing_cf_artifact_fails_closed"
+    },
+    {
+      "item": "corrupt_cf_artifact",
+      "status": "PASS",
+      "covering_tests": "test_corrupt_cf_artifact_fails_closed"
+    },
+    {
+      "item": "new_user",
+      "status": "PASS",
+      "covering_tests": "test_new_user_insufficient_history_neighbors_domain_context_are_neutral"
+    },
+    {
+      "item": "insufficient_target_history",
+      "status": "PASS",
+      "covering_tests": "test_new_user_insufficient_history_neighbors_domain_context_are_neutral"
+    },
+    {
+      "item": "insufficient_neighbors",
+      "status": "PASS",
+      "covering_tests": "test_new_user_insufficient_history_neighbors_domain_context_are_neutral"
+    },
+    {
+      "item": "unsupported_domain",
+      "status": "PASS",
+      "covering_tests": "test_new_user_insufficient_history_neighbors_domain_context_are_neutral"
+    },
+    {
+      "item": "unknown_context",
+      "status": "PASS",
+      "covering_tests": "test_new_user_insufficient_history_neighbors_domain_context_are_neutral"
+    },
+    {
+      "item": "maximal_forged_score_for_blocked_task",
+      "status": "PASS",
+      "covering_tests": "test_maximal_forged_score_for_blocked_task_fails_closed"
+    },
+    {
+      "item": "non_allowed_terminal_states",
+      "status": "PASS",
+      "covering_tests": "test_agentic_non_allowed_terminal_states_never_call_cf"
+    }
+  ],
+  "absolute_invariant_counters": {
+    "candidate_set_violations": 0,
+    "blocked_task_resurrection": 0,
+    "task_mutation": 0,
+    "evidence_id_mutation": 0,
+    "guard_contract_violation": 0,
+    "cf_calls_on_non_allowed_terminal_states": 0
+  },
+  "claim_evaluation": {
+    "CR-CF-002": {
+      "status": "SUPPORTED",
+      "criterion": "candidate_expansion_count == 0 AND blocked_task_resurrection_count == 0",
+      "observed": {
+        "candidate_expansion_count": 0,
+        "blocked_task_resurrection_count": 0
+      }
+    },
+    "CR-CF-003": {
+      "status": "SUPPORTED",
+      "criterion": "unsafe_escape == 0 AND evidence_contamination == 0 AND output_guard_contract_violations == 0 AND task_mutation == 0 AND cf_calls_on_non_allowed_terminal_states == 0",
+      "observed": {
+        "unsafe_escape": 0,
+        "evidence_contamination": 0,
+        "output_guard_contract_violations": 0,
+        "task_mutation": 0,
+        "cf_calls_on_non_allowed_terminal_states": 0
+      }
+    },
+    "CR-CF-004": {
+      "status": "NOT_EVALUATED"
+    },
+    "CR-CF-REAL-001": {
+      "status": "UNSUPPORTED",
+      "immutable": true
+    }
+  },
+  "heartsteps_scores_imported_into_product": false,
+  "provider": "neutral",
+  "test_counts": {
+    "preprocessing": 18,
+    "external_cf": 24,
+    "collaborative_ranking": 27,
+    "new_total": 69,
+    "new_failed": 0,
+    "unit_passed": 324,
+    "unit_failed": 0,
+    "unit_deselected": 13,
+    "integration_passed": 5,
+    "integration_failed": 0,
+    "integration_deselected": 332
+  },
+  "api_changed": false,
+  "basic_rag_changed": false,
+  "formal_cf_result_computed": false
+}

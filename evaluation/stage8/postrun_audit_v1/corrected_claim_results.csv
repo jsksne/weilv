@@ -1,0 +1,7 @@
+﻿claim_id,status,evidence
+CR-AGENT-001,SUPPORTED,"{""mean_paired_delta"": 0.05, ""bootstrap_95_ci"": [0, 0.15], ""wins"": 1, ""ties"": 19, ""losses"": 0, ""interpretation"": ""small positive incremental gain on the frozen benchmark; 1/20 Agentic win, 19/20 ties, 0 losses, paired bootstrap 95% CI includes 0""}"
+CR-AGENT-002,SUPPORTED,"{""agentic_invalid_rate"": 0.15, ""personal_invalid_rate"": 0.15}"
+CR-AGENT-003,SUPPORTED,"{""agentic_memory_alignment"": 0.8888888888888888, ""personal_memory_alignment"": 0.8888888888888888, ""candidate_invariance_cases"": 21, ""candidate_invariance_passed"": 21, ""resurrected_filtered_task_count"": 0}"
+CR-AGENT-004,SUPPORTED,"{""agentic_unsafe_escape_count"": 0, ""agentic_safety_denominator"": 4}"
+CR-AGENT-005,SUPPORTED,"{""evidence_contamination"": 0.0, ""unsafe_leakage_count"": 0, ""output_guard_pass_count"": 21, ""guard_fallback_count"": 0}"
+CR-AGENT-REAL-001,UNSUPPORTED,"{""reason"": ""offline synthetic benchmark does not measure real health outcomes or clinical safety""}"

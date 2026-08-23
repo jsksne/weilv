@@ -1,0 +1,35 @@
+{
+  "result": {
+    "analysis_fallback": false,
+    "case": "A",
+    "classification": "non_formal_engineering_smoke",
+    "factor_count": 4,
+    "factor_domains": [
+      "study_break",
+      "sleep",
+      "physical_activity",
+      "light_recovery"
+    ],
+    "guard": {
+      "fallback_used": false,
+      "passed": true,
+      "reason_codes": []
+    },
+    "model_calls": {
+      "decomposition": 1,
+      "explanation": 1,
+      "knowledge_embedding": 4,
+      "knowledge_rerank": 4,
+      "memory_embedding": 0,
+      "memory_rerank": 0,
+      "task_embedding": 5,
+      "task_rerank": 1
+    },
+    "raw_explanation": "考虑连续用眼后的休息需求、临近就寝时间、活动意愿低及可用时间短，选择按时睡觉最合理。任务指令强调保持固定睡眠时间，证据指出稳定作息利于健康睡眠，且睡前避免刺激符合当前状态。",
+    "safety_reason_codes": [],
+    "selected_task_id": "MT-SLEEP-002",
+    "served_explanation": "考虑连续用眼后的休息需求、临近就寝时间、活动意愿低及可用时间短，选择按时睡觉最合理。任务指令强调保持固定睡眠时间，证据指出稳定作息利于健康睡眠，且睡前避免刺激符合当前状态。",
+    "status": "allowed"
+  },
+  "run_at": "2026-08-17T14:11:33.676958+00:00"
+}

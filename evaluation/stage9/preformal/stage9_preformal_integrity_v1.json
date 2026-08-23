@@ -1,0 +1,21 @@
+{
+  "manifest_id": "stage9_preformal_integrity_v1",
+  "schema_version": "1.1",
+  "generated_at": "2026-08-18T14:16:03.874540+00:00",
+  "heartsteps_hashes": "PASS",
+  "users_37": 37,
+  "formal_result_executed": "NO",
+  "formal_result_fields_present": "NO",
+  "production_cf_implemented": "YES",
+  "heartsteps_parameters_transferred_to_product": "NO",
+  "candidate_set_violations": 0,
+  "blocked_task_resurrection": 0,
+  "future_source_leakage": 0,
+  "future_target_leakage": 0,
+  "held_out_user_source_leakage": 0,
+  "post_response_feature_leakage": 0,
+  "api_changed": "NO",
+  "basic_rag_changed": "NO",
+  "safety_contract_regression": 0,
+  "formal_cf_result_computed": false
+}

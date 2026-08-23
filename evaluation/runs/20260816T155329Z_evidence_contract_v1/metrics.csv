@@ -1,0 +1,5 @@
+﻿metric,value,target,n,passed
+Exact Evidence Match Rate,1.0,1.0,23,True
+Evidence Contamination Rate,0.0,0.0,23,True
+Missing Evidence Rate,0.0,0.0,23,True
+Fail-Closed Pass Rate,1.0,1.0,3,True

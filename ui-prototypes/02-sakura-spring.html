@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微律 · 春日极光 — 青少年个性化健康微干预</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================
+   微律 · 春日极光
+   春樱基底 × 极光智能感：清晨天空 + 极光色晕 + 柔和玻璃
+   v2：天空尺度极光 + 质感层（网格/光尘/噪点）· 去模板化（渐变收敛/线性图标）
+       问答页组件样式同步 05 春日极光（字体与内容保留 02）
+   明朝体排印 · 非对称脉冲运动曲线
+     · 上升段 0→20%  easeInCubic（先慢后快）
+     · 衰减段 20%→100% 指数长尾（RC 放电）
+   ========================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --ink: #594452;
+  --ink-2: #93718a;
+  --ink-3: #bfa8b5;
+  --pink: #ffb7c5;
+  --pink-deep: #f27ba4;
+  --pink-soft: #ffdbe4;
+  --peach: #ffc4a3;
+  --peach-soft: #ffe9db;
+  --lav: #b79ae8;
+  --lav-soft: #ede4fb;
+  --purple: #9d7bdf;
+  --purple-deep: #8f6fd0;
+  --teal: #7cc6b7;
+  --teal-soft: #e4f3ef;
+  --teal-ink: #46958a;
+  --cream: #fffaf5;
+  --card: rgba(255, 255, 255, 0.66);
+  --card-border: rgba(255, 183, 197, 0.42);
+  --grad-aurora: linear-gradient(100deg, #ffa8bd 0%, #f78fb0 42%, #b9a7ea 100%);  /* v21：粉 → 玫 → 蓝紫（去桃橙的粉蓝渐变） */
+  --ease-rise: cubic-bezier(0.55, 0.055, 0.675, 0.19); /* 先慢后快 */
+  --ease-decay: cubic-bezier(0.16, 1, 0.3, 1);          /* 指数长尾 */
+  --disp: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  /* 春天清晨天空 + 极光：粉 → 薰衣草（v20：删除中段淡黄 #ffeede，整体加深一点） */
+  background: linear-gradient(172deg, #f8f3fb 0%, #fde9f1 38%, #f9e2ee 62%, #eee5fa 100%);
+  background-attachment: fixed;
+}
+::selection { background: rgba(255, 183, 197, 0.55); }
+
+/* ---------- 统一背景层：天空尺度极光色晕 + 网格 + 花瓣 + 光尘 + 噪点 ---------- */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+#petalField { position: absolute; inset: 0; overflow: hidden; }
+.petal { position: absolute; top: -8vh; will-change: transform; }
+.petal svg { display: block; animation: petalSpin var(--spin, 7s) linear infinite; }
+@keyframes petalSpin { to { transform: rotate(360deg); } }
+
+/* 极光色晕：vw 级天空尺度（路线 A），饱和度提一档，让亮色体系也能"被极光染开" */
+.blob { position: absolute; border-radius: 50%; filter: blur(110px); pointer-events: none; opacity: 0; animation: blobIn 2.6s var(--ease-decay) forwards, blobFloat 24s ease-in-out infinite alternate; }
+.blob.b1 { width: 58vw; height: 44vh; left: -12vw; top: -13vh; background: radial-gradient(closest-side, rgba(247,143,176,0.42), transparent 70%); }
+.blob.b2 { width: 52vw; height: 40vh; right: -13vw; top: -6vh; background: radial-gradient(closest-side, rgba(255,164,116,0.34), transparent 70%); animation-delay: .35s, 2s; }
+.blob.b3 { width: 46vw; height: 36vh; left: 24vw; bottom: -14vh; background: radial-gradient(closest-side, rgba(178,132,230,0.34), transparent 70%); animation-delay: .7s, 4s; }
+.blob.b4 { width: 40vw; height: 30vh; right: -10vw; bottom: -11vh; background: radial-gradient(closest-side, rgba(116,205,183,0.26), transparent 70%); animation-delay: 1s, 1.2s; }
+@keyframes blobIn { to { opacity: 1; } }
+@keyframes blobFloat { from { transform: translateY(0) scale(1); } to { transform: translateY(-38px) scale(1.12); } }
+
+/* 微网格：极淡结构线，只在上半屏渐隐（AI 的秩序感，不冰冷） */
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(89, 68, 82, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(89, 68, 82, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% -6%, #000 22%, transparent 72%);
+  mask-image: radial-gradient(ellipse 100% 70% at 50% -6%, #000 22%, transparent 72%);
+  animation: gridPulse 16s ease-in-out infinite;
+}
+@keyframes gridPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+/* 光尘（JS 生成）：暖色微粒的非对称脉冲闪烁 */
+#dust { position: absolute; inset: 0; }
+.dust { position: absolute; border-radius: 50%; animation: dustTwinkle var(--d, 4s) ease-out infinite var(--delay, 0s); }
+@keyframes dustTwinkle {
+  0%   { opacity: 0;   transform: scale(0.4); animation-timing-function: var(--ease-rise); }
+  20%  { opacity: var(--o, 0.8); transform: scale(1); animation-timing-function: var(--ease-decay); }
+  100% { opacity: 0.12; transform: scale(0.5); }
+}
+/* 噪点纹理：细腻纸感颗粒 */
+.bg-noise {
+  position: absolute; inset: 0; opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* ---------- 顶部进度条（仅吸附态显示；初始进度移至今日页 Hero 内） ---------- */
+.topbar-wrap { position: relative; z-index: 55; max-width: 1080px; margin: 0 auto; height: 0; padding: 0; }
+.topbar {
+  position: fixed; top: 8px; left: 50%; transform: translateX(-50%);
+  width: min(640px, calc(100vw - 28px)); height: 40px; z-index: 60;
+  display: flex; align-items: center; gap: 12px; padding: 0 18px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 183, 197, 0.4);
+  box-shadow: 0 14px 38px rgba(247, 143, 176, 0.28);
+  transform: translateX(160%); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform 0.55s var(--ease-decay), opacity 0.4s var(--ease-decay), visibility 0.55s;
+}
+.tb-label { font-size: 12px; letter-spacing: 2px; color: var(--purple-deep); font-weight: 700; flex: none; }
+.tb-num { font-family: var(--disp); font-size: 15px; font-weight: 600; color: var(--ink); flex: none; }
+.tb-track { flex: 1; height: 8px; border-radius: 99px; background: #ffe9ef; overflow: hidden; border: 1px solid rgba(255, 183, 197, 0.4); }
+.tb-fill { height: 100%; width: 0%; border-radius: 99px;
+  background: linear-gradient(90deg, #ffb7c5, #f78fb0 45%, #b9a7ea);
+  box-shadow: 0 0 12px rgba(233, 160, 220, 0.5);
+  transition: width 0.9s var(--ease-decay); }
+.tb-note { font-size: 11.5px; color: var(--ink-3); flex: none; letter-spacing: 1px; }
+/* 吸附态：滚动后淡入固定于顶部，玻璃悬浮条 */
+body.tb-dock .topbar { transform: translateX(-50%); opacity: 1; visibility: visible; pointer-events: auto; }
+body.tb-dock .navbar { top: 54px; }
+
+/* ---------- 顶部漂浮导航 ---------- */
+.navbar {
+  position: sticky; top: 14px; z-index: 50;
+  max-width: 1080px; margin: 0 auto; padding: 0 20px;
+  transition: top 0.55s var(--ease-decay);
+}
+.nav-pill {
+  display: flex; align-items: center; gap: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  outline: 1px solid rgba(255, 183, 197, 0.35);
+  border-radius: 999px; padding: 9px 12px 9px 20px;
+  box-shadow: 0 10px 34px rgba(247, 143, 176, 0.18);
+}
+.logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logo-flower { width: 30px; height: 30px; animation: flowerSway 6s ease-in-out infinite; transform-origin: 50% 80%; }
+@keyframes flowerSway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(8deg); } }
+.logo b { font-family: var(--disp); font-size: 21px; font-weight: 600; letter-spacing: 2px; color: #f27ba4; }
+.logo span { font-size: 10px; color: var(--ink-3); letter-spacing: 2px; display: block; margin-top: 1px; }
+.tabs { position: relative; display: flex; gap: 4px; margin-left: 6px; background: rgba(255, 219, 228, 0.4); padding: 4px; border-radius: 999px; }
+/* 导航滑块（同步 05）：CSS 过渡驱动，衰减曲线滑入 */
+.tab-glider {
+  position: absolute; z-index: 0; top: 4px; left: 0; height: calc(100% - 8px);
+  border-radius: 999px;
+  background: var(--grad-aurora);
+  box-shadow: 0 4px 18px rgba(169, 156, 224, 0.4);
+  transition: transform 0.55s var(--ease-decay), width 0.55s var(--ease-decay);
+}
+.tab {
+  border: none; background: none; cursor: pointer; font-family: var(--sans);
+  font-size: 13.5px; color: var(--ink-2); padding: 7px 16px; border-radius: 999px;
+  transition: color 0.4s var(--ease-decay); position: relative; z-index: 1;
+}
+.tab:hover { color: var(--pink-deep); }
+.tab.active { color: #fff; font-weight: 500; text-shadow: 0 1px 6px rgba(180, 90, 130, 0.25); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.nav-date { font-size: 11.5px; color: var(--ink-3); letter-spacing: 1px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #ffd9e2, #c9a7eb);
+  display: grid; place-items: center; font-size: 13px; cursor: pointer;
+  border: 2px solid #fff; box-shadow: 0 4px 12px rgba(247,143,176,0.3);
+  transition: transform 0.5s var(--ease-decay);
+}
+.avatar:hover { transform: scale(1.1) rotate(-6deg); }
+
+/* ---------- 布局与视图切换（同步 05：直接切换 + 上浮渐入） ---------- */
+.shell { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 40px 22px 110px; }
+.view { display: none; }
+.view.active { display: block; animation: viewIn 0.7s var(--ease-decay) both; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+/* ---------- 通用卡片（降噪版：更白更平，让背景色晕透进来） ---------- */
+.card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(147, 113, 138, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(89, 68, 82, 0.07);
+}
+
+/* ---------- 今日页 · 问候与观察（同步 05：文案左对齐） ---------- */
+.hero { padding: 34px 0 26px; position: relative; }
+/* 首屏惊艳时刻：极光弧带，随文案左移至「早上好，小满」身后 */
+.hero .hero-arc {
+  position: absolute; left: -48px; top: 54px; z-index: -1; pointer-events: none;
+  width: min(600px, 100%); height: 150px;
+  background: linear-gradient(92deg, rgba(255,183,197,0.55) 0%, rgba(255,196,163,0.45) 36%, rgba(201,168,235,0.5) 68%, transparent 97%);
+  border-radius: 50% 50% 44% 56% / 88%;
+  filter: blur(24px);
+  animation: heroArcDrift 14s ease-in-out infinite alternate;
+}
+@keyframes heroArcDrift { from { transform: translateX(0) scaleX(1); opacity: 0.88; } to { transform: translateX(16px) scaleX(1.04); opacity: 1; } }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 2px;
+  color: #b57edc; background: var(--lav-soft); border: 1.5px dashed rgba(201,168,235,0.6);
+  padding: 7px 16px; border-radius: 999px; margin-bottom: 20px;
+}
+.hero h1 { font-family: var(--disp); font-weight: 900; font-size: clamp(32px, 5vw, 50px); color: var(--ink); line-height: 1.3; }
+.hero h1 em {
+  font-style: normal; position: relative; display: inline-block;
+  background: linear-gradient(100deg, #f27ba4, #b06fd8 60%, #8f6fd0);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero h1 em::after {
+  content: ''; position: absolute; left: 2%; bottom: 4px; width: 96%; height: 12px; z-index: -1;
+  background: linear-gradient(90deg, rgba(255,183,197,0.55), rgba(255,196,163,0.45), rgba(201,168,235,0.5));
+  border-radius: 99px; animation: hlPulse 3.4s ease-in-out infinite;
+}
+@keyframes hlPulse { 0%,100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(1.04); opacity: 0.75; } }
+.hero p { color: var(--ink-2); font-size: 14.5px; margin-top: 16px; line-height: 2; font-weight: 300; max-width: 620px; }
+.hero p b { color: var(--pink-deep); font-weight: 500; }
+/* 进度行（同步 05：纯文字无卡片边框，位于微律观察上方；左进度 + 右检查按钮） */
+.progress-row { display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
+.progress-num { font-family: var(--disp); font-size: 26px; font-weight: 700; }
+.progress-num small { font-size: 13px; color: var(--ink-3); font-weight: 400; margin-left: 6px; }
+.progress-track { flex: 1; max-width: 380px; min-width: 120px; height: 6px; border-radius: 99px; background: rgba(147,113,138,0.12); overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, #ffb7c5, #f78fb0 45%, #b9a7ea); box-shadow: 0 0 16px rgba(233,160,220,0.45); transition: width 0.9s var(--ease-decay); }
+.progress-note { font-size: 12px; color: var(--ink-3); }
+.progress-cta { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.hero-hint { font-size: 11px; color: var(--ink-3); letter-spacing: 0.5px; }
+.btn-sm { padding: 9px 18px; font-size: 13px; }
+
+/* 微律观察卡 */
+.observe-card { padding: 26px 30px; position: relative; overflow: hidden;
+  background: linear-gradient(150deg, rgba(255,255,255,0.8), rgba(255,244,249,0.6) 55%, rgba(245,238,253,0.6)); }
+.observe-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #f78fb0; opacity: 0.85; }
+.obs-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.obs-head h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; letter-spacing: 3px; }
+.live { font-size: 11px; color: var(--pink-deep); display: inline-flex; gap: 6px; align-items: center; }
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink-deep); animation: dotPulse 2.2s infinite; }
+@keyframes dotPulse {
+  0% { transform: scale(1); opacity: 1; animation-timing-function: var(--ease-rise); }
+  20% { transform: scale(1.8); opacity: 1; animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+.obs-main { font-family: var(--disp); font-weight: 600; font-size: 24px; color: var(--ink); line-height: 1.5; }
+.obs-main em {
+  font-style: normal;
+  background: linear-gradient(100deg, #f27ba4, #9d7bdf);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.obs-sub { margin-top: 8px; font-size: 13px; color: var(--ink-2); line-height: 1.9; font-weight: 300; }
+.obs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.ob-stat { background: rgba(255,255,255,0.72); border: 1px solid rgba(255,183,197,0.35); border-radius: 16px; padding: 12px 14px; }
+.os-k { display: block; font-size: 11px; color: var(--ink-3); letter-spacing: 2px; }
+.ob-stat b { display: block; font-family: var(--disp); font-size: 16.5px; font-weight: 600; color: var(--ink); margin: 5px 0 3px; }
+.os-delta { font-size: 11px; letter-spacing: 0.5px; }
+.os-delta.up { color: var(--teal-ink); }
+.os-delta.warn { color: #d08a63; }
+.sug-row { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(255,183,197,0.5); }
+.sug-title { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-bottom: 8px; }
+.sug-item { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); line-height: 1.9; }
+.sug-item b { color: var(--ink); }
+.sug-item .sg-ic { font-size: 13px; }
+
+.today-grid { display: grid; grid-template-columns: 1fr 330px; gap: 20px; align-items: start; margin-top: 8px; }
+.section-title { display: flex; align-items: baseline; gap: 10px; margin: 22px 4px 16px; }
+.section-title h2 { font-family: var(--disp); font-weight: 600; font-size: 21px; color: var(--ink); letter-spacing: 1px; }
+.section-title span { font-size: 12px; color: var(--ink-3); }
+
+/* 状态卡（心情） */
+.mood-card { padding: 24px 26px; }
+.mood-head { display: flex; justify-content: space-between; align-items: center; }
+.mood-head h3 { font-size: 15px; font-weight: 700; }
+.mood-row { margin-top: 18px; }
+.mood-row .lbl { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; letter-spacing: 1px; }
+.moods { display: flex; gap: 10px; }
+.mood {
+  flex: 1; border: 1.5px solid rgba(255,183,197,0.5); background: #fff; border-radius: 18px;
+  padding: 12px 4px 10px; cursor: pointer; text-align: center; transition: all 0.45s var(--ease-decay);
+  font-family: var(--sans);
+}
+.mood .face { font-size: 24px; display: block; transition: transform 0.5s var(--ease-decay); }
+.mood span { font-size: 11.5px; color: var(--ink-2); display: block; margin-top: 5px; }
+.mood:hover { transform: translateY(-3px); border-color: var(--pink-deep); }
+.mood:hover .face { transform: scale(1.15) rotate(-8deg); }
+.mood.on { background: linear-gradient(150deg, #fff0f4, #fde7f3); border-color: var(--pink-deep); box-shadow: 0 8px 20px rgba(247,143,176,0.25); }
+.mood.on .face { transform: scale(1.2); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1.5px solid rgba(255,183,197,0.6); background: #fff; color: var(--ink-2);
+  font-size: 13px; padding: 7px 16px; border-radius: 999px; cursor: pointer; font-family: var(--sans);
+  transition: all 0.45s var(--ease-decay);
+}
+.chip:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: translateY(-2px); }
+.chip.on { background: linear-gradient(120deg, #ffa8bd, #f78fb0 60%, #b9a7ea); color: #fff; border-color: transparent; font-weight: 700; box-shadow: 0 4px 14px rgba(233,160,220,0.32), inset 0 1px 0 rgba(255,255,255,0.28); }
+.mood-note { margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(255,183,197,0.6); font-size: 12px; color: var(--ink-3); line-height: 1.9; }
+.mood-note b { color: var(--ink-2); }
+.check-focus { animation: checkFocus 1.6s var(--ease-decay); }
+@keyframes checkFocus {
+  0%,100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 14px 40px rgba(247,143,176,0.13); }
+  30% { box-shadow: 0 0 0 5px rgba(157,123,223,0.18), 0 0 44px rgba(157,123,223,0.32); }
+}
+
+/* 任务卡 */
+.task-list { display: flex; flex-direction: column; gap: 16px; }
+.task-card { padding: 24px 26px; position: relative; overflow: hidden; }
+.task-card::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 99px; background: #f78fb0; }
+.task-card.t-eye::before { background: #6fbcae; }
+.task-card.t-move::before { background: #b79ae8; }
+.task-card.t-sleep::before { background: #a678d8; }
+.task-card.done::before { background: var(--purple); }
+.task-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.task-domain { font-size: 11px; letter-spacing: 2px; font-weight: 700; color: var(--pink-deep); }
+.task-card.t-eye .task-domain { color: var(--teal-ink); }
+.task-card.t-move .task-domain { color: #9d7bdf; }
+.task-card.t-sleep .task-domain { color: #a678d8; }
+.task-meta { font-size: 12px; color: var(--ink-3); }
+.task-name { font-family: var(--disp); font-weight: 600; font-size: 22px; color: var(--ink); letter-spacing: 0.5px; }
+.task-desc { margin-top: 8px; color: var(--ink-2); font-size: 13.5px; line-height: 1.95; font-weight: 300; }
+.task-why {
+  margin-top: 14px; display: flex; gap: 11px; padding: 13px 15px;
+  background: linear-gradient(120deg, #fff4f7, #f6effe); border-radius: 16px;
+  border: 1px solid rgba(255,183,197,0.35);
+}
+.task-why .why-icon { font-size: 15px; }
+.task-why b { display: block; font-size: 11.5px; color: #c88aa5; letter-spacing: 1px; margin-bottom: 4px; }
+.task-why p { font-size: 12.5px; color: var(--ink-2); line-height: 1.8; }
+.task-actions { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-height: 44px; }
+/* 任务终态提示（完成后替换操作按钮） */
+.done-note { font-size: 13px; color: var(--teal-ink); letter-spacing: 1px; opacity: 0; animation: noteIn 0.8s var(--ease-decay) 0.15s forwards; }
+@keyframes noteIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.btn {
+  font-family: var(--sans); font-size: 13.5px; cursor: pointer; border-radius: 999px;
+  padding: 11px 24px; border: 1.5px solid transparent; letter-spacing: 1px;
+  transition: transform 0.5s var(--ease-decay), box-shadow 0.5s var(--ease-decay), background 0.4s;
+  position: relative;
+}
+.btn:active { transform: scale(0.94); }
+.btn-primary {
+  color: #fff; font-weight: 700;
+  background: linear-gradient(120deg, #ffa8bd, #f78fb0 50%, #b9a7ea);
+  background-size: 180% 100%;
+  box-shadow: 0 6px 18px rgba(233,160,220,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.btn-primary:hover { background-position: 90% 0; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(233,160,220,0.45), inset 0 1px 0 rgba(255,255,255,0.3); }
+.btn-ghost { background: #fff; border-color: rgba(255,183,197,0.65); color: var(--ink-2); }
+.btn-ghost:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: translateY(-2px); }
+.btn-ok { background: var(--teal-soft); border-color: rgba(124,198,183,0.65); color: var(--teal-ink); font-weight: 700; }
+.btn-ok:hover { box-shadow: 0 8px 18px rgba(124,198,183,0.35); transform: translateY(-2px); }
+
+/* 完成徽章 —— 与完成符号融合出现 */
+.task-state { position: absolute; top: 18px; right: 22px; width: 44px; height: 44px; }
+.task-state svg { width: 100%; height: 100%; }
+.task-state .ck-ring { fill: none; stroke: rgba(124,198,183,0.5); stroke-width: 2; stroke-dasharray: 132; stroke-dashoffset: 132; }
+.task-state .ck-path { fill: none; stroke: var(--purple); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; }
+/* 符号在粒子汇聚与光球之后自然浮现 */
+.task-card.done .ck-ring { animation: ringDraw 0.9s var(--ease-decay) 0.65s forwards; }
+.task-card.done .ck-path { animation: pathDraw 0.55s var(--ease-decay) 0.95s forwards; }
+@keyframes ringDraw { to { stroke-dashoffset: 0; } }
+@keyframes pathDraw { to { stroke-dashoffset: 0; } }
+.task-badge { display: none; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--purple-deep); letter-spacing: 1px; }
+.task-card.done .task-badge { display: inline-flex; animation: badgeIn 0.8s var(--ease-decay) 1.05s both; }
+@keyframes badgeIn { from { opacity: 0; transform: translateY(8px); filter: blur(3px); text-shadow: 0 0 18px rgba(157,123,223,0.9); } to { opacity: 1; transform: none; filter: blur(0); } }
+.task-badge .bdot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: dotPulse 2.4s infinite; }
+.task-card.partial .task-badge { display: inline-flex; color: #c471b8; animation: badgeIn 0.8s var(--ease-decay) 0.4s both; }
+.task-card.skippedcard { opacity: 0.6; }
+.task-card.skippedcard .task-badge { display: inline-flex; color: var(--ink-3); }
+
+/* 完成特效：粒子汇聚 → 核心光球 → 符号浮现 */
+.fx-p { position: fixed; z-index: 96; pointer-events: none; border-radius: 50%; will-change: transform, opacity; }
+.fx-orb {
+  position: fixed; z-index: 97; pointer-events: none; width: 22px; height: 22px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 35% 30%, #fff, #ffd9e2 40%, #c9a8eb 78%);
+  box-shadow: 0 0 22px rgba(247,143,176,0.85), 0 0 64px rgba(157,123,223,0.5);
+}
+.fx-halo {
+  position: fixed; z-index: 95; pointer-events: none; width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid rgba(157,123,223,0.4); transform: translate(-50%, -50%);
+}
+
+/* ---------- 右栏：AI 节奏呼吸 ---------- */
+.breath-card { padding: 24px 26px; text-align: center; overflow: hidden; }
+.breath-card h3 { font-family: var(--disp); font-weight: 600; font-size: 17px; letter-spacing: 3px; color: var(--ink); }
+.breath-card .sub { font-size: 11px; color: var(--ink-3); margin: 5px 0 10px; letter-spacing: 1px; }
+.breath-stage { position: relative; height: 190px; display: grid; place-items: center; margin: 4px 0; }
+.breath-core {
+  width: 118px; height: 118px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(255,255,255,0.95), rgba(255,183,197,0.75) 40%, rgba(201,168,235,0.55) 72%, rgba(255,196,163,0.35));
+  box-shadow: 0 0 34px rgba(247,143,176,0.4), 0 0 72px rgba(201,168,235,0.28), inset 0 0 24px rgba(255,255,255,0.6);
+  animation: breathCycle 9s infinite;
+  display: grid; place-items: center;
+}
+@keyframes breathCycle {
+  0%   { transform: scale(1); animation-timing-function: var(--ease-rise); }
+  20%  { transform: scale(1.24); animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); }
+}
+.breath-halo { position: absolute; width: 118px; height: 118px; border-radius: 50%; border: 1.5px solid rgba(242,123,164,0.28); animation: breathCycle 9s infinite; }
+.breath-halo.h2 { animation-delay: 0.18s; opacity: 0.55; }
+.breath-halo.h3 { animation-delay: 0.36s; opacity: 0.3; }
+.breath-label { position: absolute; bottom: 6px; left: 0; right: 0; font-size: 12.5px; letter-spacing: 4px; color: var(--ink-2); font-family: var(--disp); }
+.breath-count { font-family: var(--disp); font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgba(242,123,164,0.6); }
+.breath-tip { font-size: 11.5px; color: var(--ink-3); line-height: 1.8; border-top: 1px dashed rgba(255,183,197,0.5); padding-top: 12px; margin-top: 4px; }
+
+/* 右栏：今日节奏 */
+.rhythm-card { padding: 22px 24px; margin-top: 18px; }
+.rhythm-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 3px; }
+.rhythm-card .sub { font-size: 11px; color: var(--ink-3); margin-bottom: 14px; }
+.rhythm-item { display: flex; gap: 12px; position: relative; padding-bottom: 15px; }
+.rhythm-item:last-child { padding-bottom: 0; }
+.rhythm-item::before { content: ''; position: absolute; left: 5px; top: 15px; bottom: 0; width: 1.5px; background: rgba(255,183,197,0.55); }
+.rhythm-item:last-child::before { display: none; }
+.rhythm-time { font-size: 11px; color: var(--ink-3); width: 38px; flex: none; padding-top: 2px; }
+.rhythm-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; margin-top: 1px; background: #fff; border: 2.5px solid var(--pink); }
+.rhythm-item.now .rhythm-dot { border-color: var(--purple); animation: dotPulse 2.4s infinite; }
+.rhythm-txt { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.rhythm-txt b { color: var(--ink); font-weight: 500; display: block; }
+
+/* ---------- 问问薇薇 · AI 问答管线（05 春日极光设计语言） ---------- */
+.ask-wrap { max-width: 820px; margin: 0 auto; position: relative; }
+/* AI 页专属背景：极光晕在内容后方缓慢漂移 */
+.ask-bg { position: absolute; inset: -40px -140px -20px; z-index: -1; pointer-events: none; }
+.ask-bg i { position: absolute; border-radius: 50%; filter: blur(78px); animation: askDrift 30s ease-in-out infinite alternate; }
+.ask-bg i.g1 { width: 430px; height: 330px; left: -70px; top: 60px; background: radial-gradient(closest-side, rgba(255,183,197,0.5), transparent 70%); }
+.ask-bg i.g2 { width: 470px; height: 350px; right: -90px; top: 160px; background: radial-gradient(closest-side, rgba(201,168,235,0.42), transparent 70%); animation-delay: -12s; }
+.ask-bg i.g3 { width: 360px; height: 280px; left: 32%; bottom: -20px; background: radial-gradient(closest-side, rgba(124,198,183,0.3), transparent 70%); animation-delay: -20s; }
+@keyframes askDrift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-28px, 22px) scale(1.12); } }
+
+.ask-hero { text-align: center; margin: 30px 0 26px; }
+/* AI 存在感：呼吸极光球 + 环绕花瓣 */
+.orb-stage { height: 132px; display: grid; place-items: center; margin-bottom: 12px; }
+.orb { width: 96px; height: 96px; position: relative; display: grid; place-items: center; }
+.orb-core {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 55%, #cdeee6);
+  box-shadow: 0 0 30px rgba(183,154,232,0.5), 0 0 60px rgba(255,183,197,0.35);
+  animation: orbBreath 6s infinite;
+}
+@keyframes orbBreath {
+  0%   { transform: scale(1); animation-timing-function: var(--ease-rise); }
+  20%  { transform: scale(1.2); animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1); }
+}
+.orb-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(183,154,232,0.45); animation: orbSpin 14s linear infinite; }
+.orb-ring.r2 { inset: -14px; border-color: rgba(255,183,197,0.4); animation-duration: 22s; animation-direction: reverse; }
+@keyframes orbSpin { to { transform: rotate(360deg); } }
+.orb-ring .op { position: absolute; top: -7px; left: 50%; margin-left: -7px; width: 14px; height: 14px; }
+.ask-hero h2 { font-family: var(--disp); font-weight: 600; font-size: 28px; }
+.ask-hero h2 em { font-style: normal; background: linear-gradient(96deg, #f27ba4, #b79ae8 60%, #7cc6b7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ask-hero p { color: var(--ink-3); font-size: 13px; margin-top: 10px; letter-spacing: 0.5px; line-height: 1.9; }
+
+.quick-row { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-bottom: 22px; }
+
+/* 问答流（页面级滚动，无内滚动条） */
+.ask-log { display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; min-height: 120px; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+/* 用户问题气泡 */
+.q-bubble {
+  align-self: flex-end; max-width: 78%;
+  background: linear-gradient(120deg, rgba(255,183,197,0.24), rgba(201,168,235,0.26));
+  border: 1px solid rgba(242,123,164,0.42);
+  color: var(--ink); padding: 12px 18px; border-radius: 18px 18px 4px 18px;
+  font-size: 14px; line-height: 1.8; animation: msgIn 0.65s var(--ease-decay) both;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+/* 管线组：阶段轨道 + 阶段卡 */
+.pipe { display: flex; flex-direction: column; gap: 14px; animation: msgIn 0.65s var(--ease-decay) both; }
+/* 阶段轨道：编号胶囊步进器（pending 描边 / active 极光填充 + 脉冲 / done 青色打勾） */
+.pipe-rail { display: flex; align-items: center; gap: 8px; }
+.pnode {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 7px; border-radius: 999px;
+  border: 1.5px solid rgba(255,183,197,0.5); background: rgba(255,255,255,0.72);
+  font-size: 12.5px; color: var(--ink-3); letter-spacing: 1px;
+  transition: color 0.5s var(--ease-decay), background 0.5s var(--ease-decay), border-color 0.5s var(--ease-decay);
+}
+.pnode .pno {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-family: var(--disp); font-style: normal; font-size: 11px; font-weight: 600;
+  background: #ffe9ef; color: var(--ink-3);
+  transition: background 0.5s var(--ease-decay), color 0.5s var(--ease-decay);
+}
+.pnode.active {
+  color: #fff; font-weight: 500; border-color: transparent;
+  background: var(--grad-aurora);
+  animation: nodePulse 1.8s infinite;
+}
+.pnode.active .pno { background: rgba(255,255,255,0.3); color: #fff; }
+.pnode.done { color: #8f6fd0; border-color: rgba(183,154,232,0.55); background: rgba(237,228,251,0.85); }
+.pnode.done .pno { background: #fff; color: #8f6fd0; font-size: 0; }
+.pnode.done .pno::before { content: '✓'; font-size: 11px; }
+@keyframes nodePulse {
+  0%   { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 0 rgba(255,183,197,0.4); animation-timing-function: var(--ease-rise); }
+  20%  { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 8px rgba(255,183,197,0.14); animation-timing-function: var(--ease-decay); }
+  100% { box-shadow: 0 4px 16px rgba(247,143,176,0.35), 0 0 0 0 rgba(255,183,197,0); }
+}
+.pline { flex: 1; min-width: 14px; height: 2.5px; background: rgba(147,113,138,0.12); border-radius: 99px; overflow: hidden; position: relative; }
+.pline::after { content: ''; position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--pink), var(--lav)); transition: width 0.8s var(--ease-decay); }
+.pline.fill::after { width: 100%; }
+/* 打字指示 */
+.typing { display: inline-flex; gap: 5px; padding: 5px 2px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); animation: typeDot 1.3s infinite; }
+.typing i:nth-child(2) { animation-delay: 0.18s; }
+.typing i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes typeDot {
+  0% { transform: translateY(0); opacity: 0.4; animation-timing-function: var(--ease-rise); }
+  20% { transform: translateY(-6px); opacity: 1; animation-timing-function: var(--ease-decay); }
+  100% { transform: translateY(0); opacity: 0.4; }
+}
+/* 阶段卡（问题拆解 / 知识检索） */
+.stage-card { padding: 20px 24px; animation: msgIn 0.65s var(--ease-decay) both; }
+.stage-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.stage-no { font-family: var(--disp); font-size: 12px; font-weight: 600; color: #fff; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--grad-aurora); box-shadow: 0 3px 10px rgba(157,123,223,0.3); }
+.stage-head h4 { font-size: 14px; font-weight: 700; letter-spacing: 1px; color: var(--ink); }
+.stage-state { font-size: 11px; color: var(--ink-3); margin-left: auto; letter-spacing: 1px; }
+.stage-lead { font-size: 13px; color: var(--ink-2); margin-bottom: 12px; line-height: 1.9; }
+.stage-lead b { color: var(--ink); }
+/* 方向行（问题拆解结果） */
+.dir-row {
+  display: flex; gap: 12px; align-items: baseline; padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.92);
+  animation: msgIn 0.6s var(--ease-decay) both; margin-bottom: 8px;
+}
+.dir-row:last-child { margin-bottom: 0; }
+.dir-no { font-family: var(--disp); flex: none; font-size: 13px; font-weight: 600; }
+.dirs .dir-row:nth-child(1) .dir-no { color: var(--pink-deep); }
+.dirs .dir-row:nth-child(2) .dir-no { color: var(--purple-deep); }
+.dirs .dir-row:nth-child(3) .dir-no { color: var(--teal-ink); }
+.dir-row b { font-size: 13.5px; color: var(--ink); display: block; font-weight: 600; }
+.dir-row span { font-size: 12px; color: var(--ink-3); line-height: 1.7; display: block; margin-top: 2px; }
+/* 知识块（RAG chunk 依据） */
+.chunk {
+  padding: 13px 16px; border-radius: 13px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.92);
+  animation: msgIn 0.6s var(--ease-decay) both;
+}
+.chunk:last-child { margin-bottom: 0; }
+.chunk-badge { display: inline-block; font-size: 10.5px; letter-spacing: 1.5px; padding: 3px 10px; border-radius: 99px; margin-bottom: 7px; font-weight: 500; color: var(--teal-ink); background: var(--teal-soft); border: 1px solid rgba(124,198,183,0.45); }
+.chunk p { font-size: 12.5px; color: var(--ink-2); line-height: 1.8; }
+.chunk p b { color: var(--ink); font-weight: 500; }
+/* 相关度条 */
+.rel { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+.rel-bar { flex: 1; max-width: 200px; height: 4px; border-radius: 99px; background: rgba(147,113,138,0.1); overflow: hidden; }
+.rel-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--lav), var(--pink)); transition: width 1.1s var(--ease-decay); }
+.rel-val { font-size: 10.5px; color: var(--ink-3); letter-spacing: 1px; font-family: var(--disp); }
+/* 最终回答卡：柔光扩散 */
+.answer-card { position: relative; overflow: hidden; padding: 22px 26px; animation: msgIn 0.7s var(--ease-decay) both; }
+/* 初始问候卡：不单独入场，跟随问答页整体一起渐入（切页也不重播光效） */
+.greeting-card { animation: none; }
+.greeting-card .answer-glow { animation: none; opacity: 0; }
+.answer-glow {
+  position: absolute; left: 50%; top: 18px; width: 300px; height: 300px; margin: -150px;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,219,228,0.6), rgba(237,228,251,0.35) 55%, transparent 75%);
+  animation: glowSpread 1.6s var(--ease-rise) both;
+}
+@keyframes glowSpread {
+  0%   { transform: scale(0.4); opacity: 0; animation-timing-function: var(--ease-rise); }
+  20%  { opacity: 0.9; animation-timing-function: var(--ease-decay); }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.answer-face { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 11px; color: var(--ink-3); letter-spacing: 2px; position: relative; }
+.answer-face .mini { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 60%, #cdeee6); box-shadow: 0 0 10px rgba(183,154,232,0.45); }
+.answer-text { font-size: 14px; color: var(--ink-2); line-height: 2; position: relative; }
+.answer-text b { color: var(--ink); font-weight: 600; }
+/* 回答中的任务小卡 */
+.mini-task {
+  margin-top: 14px; padding: 13px 16px; border-radius: 13px;
+  background: rgba(237,228,251,0.65); border: 1px solid rgba(201,168,235,0.4);
+  display: flex; align-items: center; gap: 13px; animation: msgIn 0.6s var(--ease-decay) 0.2s both;
+}
+.mini-task .mt-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; font-size: 15px; background: linear-gradient(135deg, #ffd9e2, #eee2fd); }
+.mini-task b { font-size: 13.5px; color: var(--ink); display: block; }
+.mini-task span { font-size: 11.5px; color: var(--ink-3); }
+.mini-task .go { margin-left: auto; font-size: 12px; color: var(--purple-deep); border: 1px solid rgba(183,154,232,0.5); background: none; padding: 6px 13px; border-radius: 99px; cursor: pointer; transition: all 0.4s var(--ease-decay); font-family: var(--sans); }
+.mini-task .go:hover { background: rgba(237,228,251,0.9); transform: translateY(-1px); }
+/* 安全提示卡（疼痛等风险输入） */
+.safety-card { margin-top: 4px; padding: 15px 17px; border-radius: 13px; background: rgba(253,240,246,0.85); border: 1.5px solid rgba(201,168,235,0.55); animation: msgIn 0.6s var(--ease-decay) both; }
+.safety-card .st { display: flex; gap: 7px; align-items: center; font-size: 13px; color: #c06d92; font-weight: 700; margin-bottom: 7px; letter-spacing: 1px; }
+.safety-card p { font-size: 12.5px; color: var(--ink-2); line-height: 1.85; }
+.safety-card .rule { margin-top: 9px; font-size: 11px; color: var(--ink-3); border-top: 1px dashed rgba(201,168,235,0.5); padding-top: 8px; }
+/* 引用来源 */
+.cites { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,183,197,0.55); }
+.cites .ct { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-bottom: 7px; }
+.cite { font-size: 12px; color: var(--ink-2); display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
+.cite::before { content: '❀'; color: var(--pink); font-size: 10px; }
+/* 输入区（玻璃卡 + 呼吸光点） */
+.ask-input { display: flex; gap: 12px; padding: 12px 14px; align-items: center; }
+.ask-input .ai-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; margin-left: 6px; background: radial-gradient(circle at 35% 30%, #ffd3e0, #e0cdf8 60%, #cdeee6); box-shadow: 0 0 12px rgba(183,154,232,0.5); animation: orbBreath 6s infinite; }
+.ask-input input {
+  flex: 1; background: rgba(255,255,255,0.75); border: 1.5px solid rgba(255,183,197,0.55); border-radius: 13px;
+  padding: 12px 18px; color: var(--ink); font-size: 14px; font-family: var(--sans); outline: none;
+  transition: border-color 0.4s var(--ease-decay), box-shadow 0.4s var(--ease-decay);
+}
+.ask-input input:focus { border-color: var(--pink-deep); box-shadow: 0 0 0 4px rgba(247,143,176,0.12); }
+.ask-input input::placeholder { color: var(--ink-3); }
+.btn-send {
+  border: none; cursor: pointer; border-radius: 13px; padding: 0 26px; height: 46px; flex: none;
+  background: linear-gradient(120deg, #ffa8bd, #f78fb0 55%, #c9a8eb); color: #fff; font-weight: 700;
+  font-size: 14px; font-family: var(--sans); letter-spacing: 2px;
+  box-shadow: 0 6px 18px rgba(247,143,176,0.4); transition: transform 0.5s var(--ease-decay), box-shadow 0.5s var(--ease-decay);
+}
+.btn-send:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(247,143,176,0.5); }
+.btn-send:active { transform: scale(0.94); }
+.ask-foot { text-align: center; font-size: 11px; color: var(--ink-3); margin-top: 12px; letter-spacing: 0.5px; line-height: 1.8; }
+
+/* ---------- 我的画像 ---------- */
+.profile-wrap { max-width: 940px; margin: 0 auto; }
+.profile-head { margin: 26px 0 22px; }
+.profile-head h2 { font-family: var(--disp); font-weight: 600; font-size: 27px; }
+.profile-head p { color: var(--ink-2); font-size: 13px; margin-top: 8px; line-height: 1.9; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.p-card { padding: 24px 26px; }
+.p-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 14px; display: flex; gap: 9px; align-items: center; }
+.pref-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed rgba(255,183,197,0.5); font-size: 13px; }
+.pref-line:last-child { border-bottom: none; }
+.pref-line .k { color: var(--ink-2); }
+.pref-line .v { color: var(--ink); font-weight: 500; }
+.pref-line .v.up { color: var(--purple-deep); }
+.pref-line .v.down { color: var(--ink-3); }
+.stat-ring { display: flex; align-items: center; gap: 18px; }
+.ring-box { width: 88px; height: 88px; position: relative; flex: none; }
+.ring-box svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-box .rbg { fill: none; stroke: #ffe6ec; stroke-width: 8; }
+.ring-box .rfg { fill: none; stroke: #f27ba4; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 258; stroke-dashoffset: 258; }
+.ring-num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--disp); font-size: 18px; font-weight: 600; color: var(--pink-deep); }
+.stat-txt { font-size: 12.5px; color: var(--ink-2); line-height: 2; }
+.stat-txt b { color: var(--ink); }
+.mem-list { display: flex; flex-direction: column; gap: 10px; }
+.mem-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; background: #fff; border: 1px solid rgba(255,183,197,0.45); border-radius: 16px; transition: transform 0.5s var(--ease-decay), opacity 0.5s, max-height 0.5s, margin 0.5s, padding 0.5s; }
+.mem-item:hover { transform: translateX(4px) rotate(0.4deg); }
+.mem-item .mi-ic { flex: none; font-size: 15px; }
+.mem-item p { flex: 1; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.mem-item p b { color: var(--ink); font-weight: 500; }
+.mem-del { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid rgba(255,183,197,0.6); background: #fff; color: var(--ink-3); cursor: pointer; font-size: 12px; line-height: 1; transition: all 0.4s var(--ease-decay); font-family: var(--sans); }
+.mem-del:hover { border-color: var(--pink-deep); color: var(--pink-deep); transform: rotate(90deg) scale(1.1); }
+.mem-item.removing { opacity: 0; transform: translateX(36px) scale(0.9); max-height: 0; margin: -12px 0; padding: 0 15px; border-width: 0; }
+.consent { margin-top: 16px; font-size: 11.5px; color: var(--ink-3); line-height: 1.9; padding: 13px 16px; border-radius: 14px; background: var(--lav-soft); border: 1.5px dashed rgba(201,168,235,0.5); }
+
+/* ---------- 周度变化 ---------- */
+.week-wrap { max-width: 940px; margin: 0 auto; }
+.week-head { margin: 26px 0 22px; }
+.week-head h2 { font-family: var(--disp); font-weight: 600; font-size: 27px; }
+.week-head p { color: var(--ink-2); font-size: 13px; margin-top: 8px; line-height: 1.9; }
+.chart-card { padding: 26px 28px 16px; }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.chart-head h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; }
+.chart-head span { font-size: 11px; color: var(--ink-3); }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-line { fill: none; stroke: #f78fb0; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 620; stroke-dashoffset: 620; }
+.chart-area { fill: url(#areaGrad2); opacity: 0; }
+.view.active .chart-line { animation: chartDraw 1.6s var(--ease-decay) 0.3s forwards; }
+.view.active .chart-area { animation: areaFade 1.2s var(--ease-decay) 1.1s forwards; }
+@keyframes chartDraw { to { stroke-dashoffset: 0; } }
+@keyframes areaFade { to { opacity: 1; } }
+.week-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; margin-top: 18px; align-items: start; }
+.tl-card { padding: 24px 26px; }
+.tl-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 16px; }
+.tl-item { display: flex; gap: 13px; position: relative; padding-bottom: 20px; }
+.tl-item:last-child { padding-bottom: 2px; }
+.tl-item::before { content: ''; position: absolute; left: 6px; top: 16px; bottom: 0; width: 1.5px; background: rgba(255,183,197,0.6); }
+.tl-item:last-child::before { display: none; }
+.tl-day { flex: none; width: 38px; font-size: 12px; color: var(--ink-3); padding-top: 2px; }
+.tl-dot { flex: none; width: 13px; height: 13px; border-radius: 50%; margin-top: 1px; background: #fff; border: 2.5px solid var(--pink); }
+.tl-item.hit .tl-dot { border-color: var(--teal); }
+.tl-item.adj .tl-dot { border-color: var(--lav); }
+.tl-body { font-size: 12.5px; color: var(--ink-2); line-height: 1.85; }
+.tl-body b { color: var(--ink); font-weight: 500; }
+.tl-tag { display: inline-block; font-size: 10.5px; padding: 2px 9px; border-radius: 99px; margin-left: 6px; }
+.tl-tag.g { color: #3f9484; background: var(--teal-soft); }
+.tl-tag.m { color: #a678d8; background: var(--lav-soft); }
+.tl-tag.n { color: var(--ink-3); background: #f7f2f4; }
+.insight-card { padding: 24px 26px; background: linear-gradient(150deg, #fff4f7, #f6effe 70%); }
+.insight-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+.insight-card p { font-size: 12.5px; color: var(--ink-2); line-height: 2; }
+.insight-card p b { color: var(--pink-deep); }
+.insight-quote { margin-top: 14px; padding: 12px 15px; border-left: 3px solid var(--pink); background: #fff; border-radius: 0 13px 13px 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.9; }
+
+/* ---------- Toast / 原型标记 ---------- */
+.toast-box { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
+.toast {
+  padding: 12px 24px; border-radius: 999px; font-size: 13px; letter-spacing: 1px; color: var(--ink);
+  background: rgba(255, 255, 255, 0.95); border: 1.5px solid rgba(255,183,197,0.7);
+  box-shadow: 0 12px 36px rgba(247,143,176,0.25); animation: toastIn 0.65s var(--ease-decay) both;
+  display: flex; gap: 8px; align-items: center;
+}
+.toast.out { animation: toastOut 0.5s var(--ease-rise) forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(18px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(12px) scale(0.94); } }
+.proto-tag {
+  position: fixed; left: 18px; bottom: 18px; z-index: 80; font-size: 11px; letter-spacing: 2px;
+  color: var(--ink-3); padding: 7px 14px; border-radius: 999px; border: 1.5px dashed rgba(255,183,197,0.7);
+  background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); user-select: none;
+  cursor: pointer; transition: color 0.4s, border-color 0.4s;
+}
+.proto-tag:hover { color: var(--pink-deep); border-color: var(--pink-deep); }
+
+/* ---------- 线性图标系统（统一线宽，替代图标位 emoji） ---------- */
+.ic { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.why-icon { display: inline-flex; color: var(--pink-deep); }
+.sg-ic { display: inline-flex; color: var(--pink-deep); }
+.sg-ic.night { color: var(--purple-deep); }
+.p-card h3 .ic { width: 16px; height: 16px; color: #a678d8; }
+.mi-ic { display: inline-flex; color: var(--purple-deep); }
+.insight-card h3 { display: flex; gap: 9px; align-items: center; }
+.insight-card h3 .ic { color: var(--pink-deep); }
+
+/* 级联入场（同步 05：五级延迟） */
+.stagger > * { animation: viewIn 0.8s var(--ease-decay) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.13s; }
+.stagger > *:nth-child(3) { animation-delay: 0.21s; }
+.stagger > *:nth-child(4) { animation-delay: 0.29s; }
+.stagger > *:nth-child(5) { animation-delay: 0.37s; }
+
+/* ---------- 首次使用 Onboarding ---------- */
+.onboard {
+  position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 20px;
+  background: linear-gradient(172deg, #f8f3fb 0%, #fde9f1 38%, #f9e2ee 62%, #eee5fa 100%);
+  transition: opacity 0.8s var(--ease-decay);
+}
+.onboard.hide { opacity: 0; pointer-events: none; }
+.ob-card {
+  width: min(560px, 100%); text-align: center; position: relative;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.9); outline: 1px solid rgba(255,183,197,0.35);
+  border-radius: 30px; padding: 32px 38px 22px;
+  box-shadow: 0 30px 80px rgba(247,143,176,0.28);
+}
+.ob-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.ob-dots i { width: 7px; height: 7px; border-radius: 99px; background: #ffd9e2; transition: all 0.5s var(--ease-decay); }
+.ob-dots i.on { width: 22px; background: linear-gradient(90deg, #f78fb0, #b9a7ea); }
+.ob-step { display: none; }
+.ob-step.active { display: block; animation: obStepIn 0.6s var(--ease-decay) both; }
+@keyframes obStepIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+.ob-step h2 { font-family: var(--disp); font-weight: 600; font-size: 25px; color: var(--ink); margin-bottom: 14px; letter-spacing: 1px; }
+.ob-step h2 em { font-style: normal; background: linear-gradient(100deg, #f27ba4, #b79ae8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.ob-intro { font-size: 13.5px; color: var(--ink-2); line-height: 2.1; font-weight: 300; }
+.ob-logo { width: 64px; height: 64px; margin: 0 auto 16px; animation: flowerSway 6s ease-in-out infinite; transform-origin: 50% 80%; }
+.ob-q { font-size: 12.5px; color: var(--ink-2); letter-spacing: 1px; margin: 16px 0 10px; text-align: left; padding-left: 4px; }
+.ob-q:first-of-type { margin-top: 4px; }
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+.ob-actions { display: flex; justify-content: center; gap: 12px; margin-top: 26px; min-height: 44px; align-items: center; }
+.ob-skip { margin-top: 12px; font-size: 11.5px; color: var(--ink-3); letter-spacing: 1px; cursor: pointer; transition: color 0.4s; }
+.ob-skip:hover { color: var(--pink-deep); }
+/* Step5 生成画像动画 */
+.gen-stage { position: relative; width: 150px; height: 150px; margin: 8px auto 14px; display: grid; place-items: center; }
+.gen-ring {
+  position: absolute; inset: 0; border-radius: 50%; opacity: 0;
+  background: conic-gradient(from 0deg, #ffb7c5, #ffc4a3, #c9a8eb, #7cc6b7, #ffb7c5);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  animation: ringSpin 2.6s linear infinite;
+}
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+.gen-core {
+  width: 96px; height: 96px; border-radius: 50%; opacity: 0; transform: scale(0.6);
+  background: radial-gradient(circle at 34% 30%, #fff, #ffe3ec 45%, #e6d7f8);
+  box-shadow: 0 0 30px rgba(247,143,176,0.4), 0 0 60px rgba(201,168,235,0.25);
+  display: grid; place-items: center; font-size: 30px;
+  transition: all 0.8s var(--ease-decay);
+}
+.gen-txt { font-size: 12.5px; color: var(--ink-2); letter-spacing: 1.5px; min-height: 20px; }
+.ob-summary {
+  margin-top: 14px; padding: 14px 18px; border-radius: 16px; text-align: left;
+  background: linear-gradient(120deg, #fff4f7, #f6effe);
+  border: 1px solid rgba(255,183,197,0.45);
+  animation: msgIn 0.7s var(--ease-decay) both;
+}
+.ob-summary b { font-family: var(--disp); font-size: 14px; color: var(--purple-deep); display: block; margin-bottom: 6px; letter-spacing: 1px; }
+.ob-summary p { font-size: 12.5px; color: var(--ink-2); line-height: 1.9; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 960px) {
+  .today-grid, .week-grid { grid-template-columns: 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .obs-stats { grid-template-columns: 1fr 1fr; }
+  .nav-pill { flex-wrap: wrap; border-radius: 26px; }
+  .tabs { order: 3; width: 100%; justify-content: space-between; }
+}
+@media (max-width: 720px) { .tb-note { display: none; } }
+@media (max-width: 560px) {
+  .shell { padding: 24px 16px 90px; }
+  .q-bubble { max-width: 92%; }
+  .pipe-rail { gap: 5px; }
+  .pnode { padding: 4px 9px 4px 5px; font-size: 11px; gap: 5px; }
+  .pnode .pno { width: 17px; height: 17px; }
+  .ask-input { flex-wrap: wrap; }
+  .ask-input input { min-width: 60%; }
+  .btn-send { flex: 1; }
+  .proto-tag { display: none; }
+  .ob-card { padding: 26px 22px 18px; }
+  .obs-stats { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; transition-duration: 0.01s !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 极光色晕 + 网格 + 花瓣 + 光尘 + 噪点（统一背景层） -->
+<div class="bg" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  <div class="bg-grid"></div>
+  <div id="petalField"></div>
+  <div id="dust"></div>
+  <div class="bg-noise"></div>
+</div>
+<!-- 线性图标 sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-flower" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9L18 18M18 6l-2.1 2.1M8.1 15.9L6 18"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M19.5 4.5C10 4.5 4.5 10 4.5 17c0 1.9.5 3 1.2 4C7 13.5 12 8.5 18.5 6.3"/><path d="M4.5 20.5C10 14 14 10.5 19 7.5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.6"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5.5 4.5h11a2 2 0 0 1 2 2v13h-11a2 2 0 0 1-2-2v-13z"/><path d="M5.5 17a2.2 2.2 0 0 1 2.2-1.8h10.8"/></symbol>
+  </defs>
+</svg>
+
+<!-- ====== 顶部进度条（初始显示 · 滚动吸附） ====== -->
+<div class="topbar-wrap">
+  <div class="topbar" id="topbar">
+    <span class="tb-label">✦ 今日微任务</span>
+    <span class="tb-num" id="tbNum">0 / 3</span>
+    <div class="tb-track"><div class="tb-fill" id="tbFill"></div></div>
+    <span class="tb-note" id="tbNote">捡起一片，就是今天的花瓣</span>
+  </div>
+</div>
+
+<!-- ====== 漂浮导航 ====== -->
+<div class="navbar">
+  <div class="nav-pill">
+    <div class="logo" onclick="switchView('today')">
+      <svg class="logo-flower" viewBox="0 0 32 32">
+        <g fill="none">
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(72 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5" transform="rotate(144 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#e6c9f7" transform="rotate(216 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(288 16 16)"/>
+          <circle cx="16" cy="16" r="3" fill="#f78fb0"/>
+        </g>
+      </svg>
+      <div><b>微律</b><span>春日极光 · 健康同伴</span></div>
+    </div>
+    <div class="tabs">
+      <div class="tab-glider" id="glider"></div>
+      <button class="tab active" data-view="today">今日</button>
+      <button class="tab" data-view="assistant">问问薇薇</button>
+      <button class="tab" data-view="profile">我的画像</button>
+      <button class="tab" data-view="weekly">周度变化</button>
+    </div>
+    <div class="nav-right">
+      <span class="nav-date" id="navDate"></span>
+      <div class="avatar">满</div>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+
+  <!-- ====== 今日 ====== -->
+  <section class="view active" id="view-today">
+    <div class="hero stagger">
+      <div class="hero-arc" aria-hidden="true"></div>
+      <div class="hero-tag">✦ 春日极光 · 期中考试周 · 第 2 天</div>
+      <h1>早上好，<em>小满</em></h1>
+      <p>昨晚睡了 <b>6 小时 50 分</b>，比前天多 40 分钟——今天的状态，比昨天轻松一点。<br>微律准备了 <b>3 件微任务</b>，都很小，小到像捡起一片花瓣。</p>
+      <div class="progress-row">
+        <div class="progress-num" id="progNum">0<small>/ 3</small></div>
+        <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+        <div class="progress-note" id="progNote">完成一件，就算今天有交代</div>
+        <div class="progress-cta">
+          <button class="btn btn-primary btn-sm" id="btnCheck">✦ 开始今日检查</button>
+          <span class="hero-hint">约 30 秒 · 从此刻的心情开始</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card observe-card">
+      <div class="obs-head"><h3>微律观察</h3><span class="live"><i></i>每天 8:00 更新</span></div>
+      <p class="obs-main">今天的状态，比昨天<em>轻松一点</em>。</p>
+      <p class="obs-sub">昨晚多睡了 40 分钟，今早的专注记录也更完整；连续用眼时间仍偏长——下午 16:20，微律在节奏里给你留了一朵「远眺」。</p>
+      <div class="obs-stats">
+        <div class="ob-stat"><span class="os-k">昨夜睡眠</span><b>6 小时 50 分</b><span class="os-delta up">↑ 比前天多 40 分</span></div>
+        <div class="ob-stat"><span class="os-k">连续用眼</span><b>110 分钟</b><span class="os-delta warn">偏长 · 建议远眺</span></div>
+        <div class="ob-stat"><span class="os-k">此刻情绪</span><b>平静偏松</b><span class="os-delta up">↗ 比昨天轻松</span></div>
+      </div>
+      <div class="sug-row">
+        <div class="sug-title">今日建议</div>
+        <div class="sug-item"><span class="sg-ic"><svg class="ic"><use href="#i-flower"/></svg></span><p><b>16:20 · 窗边远眺 20 秒</b>——两节自习之间，给眼睛放个小假。</p></div>
+        <div class="sug-item"><span class="sg-ic night"><svg class="ic"><use href="#i-moon"/></svg></span><p><b>21:40 · 花瓣呼吸</b>——睡前 2 分钟，把复习了一天的大脑轻轻放下。</p></div>
+      </div>
+    </div>
+
+    <div class="today-grid">
+      <div>
+        <div class="section-title"><h2>现在的心情</h2><span>心情会轻轻影响推荐</span></div>
+        <div class="card mood-card">
+          <div class="mood-head"><h3>此刻的你，感觉怎么样？</h3><span class="live"><i></i>随时可改</span></div>
+          <div class="mood-row">
+            <div class="moods" id="moodRow">
+              <button class="mood" data-v="happy"><span class="face">◕‿◕</span><span>还不错</span></button>
+              <button class="mood on" data-v="calm"><span class="face">˘‿˘</span><span>平静</span></button>
+              <button class="mood" data-v="tired"><span class="face">>﹏<</span><span>有点累</span></button>
+              <button class="mood" data-v="low"><span class="face">·︿·</span><span>有点低落</span></button>
+            </div>
+          </div>
+          <div class="mood-row">
+            <div class="lbl">课后可用时间</div>
+            <div class="chips" id="timeChips">
+              <button class="chip" data-v="10">10 分钟</button>
+              <button class="chip on" data-v="25">25 分钟</button>
+              <button class="chip" data-v="40">40 分钟以上</button>
+            </div>
+          </div>
+          <div class="mood-note"><b>已计入：</b>下午体育课 40 分钟 · 明天数学考试<br>怎么选都可以，微律只负责读懂你。</div>
+        </div>
+
+        <div class="section-title" style="margin-top:26px"><h2>今日微任务</h2><span>来自审核白名单 · 按你的画像生成</span></div>
+        <div class="task-list" id="taskList">
+          <article class="card task-card t-eye" data-idx="0">
+            <div class="task-top"><span class="task-domain">用眼健康</span><span class="task-meta">约 1 分钟 · 极低强度</span></div>
+            <h3 class="task-name">窗边远眺 20 秒</h3>
+            <p class="task-desc">望向窗外最远的地方，数 20 秒。让眼睛在春天的远处，散一会儿步。</p>
+            <div class="task-why"><span class="why-icon"><svg class="ic"><use href="#i-flower"/></svg></span><div><b>为什么是它</b><p>上午你连续用眼 110 分钟没休息，远眺是负担最小的一朵「花瓣」。</p></div></div>
+            <div class="task-actions">
+              <button class="btn btn-primary" data-act="start">开始</button>
+              <button class="btn btn-ghost" data-act="replace">换一朵</button>
+              <button class="btn btn-ghost" data-act="skip">先跳过</button>
+            </div>
+            <div class="task-state"><svg viewBox="0 0 46 46"><circle class="ck-ring" cx="23" cy="23" r="21"/><path class="ck-path" d="M14 24 L20.5 30.5 L33 16.5"/></svg></div>
+            <div class="task-badge"><span class="bdot"></span><span class="badge-txt">完成 · 今天的花瓣 +1</span></div>
+          </article>
+
+          <article class="card task-card t-move" data-idx="1">
+            <div class="task-top"><span class="task-domain">颈肩放松</span><span class="task-meta">约 3 分钟 · 低强度</span></div>
+            <h3 class="task-name">颈肩小伸展</h3>
+            <p class="task-desc">头缓缓向右倾，右手轻扶保持 15 秒，换边；再画圈转转肩膀 8 次。像春天伸懒腰的猫。</p>
+            <div class="task-why"><span class="why-icon"><svg class="ic"><use href="#i-flower"/></svg></span><div><b>为什么是它</b><p>你之前 6 次接受了课桌旁的拉伸，完成率 100%，是你最喜欢的任务类型。</p></div></div>
+            <div class="task-actions">
+              <button class="btn btn-primary" data-act="start">开始</button>
+              <button class="btn btn-ghost" data-act="replace">换一朵</button>
+              <button class="btn btn-ghost" data-act="skip">先跳过</button>
+            </div>
+            <div class="task-state"><svg viewBox="0 0 46 46"><circle class="ck-ring" cx="23" cy="23" r="21"/><path class="ck-path" d="M14 24 L20.5 30.5 L33 16.5"/></svg></div>
+            <div class="task-badge"><span class="bdot"></span><span class="badge-txt">完成 · 今天的花瓣 +1</span></div>
+          </article>
+
+          <article class="card task-card t-sleep" data-idx="2">
+            <div class="task-top"><span class="task-domain">睡前准备</span><span class="task-meta">约 2 分钟 · 极低强度</span></div>
+            <h3 class="task-name">花瓣呼吸 4-7-8</h3>
+            <p class="task-desc">吸气 4 秒，像捧起一片花瓣；屏息 7 秒，看它在掌心；呼气 8 秒，轻轻放它飞走。循环 4 次。</p>
+            <div class="task-why"><span class="why-icon"><svg class="ic"><use href="#i-flower"/></svg></span><div><b>为什么是它</b><p>昨晚只睡了 6 小时 10 分，明天还有考试。放慢呼吸，是给大脑最温柔的收尾。</p></div></div>
+            <div class="task-actions">
+              <button class="btn btn-primary" data-act="start">开始</button>
+              <button class="btn btn-ghost" data-act="replace">换一朵</button>
+              <button class="btn btn-ghost" data-act="skip">先跳过</button>
+            </div>
+            <div class="task-state"><svg viewBox="0 0 46 46"><circle class="ck-ring" cx="23" cy="23" r="21"/><path class="ck-path" d="M14 24 L20.5 30.5 L33 16.5"/></svg></div>
+            <div class="task-badge"><span class="bdot"></span><span class="badge-txt">完成 · 今天的花瓣 +1</span></div>
+          </article>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card breath-card">
+          <h3>此刻 · 跟随呼吸</h3>
+          <div class="sub">微律 AI 节律 · 9 秒一循环</div>
+          <div class="breath-stage">
+            <div class="breath-halo"></div><div class="breath-halo h2"></div><div class="breath-halo h3"></div>
+            <div class="breath-core"><div class="breath-count" id="breathCount">—</div></div>
+            <div class="breath-label" id="breathLabel">准备…</div>
+          </div>
+          <p class="breath-tip">这是微律的呼吸节律：吸气 20% · 呼气 80%。<br>页面上所有动效，都遵循这同一条曲线。</p>
+        </div>
+        <div class="card rhythm-card">
+          <h3>今天的节奏</h3>
+          <div class="sub">按你的习惯轻轻排布</div>
+          <div class="rhythm-item now"><span class="rhythm-time">17:30</span><span class="rhythm-dot"></span><div class="rhythm-txt"><b>窗边远眺</b>两节自习之间</div></div>
+          <div class="rhythm-item"><span class="rhythm-time">18:10</span><span class="rhythm-dot"></span><div class="rhythm-txt"><b>颈肩小伸展</b>晚饭前 · 你偏好的时段</div></div>
+          <div class="rhythm-item"><span class="rhythm-time">21:40</span><span class="rhythm-dot"></span><div class="rhythm-txt"><b>花瓣呼吸</b>复习收尾后</div></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ====== 问问薇薇（三阶段 RAG 管线 · 05 春日极光设计语言） ====== -->
+  <section class="view" id="view-assistant">
+    <div class="ask-wrap">
+      <div class="ask-bg" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+      <div class="ask-hero">
+        <div class="orb-stage">
+          <div class="orb">
+            <div class="orb-ring"><span class="op"><svg width="14" height="14" viewBox="0 0 40 40"><path d="M20 2 C31 8 33 20 20 38 C7 20 9 8 20 2 Z" fill="#ffb7c5" opacity="0.9"/></svg></span></div>
+            <div class="orb-ring r2"><span class="op"><svg width="12" height="12" viewBox="0 0 40 40"><path d="M20 2 C31 8 33 20 20 38 C7 20 9 8 20 2 Z" fill="#bfe8dd" opacity="0.9"/></svg></span></div>
+            <div class="orb-core"></div>
+          </div>
+        </div>
+        <h2>有事，问问<em>薇薇</em></h2>
+        <p>薇薇会先理解你的问题，再检索审核知识库与你的记忆，然后才回答。<br>每一步怎么想的，都给你看。</p>
+      </div>
+      <div class="quick-row" id="quickRow">
+        <button class="chip" data-q="exam">考试周好累，只有 10 分钟</button>
+        <button class="chip" data-q="sleep">最近睡不好</button>
+        <button class="chip" data-q="neck">我脖子有点疼</button>
+      </div>
+      <div class="ask-log" id="chatLog">
+        <div class="card answer-card greeting-card">
+          <span class="answer-glow"></span>
+          <div class="answer-face"><span class="mini"></span>薇薇</div>
+          <div class="answer-text">嗨，小满 🌸 我看过你今天的状态——连续学习 4 小时 20 分钟，明天还有数学考试，辛苦啦。<br><br>随便和我说说现在的困扰。我会先把它拆成几个小问题，再去审核过的健康知识里检索依据，最后才给你小到能落地的行动。</div>
+        </div>
+      </div>
+      <form class="card ask-input" id="chatForm">
+        <span class="ai-dot" aria-hidden="true"></span>
+        <input id="chatInput" type="text" placeholder="说说你现在的状态…" autocomplete="off">
+        <button class="btn-send" type="submit">问问薇薇</button>
+      </form>
+      <p class="ask-foot">回答基于审核知识库与你的历史记忆 · 薇薇不做医疗诊断<br>遇到持续不适，请第一时间告诉家长或老师</p>
+    </div>
+  </section>
+
+  <!-- ====== 我的画像 ====== -->
+  <section class="view" id="view-profile">
+    <div class="profile-wrap">
+      <div class="profile-head">
+        <h2>薇薇认识的你 🌷</h2>
+        <p>这不是成绩单，只是薇薇慢慢了解到的你。每一条都来自你的选择与反馈，随时可以修改或删除。</p>
+      </div>
+      <div class="profile-grid stagger">
+        <div class="card p-card">
+          <h3><svg class="ic"><use href="#i-clock"/></svg>时间偏好</h3>
+          <div class="pref-line"><span class="k">最容易完成任务的时段</span><span class="v up">17:30 – 18:10</span></div>
+          <div class="pref-line"><span class="k">次优时段</span><span class="v">21:30 – 21:50</span></div>
+          <div class="pref-line"><span class="k">几乎不碰任务的时段</span><span class="v down">午休前 10 分钟</span></div>
+        </div>
+        <div class="card p-card">
+          <h3><svg class="ic"><use href="#i-leaf"/></svg>任务偏好</h3>
+          <div class="pref-line"><span class="k">伸展 / 拉伸类</span><span class="v up">很喜欢 · 接受率 92%</span></div>
+          <div class="pref-line"><span class="k">呼吸 / 冥想类</span><span class="v up">愿意尝试</span></div>
+          <div class="pref-line"><span class="k">跳跃 / 出汗类</span><span class="v down">考试周会回避</span></div>
+        </div>
+        <div class="card p-card">
+          <h3><svg class="ic"><use href="#i-target"/></svg>历史规律</h3>
+          <div class="stat-ring">
+            <div class="ring-box">
+              <svg viewBox="0 0 88 88">
+                <circle class="rbg" cx="44" cy="44" r="41"/>
+                <circle class="rfg" cx="44" cy="44" r="41" id="ringFg"/>
+              </svg>
+              <div class="ring-num" id="ringNum">0</div>
+            </div>
+            <div class="stat-txt"><b>3 分钟以内</b>的小任务完成率最高。<br>超过 10 分钟的，你 7 次里跳过了 5 次。<br>所以薇薇越来越偏爱给你<b>小小的事</b>。</div>
+          </div>
+        </div>
+        <div class="card p-card">
+          <h3><svg class="ic"><use href="#i-book"/></svg>记忆小卡 <span style="font-size:11px;color:var(--ink-3);font-weight:400">（点 × 撕掉）</span></h3>
+          <div class="mem-list" id="memList">
+            <div class="mem-item"><span class="mi-ic"><svg class="ic"><use href="#i-flower"/></svg></span><p><b>你说过</b>课间走廊太挤，不想去操场活动</p><button class="mem-del" aria-label="删除这条记忆">×</button></div>
+            <div class="mem-item"><span class="mi-ic"><svg class="ic"><use href="#i-moon"/></svg></span><p><b>上周四</b>你完成了睡前呼吸，并说「愿意继续」</p><button class="mem-del" aria-label="删除这条记忆">×</button></div>
+            <div class="mem-item"><span class="mi-ic"><svg class="ic"><use href="#i-clock"/></svg></span><p><b>薇薇发现</b>你不太适应超过 10 分钟的任务</p><button class="mem-del" aria-label="删除这条记忆">×</button></div>
+            <div class="mem-item"><span class="mi-ic"><svg class="ic"><use href="#i-book"/></svg></span><p><b>考试周</b>你更愿意接受坐着就能完成的任务</p><button class="mem-del" aria-label="删除这条记忆">×</button></div>
+          </div>
+          <div class="consent">这些记忆只属于你：薇薇不用它排名、不给任何人看，你撕掉后它就真的消失了。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== 周度变化 ====== -->
+  <section class="view" id="view-weekly">
+    <div class="week-wrap">
+      <div class="week-head">
+        <h2>这一周，薇薇的变化 🌱</h2>
+        <p>重要的不是你完成了多少，而是薇薇怎样一步步学会「什么对你更容易」。</p>
+      </div>
+      <div class="stagger">
+      <div class="card chart-card">
+        <div class="chart-head"><h3>每日完成任务的分钟数</h3><span>只统计白名单小任务</span></div>
+        <svg class="chart-svg" viewBox="0 0 640 240">
+          <defs>
+            <linearGradient id="areaGrad2" x1="0" y1="0" x2="0" y2="240" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="rgba(255,183,197,0.35)"/><stop offset="1" stop-color="rgba(255,183,197,0)"/>
+            </linearGradient>
+          </defs>
+          <path class="chart-area" d="M60 190 L140 150 L220 128 L300 96 L380 112 L460 76 L540 60 L540 220 L60 220 Z"/>
+          <path class="chart-line" d="M60 190 L140 150 L220 128 L300 96 L380 112 L460 76 L540 60"/>
+          <g id="chartDots"></g><g id="chartLabels"></g>
+        </svg>
+      </div>
+      <div class="week-grid">
+        <div class="card tl-card">
+          <h3>推荐的调整轨迹</h3>
+          <div class="tl-item"><span class="tl-day">周一</span><span class="tl-dot"></span><div class="tl-body"><b>推荐「户外快走 10 分钟」</b> → 你跳过了<span class="tl-tag n">没时间</span><br>薇薇记下：周一课后比预想的紧张</div></div>
+          <div class="tl-item adj"><span class="tl-day">周二</span><span class="tl-dot"></span><div class="tl-body"><b>换成「窗边远眺 1 分钟」</b><span class="tl-tag m">薇薇调整</span><br>负担降到你愿意的程度 → 完成</div></div>
+          <div class="tl-item hit"><span class="tl-day">周三</span><span class="tl-dot"></span><div class="tl-body"><b>保留远眺 + 新增「颈肩伸展」</b><span class="tl-tag g">均完成</span><br>都放在你偏好的 17:30 后提醒</div></div>
+          <div class="tl-item adj"><span class="tl-day">周四</span><span class="tl-dot"></span><div class="tl-body"><b>用「花瓣呼吸」替换跳跃类</b><span class="tl-tag m">薇薇调整</span><br>因为你考试周回避出汗类活动</div></div>
+          <div class="tl-item hit"><span class="tl-day">周五</span><span class="tl-dot"></span><div class="tl-body"><b>全部任务收进 3 分钟内</b><span class="tl-tag g">全部完成</span><br>今天只剩一件：睡前呼吸</div></div>
+        </div>
+        <div class="card insight-card">
+          <h3><svg class="ic"><use href="#i-flower"/></svg>本周洞察</h3>
+          <p>你更容易接受 <b>3 分钟以内</b>、<b>坐着就能完成</b>的小事。下周薇薇会优先给你这类任务，再看看周三晚上适不适合加一件户外的。</p>
+          <div class="insight-quote">薇薇想学会的从来不是「你够不够好」，而是「怎样让你更容易」。</div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast-box" id="toastBox"></div>
+<div class="proto-tag" id="protoTag" title="点击重新体验首次引导">UI 原型 02 · 春日极光</div>
+
+<!-- ====== 首次使用 Onboarding ====== -->
+<div class="onboard" id="onboard">
+  <div class="ob-card">
+    <div class="ob-dots" id="obDots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="ob-step s1 active">
+      <svg class="ob-logo" viewBox="0 0 32 32">
+        <g fill="none">
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(72 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5" transform="rotate(144 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#e6c9f7" transform="rotate(216 16 16)"/>
+          <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(288 16 16)"/>
+          <circle cx="16" cy="16" r="3" fill="#f78fb0"/>
+        </g>
+      </svg>
+      <h2>你好，我是<em>微律</em></h2>
+      <p class="ob-intro">你的专属健康 AI。我会留意你的睡眠、用眼和情绪，<br>每天只给你三件小到不会拒绝的事。<br>先花 60 秒，让我认识你。</p>
+    </div>
+
+    <div class="ob-step s2">
+      <h2>基础画像</h2>
+      <div class="ob-q">你现在在读…</div>
+      <div class="ob-chips" data-ob="grade">
+        <button class="chip">初中</button><button class="chip on">高中</button><button class="chip">大学</button>
+      </div>
+      <div class="ob-q">昨晚睡了多久？</div>
+      <div class="ob-chips" data-ob="sleep">
+        <button class="chip">不到 6 小时</button><button class="chip on">6 – 7 小时</button><button class="chip">7 – 8 小时</button><button class="chip">8 小时以上</button>
+      </div>
+    </div>
+
+    <div class="ob-step s3">
+      <h2>最近主要问题</h2>
+      <div class="ob-q">可多选 · 微律会优先照顾这些</div>
+      <div class="ob-chips" data-ob="issues" data-multi="1">
+        <button class="chip on">眼睛容易累</button><button class="chip on">肩颈发紧</button><button class="chip">睡前想太多</button><button class="chip">情绪起伏</button><button class="chip">没时间运动</button>
+      </div>
+    </div>
+
+    <div class="ob-step s4">
+      <h2>行为偏好</h2>
+      <div class="ob-q">能接受的任务时长</div>
+      <div class="ob-chips" data-ob="dur">
+        <button class="chip on">3 分钟以内</button><button class="chip">3 – 5 分钟</button><button class="chip">5 – 10 分钟</button>
+      </div>
+      <div class="ob-q">偏好任务时段</div>
+      <div class="ob-chips" data-ob="slot">
+        <button class="chip on">放学后</button><button class="chip">晚饭后</button><button class="chip">睡前</button>
+      </div>
+    </div>
+
+    <div class="ob-step s5">
+      <h2>生成初始画像</h2>
+      <div class="gen-stage">
+        <div class="gen-ring" id="genRing"></div>
+        <div class="gen-core" id="genCore"></div>
+      </div>
+      <p class="gen-txt" id="genTxt">正在汇聚你的回答…</p>
+      <div class="ob-summary" id="obSummary" hidden>
+        <b>✦ 画像已生成</b>
+        <p>高中生 · 睡眠偏短 · 用眼负担大 · 偏好 3 分钟内的小任务<br>今晚 21:40，微律为你准备了第一件小事。</p>
+      </div>
+    </div>
+
+    <div class="ob-actions">
+      <button class="btn btn-ghost" id="obPrev" hidden>上一步</button>
+      <button class="btn btn-primary" id="obNext">开始认识你</button>
+    </div>
+    <p class="ob-skip" id="obSkip">跳过，先随便看看</p>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   微律 · 春日极光 交互脚本
+   核心运动：非对称脉冲曲线（20% ease-in 上升 + 80% 指数长尾衰减）
+   ========================================================== */
+const WL = {
+  rise(t)  { return t * t * t; },
+  decay(t) { return Math.exp(-4.5 * t); },
+  pulse(t) {
+    if (t <= 0) return 0;
+    if (t < 0.2) return this.rise(t / 0.2);
+    return this.decay((t - 0.2) / 0.8);
+  },
+  play(duration, onUpdate, onDone) {
+    const t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min((now - t0) / duration, 1);
+      onUpdate(WL.pulse(t), t);
+      if (t < 1) requestAnimationFrame(frame);
+      else if (onDone) onDone();
+    })(t0);
+  }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- 花瓣飘落（S 曲线 + 旋转 + 缩放 + 分层） ---------- */
+(function petals() {
+  const field = document.getElementById('petalField');
+  const COLORS = [['#ffd9e2', '#ffb7c5'], ['#fff0f4', '#ffd9e2'], ['#f3d9fa', '#e6c9f7'], ['#ffffff', '#ffd9e2']];
+  const N = 26;
+  const list = [];
+  function makePetal(size, blur, op) {
+    const el = document.createElement('div');
+    el.className = 'petal';
+    const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const dur = (5 + Math.random() * 6).toFixed(1);
+    el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 40 40" style="opacity:${op};filter:blur(${blur}px)">
+      <path d="M20 2 C31 8 33 20 20 38 C7 20 9 8 20 2 Z" fill="url(#pg${size}${blur})" opacity="0.9"/>
+      <defs><linearGradient id="pg${size}${blur}" x1="0" y1="0" x2="40" y2="40">
+        <stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/>
+      </linearGradient></defs></svg>`;
+    el.firstChild.style.animation = `petalSpin ${dur}s linear infinite`;
+    field.appendChild(el);
+    return el;
+  }
+  for (let i = 0; i < N; i++) {
+    const depth = Math.random();                       // 0 远 → 1 近
+    const size = 10 + depth * 16;
+    const blur = depth < 0.35 ? 1.5 : 0;
+    const el = makePetal(size, blur, 0.45 + depth * 0.5);
+    list.push({
+      el, depth,
+      x: Math.random() * window.innerWidth,
+      /* 初始即有约 2/3 花瓣落在视口内，首屏立刻可见；其余从上方陆续飘入 */
+      y: (Math.random() * 1.6 - 0.6) * window.innerHeight,
+      vy: 26 + depth * 46,                              // 越近飘得越快
+      amp: 30 + Math.random() * 55,                     // S 曲线摆幅
+      freq: 0.4 + Math.random() * 0.8,
+      phase: Math.random() * Math.PI * 2,
+      rot: Math.random() * 360,
+      vr: (Math.random() - 0.5) * 40,
+      scaleBase: 0.75 + Math.random() * 0.5
+    });
+  }
+  let last = performance.now();
+  (function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    const t = now / 1000;
+    for (const p of list) {
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      if (p.y > window.innerHeight + 60) { p.y = -60; p.x = Math.random() * window.innerWidth; }
+      const sx = p.x + Math.sin(t * p.freq + p.phase) * p.amp;        // S 曲线横漂
+      const sc = p.scaleBase * (1 + 0.22 * Math.sin(t * p.freq * 1.6 + p.phase)); // 呼吸式缩放
+      p.el.style.transform = `translate(${sx}px, ${p.y}px) rotate(${p.rot}deg) scale(${sc})`;
+    }
+    requestAnimationFrame(tick);
+  })(last);
+})();
+
+/* ---------- 光尘：暖色微粒的非对称脉冲闪烁 ---------- */
+(function makeDust() {
+  const box = document.getElementById('dust');
+  const DUST_COLORS = ['#ffd9e2', '#e6d5f9', '#cdeee6', '#ffe9db', '#ffffff'];
+  for (let i = 0; i < 54; i++) {
+    const d = document.createElement('i');
+    d.className = 'dust';
+    const size = Math.random() * 2.2 + 0.8;
+    const color = DUST_COLORS[Math.floor(Math.random() * DUST_COLORS.length)];
+    d.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;background:${color};box-shadow:0 0 ${size*2}px ${color};--d:${(Math.random()*4+2.8).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s;--o:${(Math.random()*0.5+0.35).toFixed(2)}`;
+    box.appendChild(d);
+  }
+})();
+
+/* ---------- 日期 ---------- */
+(function () {
+  const d = new Date();
+  const w = ['日','一','二','三','四','五','六'][d.getDay()];
+  document.getElementById('navDate').textContent = `4 月 22 日 · 星期${w}`;
+})();
+
+/* ---------- 顶部进度条：滚动吸附（初始进度行滚出视口后才浮现，保证任何时刻只有一个状态栏） ---------- */
+(function topbar() {
+  let ticking = false;
+  function onScroll() {
+    const row = document.querySelector('.view.active .progress-row');
+    const show = row ? row.getBoundingClientRect().bottom < 0 : window.scrollY > 36;
+    document.body.classList.toggle('tb-dock', show);
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { onScroll(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  onScroll();
+})();
+
+/* ---------- 视图切换（同步 05：滑块 + 过渡） ---------- */
+const glider = document.getElementById('glider');
+const tabs = document.querySelectorAll('.tab');
+function moveGlider(tab) {
+  glider.style.width = tab.offsetWidth + 'px';
+  glider.style.transform = `translateX(${tab.offsetLeft - 4}px)`;
+}
+function switchView(name) {
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  moveGlider(document.querySelector(`.tab[data-view="${name}"]`));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (name === 'weekly') startChartAnim();
+  if (name === 'profile') startRingAnim();
+}
+tabs.forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+window.addEventListener('load', () => moveGlider(document.querySelector('.tab.active')));
+window.addEventListener('resize', () => moveGlider(document.querySelector('.tab.active')));
+
+/* ---------- Toast ---------- */
+function toast(msg) {
+  const box = document.getElementById('toastBox');
+  const el = document.createElement('div');
+  el.className = 'toast'; el.innerHTML = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 500); }, 2600);
+}
+
+/* ---------- 完成特效：粒子汇聚 → 核心光球 → 符号浮现 ---------- */
+const FX_COLORS = ['#ffb7c5', '#f78fb0', '#c9a8eb', '#9d7bdf', '#7cc6b7', '#ffc4a3'];
+function convergeFx(cx, cy, opts = {}) {
+  const { count = 16, dur = 680, colors = FX_COLORS } = opts;
+  return new Promise(resolve => {
+    const parts = [];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'fx-p';
+      const size = 4 + Math.random() * 5;
+      const c = colors[i % colors.length];
+      p.style.cssText = `left:${cx - size / 2}px;top:${cy - size / 2}px;width:${size}px;height:${size}px;background:${c};box-shadow:0 0 ${size * 2.6}px ${c}`;
+      document.body.appendChild(p);
+      const ang = (Math.PI * 2 * i) / count + Math.random() * 0.8;
+      const dist = 74 + Math.random() * 92;
+      parts.push({ p, sx: Math.cos(ang) * dist, sy: Math.sin(ang) * dist });
+      p.style.transform = `translate(${parts[i].sx}px,${parts[i].sy}px) scale(.5)`;
+      p.style.opacity = '0';
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      let doneN = 0;
+      parts.forEach(({ p, sx, sy }, i) => {
+        WL.play(dur + i * 16, (v, t) => {
+          const e = 1 - Math.exp(-4.2 * t);            // 磁吸式先快后慢
+          p.style.transform = `translate(${sx * (1 - e)}px,${sy * (1 - e)}px) scale(${0.5 + 0.6 * e})`;
+          p.style.opacity = String(Math.min(1, t * 3));
+        }, () => { p.remove(); if (++doneN === parts.length) resolve(); });
+      });
+    }));
+  });
+}
+function orbFx(cx, cy) {
+  const orb = document.createElement('span');
+  orb.className = 'fx-orb';
+  orb.style.left = cx + 'px'; orb.style.top = cy + 'px';
+  document.body.appendChild(orb);
+  WL.play(1150, (v, t) => {
+    orb.style.transform = `translate(-50%,-50%) scale(${0.4 + 1.05 * v})`;
+    orb.style.opacity = String(Math.min(1, t * 5) * Math.max(0.25, v));
+  }, () => orb.remove());
+}
+function haloFx(cx, cy) {
+  const halo = document.createElement('span');
+  halo.className = 'fx-halo';
+  halo.style.left = cx + 'px'; halo.style.top = cy + 'px';
+  document.body.appendChild(halo);
+  WL.play(950, (v, t) => {
+    halo.style.transform = `translate(-50%,-50%) scale(${0.6 + 2.2 * t})`;
+    halo.style.opacity = String(0.5 * (1 - t));
+  }, () => halo.remove());
+}
+function taskCompleteFx(card) {
+  const st = card.querySelector('.task-state');
+  const r = st.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  /* 1. 粒子汇聚 */
+  convergeFx(cx, cy, { count: 16, dur: 640 });
+  /* 2. 核心光球（吸收 → 脉冲 → 消散，符号随后浮现） */
+  setTimeout(() => orbFx(cx, cy), 620);
+  /* 3. 光环扩散 */
+  setTimeout(() => haloFx(cx, cy), 780);
+}
+
+/* ---------- 任务交互 ---------- */
+const REPLACE_POOL = [
+  { cls: 't-move', domain: '轻活动', name: '走廊慢走 · 5 分钟', time: '约 5 分钟 · 低强度', desc: '离开座位，去走廊慢慢走上 5 分钟，让身体像春风里的柳条一样醒过来。', why: '替代任务同样来自审核白名单，强度略高一点，但考试周也适用。' },
+  { cls: 't-eye', domain: '用眼健康', name: '掌心热敷闭眼', time: '约 1 分钟 · 极低强度', desc: '闭眼，双掌搓热，轻轻覆在眼睛上，休息 40 秒。黑暗里，眼睛会悄悄说谢谢。', why: '不用离开座位，自习间隙就能完成。' },
+  { cls: 't-sleep', domain: '轻放松', name: '窗边晒太阳 · 3 分钟', time: '约 3 分钟 · 极低强度', desc: '站在窗边，让阳光落在脸上和后颈，什么都不想，就晒 3 分钟太阳。', why: '白天接触自然光，能帮今晚的你更快入睡。' }
+];
+let replacePtr = 0;
+const taskStates = ['pending', 'pending', 'pending'];
+
+function updateProgress() {
+  const done = taskStates.filter(s => s === 'done' || s === 'partial').length;
+  /* 吸附态顶栏（滚动后浮现） */
+  document.getElementById('tbNum').textContent = `${done} / 3`;
+  document.getElementById('tbFill').style.width = (done / 3 * 100) + '%';
+  const notes = ['捡起一片，就是今天的花瓣', '很好呀，慢慢来', '就剩一件啦', '今天的花瓣，凑齐啦 ✦'];
+  document.getElementById('tbNote').textContent = notes[Math.min(done, 3)];
+  /* 今日页进度行（05 式） */
+  document.getElementById('progNum').innerHTML = `${done}<small>/ 3</small>`;
+  document.getElementById('progFill').style.width = (done / 3 * 100) + '%';
+  const heroNotes = ['完成一件，就算今天有交代', '不错，慢慢来', '快收尾了，睡前那件最轻松', '今天有交代了 ✦'];
+  document.getElementById('progNote').textContent = heroNotes[Math.min(done, 3)];
+}
+function setTaskDone(card, partial) {
+  const idx = +card.dataset.idx;
+  if (taskStates[idx] === 'done' || taskStates[idx] === 'partial') return;
+  taskStates[idx] = partial ? 'partial' : 'done';
+  card.classList.add(partial ? 'partial' : 'done');
+  card.querySelector('.badge-txt').textContent = partial ? '部分完成 · 也算数哦' : '完成 · 今天的花瓣 +1';
+  /* 终态：替换操作按钮，避免完成后仍可误触 */
+  card.querySelector('.task-actions').innerHTML =
+    `<span class="done-note">${partial ? '🌱 部分完成 · 已记下' : '🌸 已记下 · 今天的一片花瓣'}</span>`;
+  if (!partial) {
+    taskCompleteFx(card);                            // 粒子汇聚 → 光球 → 符号
+    WL.play(950, v => { card.style.transform = `scale(${1 + 0.02 * v})`; }, () => card.style.transform = '');
+    toast('✦ 已记下这次完成 · 薇薇会记住的');
+  } else {
+    WL.play(700, v => { card.style.transform = `scale(${1 + 0.012 * v})`; }, () => card.style.transform = '');
+    toast('🌱 部分完成也很棒 · 已记录');
+  }
+  updateProgress();
+}
+document.getElementById('taskList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const card = btn.closest('.task-card');
+  /* 同位换钮冷却：防止连点误触（如「开始」原地变「完成啦」后被瞬间点中） */
+  const now = performance.now();
+  if (card._actAt && now - card._actAt < 450) return;
+  card._actAt = now;
+  const idx = +card.dataset.idx;
+  const act = btn.dataset.act;
+  if (act === 'start') {
+    card.querySelector('.task-actions').innerHTML = `
+      <button class="btn btn-ok" data-act="done">✓ 完成啦</button>
+      <button class="btn btn-ghost" data-act="partial">部分完成</button>
+      <button class="btn btn-ghost" data-act="replace">换一朵</button>
+      <button class="btn btn-ghost" data-act="skip">先跳过</button>`;
+    WL.play(700, v => { card.style.transform = `translateY(${-3 * v}px)`; }, () => card.style.transform = '');
+    toast('⏱ 开始啦 · 不着急');
+  }
+  if (act === 'done') setTaskDone(card, false);
+  if (act === 'partial') setTaskDone(card, true);
+  if (act === 'skip') {
+    taskStates[idx] = 'skipped';
+    card.classList.add('skippedcard');
+    card.querySelector('.badge-txt').textContent = '跳过了 · 没关系呀';
+    card.querySelector('.task-actions').innerHTML = `<button class="btn btn-ghost" data-act="restore">恢复它</button>`;
+    toast('🕊 跳过也没关系 · 薇薇会降低这类任务的频率');
+  }
+  if (act === 'restore') {
+    taskStates[idx] = 'pending';
+    card.classList.remove('skippedcard');
+    card.querySelector('.task-actions').innerHTML = `
+      <button class="btn btn-primary" data-act="start">开始</button>
+      <button class="btn btn-ghost" data-act="replace">换一朵</button>
+      <button class="btn btn-ghost" data-act="skip">先跳过</button>`;
+  }
+  if (act === 'replace') {
+    const next = REPLACE_POOL[replacePtr++ % REPLACE_POOL.length];
+    card.style.transition = 'transform .45s var(--ease-rise), opacity .45s var(--ease-rise)';
+    card.style.transform = 'translateX(-40px) rotate(-1.5deg)';
+    card.style.opacity = '0';
+    setTimeout(() => {
+      card.className = 'card task-card ' + next.cls;
+      card.querySelector('.task-domain').textContent = next.domain;
+      card.querySelector('.task-meta').textContent = next.time;
+      card.querySelector('.task-name').textContent = next.name;
+      card.querySelector('.task-desc').textContent = next.desc;
+      card.querySelector('.task-why p').textContent = next.why;
+      card.querySelector('.task-actions').innerHTML = `
+        <button class="btn btn-primary" data-act="start">开始</button>
+        <button class="btn btn-ghost" data-act="replace">换一朵</button>
+        <button class="btn btn-ghost" data-act="skip">先跳过</button>`;
+      card.style.transition = 'transform .6s var(--ease-decay), opacity .6s var(--ease-decay)';
+      card.style.transform = 'none'; card.style.opacity = '1';
+    }, 470);
+    toast('🌸 换好了 · 新任务同样来自审核白名单');
+  }
+});
+
+/* ---------- 心情选择（联动推荐） ---------- */
+document.getElementById('moodRow').addEventListener('click', e => {
+  const m = e.target.closest('.mood'); if (!m) return;
+  document.querySelectorAll('.mood').forEach(x => x.classList.remove('on'));
+  m.classList.add('on');
+  WL.play(700, v => { m.style.transform = `scale(${1 + 0.1 * v}) rotate(${-3 * v}deg)`; }, () => m.style.transform = '');
+  if (m.dataset.v === 'low') {
+    toast('🌷 收到 · 薇薇把任务都换成了最轻的');
+    const card = document.querySelector('.task-card[data-idx="1"]');
+    if (taskStates[1] === 'pending') {
+      card.querySelector('.task-name').textContent = '闭眼听声音 · 1 分钟';
+      card.querySelector('.task-desc').textContent = '闭上眼睛，数一数能听到几种声音。风、翻书、远处的操场……只是听，什么都不用做。';
+      card.querySelector('.task-why p').textContent = '你选了「有点低落」，薇薇自动把活动类任务换成了更温柔的恢复类。';
+    }
+  }
+});
+document.getElementById('timeChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  document.querySelectorAll('#timeChips .chip').forEach(c => c.classList.remove('on'));
+  chip.classList.add('on');
+  WL.play(650, v => { chip.style.transform = `scale(${1 + 0.09 * v})`; }, () => chip.style.transform = '');
+});
+
+/* ---------- 开始今日检查 ---------- */
+document.getElementById('btnCheck').addEventListener('click', () => {
+  const card = document.querySelector('.mood-card');
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  card.classList.remove('check-focus');
+  void card.offsetWidth;
+  card.classList.add('check-focus');
+  setTimeout(() => card.classList.remove('check-focus'), 1700);
+  toast('✦ 从此刻的心情开始 · 30 秒完成今日检查');
+});
+
+/* ---------- AI 节奏呼吸（与 CSS 动画同频的文字节奏） ---------- */
+(function breathLoop() {
+  const label = document.getElementById('breathLabel');
+  const count = document.getElementById('breathCount');
+  const CYCLE = 9000, RISE = CYCLE * 0.2;
+  function cycle() {
+    label.textContent = '吸气 · 4 秒';
+    let n = 4;
+    count.textContent = n;
+    const tick = setInterval(() => { if (n > 1) count.textContent = --n; }, RISE / 4);
+    setTimeout(() => clearInterval(tick), RISE);
+    setTimeout(() => {
+      label.textContent = '呼气 · 慢慢地';
+      const t0 = performance.now();
+      (function ex(now) {
+        const t = (now - t0) / (CYCLE - RISE);
+        if (t < 1) { count.textContent = Math.max(1, Math.ceil(6 * (1 - t))); requestAnimationFrame(ex); }
+      })(t0);
+    }, RISE);
+  }
+  cycle();
+  setInterval(cycle, CYCLE);
+})();
+
+/* ---------- 问问薇薇：拆解 → RAG 检索 → 生成（可见管线 · 05 设计语言） ---------- */
+const chatLog = document.getElementById('chatLog');
+function scrollChat() {
+  const last = chatLog.lastElementChild;
+  if (last) last.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+function addUserMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'q-bubble';
+  el.textContent = text;
+  chatLog.appendChild(el); scrollChat();
+}
+function addPipe() {
+  const el = document.createElement('div');
+  el.className = 'pipe';
+  el.innerHTML = `<div class="pipe-rail">
+    <span class="pnode active" data-n="1"><i class="pno">1</i>理解问题</span><span class="pline" data-l="1"></span>
+    <span class="pnode" data-n="2"><i class="pno">2</i>检索知识库</span><span class="pline" data-l="2"></span>
+    <span class="pnode" data-n="3"><i class="pno">3</i>生成回答</span>
+  </div>`;
+  chatLog.appendChild(el); scrollChat();
+  return el;
+}
+function setNode(pipe, n, state) {
+  const p = pipe.querySelector(`.pnode[data-n="${n}"]`);
+  if (p) p.className = `pnode ${state}`;
+  if (state === 'active') {
+    const l = pipe.querySelector(`.pline[data-l="${n - 1}"]`);
+    if (l) l.classList.add('fill');
+  }
+}
+function stageCard(pipe, no, title, state) {
+  const c = document.createElement('div');
+  c.className = 'card stage-card';
+  c.innerHTML = `<div class="stage-head"><span class="stage-no">${no}</span><h4>${title}</h4><span class="stage-state">${state}</span></div><div class="stage-body"><span class="typing"><i></i><i></i><i></i></span></div>`;
+  pipe.appendChild(c); scrollChat();
+  return c;
+}
+function stageBody(c) { return c.querySelector('.stage-body'); }
+function setState(c, txt) { c.querySelector('.stage-state').textContent = txt; }
+function chunkHTML(badge, sim, text) {
+  return `<div class="chunk"><span class="chunk-badge">${badge}</span><p>${text}</p>
+    <div class="rel"><div class="rel-bar"><i data-w="${Math.round(sim * 100)}"></i></div><span class="rel-val">相关度 ${sim.toFixed(2)}</span></div></div>`;
+}
+function fillBars(scope) {
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    scope.querySelectorAll('.rel-bar i').forEach(b => { b.style.width = b.dataset.w + '%'; })));
+}
+function answerCard(pipe, inner) {
+  const a = document.createElement('div');
+  a.className = 'card answer-card';
+  a.innerHTML = `<span class="answer-glow"></span><div class="answer-face"><span class="mini"></span>薇薇 · 已基于片段生成</div><div class="answer-text">${inner}</div>`;
+  pipe.appendChild(a); scrollChat();
+  return a;
+}
+const ANSWERS = {
+  async exam(pipe) {
+    await sleep(700);
+    const c1 = stageCard(pipe, 1, '问题拆解', '理解中…');
+    await sleep(750);
+    stageBody(c1).innerHTML = `<p class="stage-lead">我先把这句话拆成两个小问题：</p><div class="dirs">
+      <div class="dir-row" style="animation-delay:.05s"><span class="dir-no">Q1</span><div><b>考试周适合的低负担小任务有哪些？</b><span>方向：可随时中断的微休息</span></div></div>
+      <div class="dir-row" style="animation-delay:.2s"><span class="dir-no">Q2</span><div><b>只有 10 分钟时，优先做哪一件？</b><span>方向：结合你的任务偏好排序</span></div></div></div>`;
+    setState(c1, '已拆解 2 个方向');
+    setNode(pipe, 1, 'done'); setNode(pipe, 2, 'active'); scrollChat();
+    await sleep(850);
+    const c2 = stageCard(pipe, 2, '知识检索', '正在检索 health_knowledge_v1 …');
+    await sleep(850);
+    stageBody(c2).innerHTML = chunkHTML('健康教育指导纲要', 0.91, '考试期间建议以低负担、可随时中断的微休息为主，优先缓解用眼与久坐疲劳。')
+      + chunkHTML('WHO 身体活动指南', 0.87, '青少年每次 1–3 分钟的间歇活动即可获益，无需连续长时间运动。');
+    fillBars(c2);
+    setState(c2, '命中 2 个片段');
+    setNode(pipe, 2, 'done'); setNode(pipe, 3, 'active'); scrollChat();
+    await sleep(900);
+    answerCard(pipe, `<b>10 分钟，两件小事就够了</b>——<b>窗边远眺 1 分钟</b>照顾眼睛，<b>颈肩伸展 3 分钟</b>照顾脖子，剩下的时间安心复习。
+      <div class="mini-task"><div class="mt-icon">🌿</div><div><b>颈肩小伸展</b><span>约 3 分钟 · 你接受率最高的类型</span></div><button class="go" onclick="switchView('today')">去做</button></div>
+      <div class="cites"><div class="ct">依据来源</div><div class="cite">《中小学生健康教育指导纲要》</div><div class="cite">WHO《青少年身体活动指南》</div></div>`);
+    setNode(pipe, 3, 'done');
+  },
+  async sleep(pipe) {
+    await sleep(700);
+    const c1 = stageCard(pipe, 1, '问题拆解', '理解中…');
+    await sleep(750);
+    stageBody(c1).innerHTML = `<p class="stage-lead">「睡不好」我拆成了两个方向：</p><div class="dirs">
+      <div class="dir-row" style="animation-delay:.05s"><span class="dir-no">Q1</span><div><b>入睡困难时的轻放松方法？</b><span>方向：慢呼吸类干预</span></div></div>
+      <div class="dir-row" style="animation-delay:.2s"><span class="dir-no">Q2</span><div><b>考试周怎么安排睡前收尾？</b><span>方向：刺激控制与睡前过渡</span></div></div></div>`;
+    setState(c1, '已拆解 2 个方向');
+    setNode(pipe, 1, 'done'); setNode(pipe, 2, 'active'); scrollChat();
+    await sleep(850);
+    const c2 = stageCard(pipe, 2, '知识检索', '正在检索 health_knowledge_v1 …');
+    await sleep(850);
+    stageBody(c2).innerHTML = chunkHTML('青少年睡眠健康白皮书', 0.93, '睡前进行 4-7-8 呼吸等慢呼吸练习，可降低唤醒水平，缩短入睡时间。')
+      + chunkHTML('教育部睡眠管理通知', 0.85, '睡前应减少学习与屏幕刺激，预留安静过渡时段。');
+    fillBars(c2);
+    setState(c2, '命中 2 个片段');
+    setNode(pipe, 2, 'done'); setNode(pipe, 3, 'active'); scrollChat();
+    await sleep(900);
+    answerCard(pipe, `今晚试试 <b>花瓣呼吸</b>（吸 4 秒、停 7 秒、呼 8 秒，循环 4 次），已经放进你 <b>21:40 的节奏</b>里啦。复习结束后留 10 分钟「不看书也不碰手机」的空白，会比直接躺下更容易睡着。
+      <div class="mini-task"><div class="mt-icon">🌙</div><div><b>花瓣呼吸 4-7-8</b><span>约 2 分钟 · 已在今日清单</span></div><button class="go" onclick="switchView('today')">去做</button></div>
+      <div class="cites"><div class="ct">依据来源</div><div class="cite">《中国青少年睡眠健康白皮书》</div><div class="cite">教育部睡眠管理通知</div></div>`);
+    setNode(pipe, 3, 'done');
+  },
+  async neck(pipe) {
+    await sleep(700);
+    const c1 = stageCard(pipe, 1, '问题拆解', '理解中…');
+    await sleep(650);
+    stageBody(c1).innerHTML = `<p class="stage-lead">我把「脖子疼」拆成一个需要谨慎处理的问题：</p><div class="dirs">
+      <div class="dir-row" style="animation-delay:.05s"><span class="dir-no">Q1</span><div><b>身体疼痛类输入是否属于健康微干预的适用范围？</b><span>方向：安全边界判断</span></div></div></div>`;
+    setState(c1, '已拆解 1 个方向');
+    setNode(pipe, 1, 'done'); setNode(pipe, 2, 'active'); scrollChat();
+    await sleep(850);
+    const c2 = stageCard(pipe, 2, '知识检索', '正在检索安全规则库 …');
+    await sleep(850);
+    stageBody(c2).innerHTML = chunkHTML('微律安全规则 v0.1', 0.98, '身体部位疼痛类输入触发输入风险分流：暂停普通推荐，不做医疗判断，提示求助家长或老师。');
+    fillBars(c2);
+    setState(c2, '已命中安全规则 · 触发风险分流');
+    setNode(pipe, 2, 'done'); setNode(pipe, 3, 'active'); scrollChat();
+    await sleep(800);
+    answerCard(pipe, `<b>先暂停一下任务推荐。</b>
+      <div class="safety-card"><div class="st">⚠ 薇薇不看诊、不猜测</div>
+      <p>脖子疼可能只是久坐的僵硬，也可能需要专业的帮助。薇薇不能替代医生，所以不会推荐任何针对性的动作。</p>
+      <p style="margin-top:6px">如果疼得<b>越来越厉害，或者伴随头晕、手发麻</b>，请今天就把这件事告诉爸爸妈妈或老师，好吗？</p>
+      <div class="rule">已触发安全规则：输入风险分流 · 普通推荐已暂停 · 本次对话记入审计日志</div></div>
+      <div class="cites"><div class="ct">依据来源</div><div class="cite">微律安全规则 v0.1 · 输入风险分流</div></div>`);
+    setNode(pipe, 3, 'done');
+  },
+  async fallback(pipe, q) {
+    await sleep(700);
+    const c1 = stageCard(pipe, 1, '问题拆解', '理解中…');
+    await sleep(700);
+    const short = q.length > 16 ? q.slice(0, 16) + '…' : q;
+    stageBody(c1).innerHTML = `<p class="stage-lead">围绕「${short}」，我先拆出一个最小的问题：</p><div class="dirs">
+      <div class="dir-row" style="animation-delay:.05s"><span class="dir-no">Q1</span><div><b>现在能立刻做的、负担最小的一件事是什么？</b><span>方向：最小可行动</span></div></div></div>`;
+    setState(c1, '已拆解 1 个方向');
+    setNode(pipe, 1, 'done'); setNode(pipe, 2, 'active'); scrollChat();
+    await sleep(800);
+    const c2 = stageCard(pipe, 2, '知识检索', '正在检索 health_knowledge_v1 …');
+    await sleep(800);
+    stageBody(c2).innerHTML = chunkHTML('微律审核知识库', 0.82, '长时间学习后，起身到窗边远眺或轻度活动 1 分钟，对用眼、颈肩与情绪均有改善。');
+    fillBars(c2);
+    setState(c2, '命中 1 个片段');
+    setNode(pipe, 2, 'done'); setNode(pipe, 3, 'active'); scrollChat();
+    await sleep(800);
+    answerCard(pipe, `先给你一件最小的事：<b>从椅子上起来，去窗边站 1 分钟</b>——眼睛、脖子和心情都会谢谢你。
+      <div class="cites"><div class="ct">依据来源</div><div class="cite">微律审核知识库 · health_knowledge_v1</div></div>`);
+    setNode(pipe, 3, 'done');
+  }
+};
+async function aiReply(key, rawText) {
+  const pipe = addPipe();
+  await (ANSWERS[key] || ANSWERS.fallback)(pipe, rawText);
+}
+document.getElementById('quickRow').addEventListener('click', async e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  const map = { exam: '考试周好累，课后只有 10 分钟，做什么好？', sleep: '最近总是睡不好，怎么办？', neck: '我脖子有点疼。' };
+  addUserMsg(map[chip.dataset.q]);
+  await aiReply(chip.dataset.q);
+});
+document.getElementById('chatForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim(); if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+  const key = /疼|痛|晕|麻|不舒服/.test(text) ? 'neck' : /睡|困|失眠/.test(text) ? 'sleep' : /考|累|时间/.test(text) ? 'exam' : 'fallback';
+  await aiReply(key, text);
+});
+
+/* ---------- 画像：圆环 + 记忆撕除 ---------- */
+let ringPlayed = false;
+function startRingAnim() {
+  if (ringPlayed) return; ringPlayed = true;
+  const fg = document.getElementById('ringFg'), num = document.getElementById('ringNum');
+  const t0 = performance.now(), dur = 1500, target = 92;
+  (function frame(now) {
+    const t = Math.min((now - t0) / dur, 1);
+    const e = 1 - Math.exp(-4.5 * t);
+    num.textContent = Math.round(target * e) + '%';
+    fg.style.strokeDashoffset = 258 * (1 - (target / 100) * e);
+    if (t < 1) requestAnimationFrame(frame);
+  })(t0);
+}
+document.getElementById('memList').addEventListener('click', e => {
+  const del = e.target.closest('.mem-del'); if (!del) return;
+  const item = del.closest('.mem-item');
+  item.classList.add('removing');
+  setTimeout(() => item.remove(), 520);
+  toast('🌸 撕掉了 · 它不会再影响推荐');
+});
+
+/* ---------- 周度图表 ---------- */
+let chartPlayed = false;
+function startChartAnim() {
+  if (chartPlayed) return; chartPlayed = true;
+  const dots = document.getElementById('chartDots');
+  const labels = document.getElementById('chartLabels');
+  const pts = [[60,190],[140,150],[220,128],[300,96],[380,112],[460,76],[540,60]];
+  const days = ['周一','周二','周三','周四','周五','周六','周日'];
+  const mins = [0, 1, 4, 3, 6, 9, 8];
+  const colors = ['#c4a5b1','#f78fb0','#9d7bdf','#7cc6b7','#f78fb0','#9d7bdf','#f78fb0'];
+  pts.forEach((p, i) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', 0);
+    c.setAttribute('fill', '#fff'); c.setAttribute('stroke', colors[i]); c.setAttribute('stroke-width', 3);
+    c.style.animation = `dotPop .7s var(--ease-decay) ${0.25 + i * 0.16}s both`;
+    dots.appendChild(c);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', p[0]); t.setAttribute('y', p[1] - 14);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('style', `font-size:12px;fill:#93718a;font-family:'Noto Serif SC';animation:valIn .6s var(--ease-decay) ${0.4 + i * 0.16}s both`);
+    t.textContent = mins[i] ? mins[i] + '′' : '—';
+    dots.appendChild(t);
+    const d = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    d.setAttribute('x', p[0]); d.setAttribute('y', 236);
+    d.setAttribute('text-anchor', 'middle');
+    d.setAttribute('style', 'font-size:11px;fill:#bfa8b5');
+    d.textContent = days[i];
+    labels.appendChild(d);
+  });
+  const st = document.createElement('style');
+  st.textContent = `@keyframes dotPop { 0% { r: 0; } 100% { r: 5.5; } } @keyframes valIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }`;
+  document.head.appendChild(st);
+}
+
+/* ---------- 首次使用 Onboarding（5 步） ---------- */
+(function onboarding() {
+  const ob = document.getElementById('onboard');
+  const need = new URLSearchParams(location.search).has('onboard') || !localStorage.getItem('wl_aurora_onboarded');
+  if (!need) { ob.remove(); return; }
+  document.body.style.overflow = 'hidden';
+  let step = 1; const TOTAL = 5;
+  const steps = document.querySelectorAll('.ob-step');
+  const dots = document.querySelectorAll('#obDots i');
+  const btnNext = document.getElementById('obNext');
+  const btnPrev = document.getElementById('obPrev');
+  const btnSkip = document.getElementById('obSkip');
+  const genCore = document.getElementById('genCore');
+  const genRing = document.getElementById('genRing');
+  const genTxt = document.getElementById('genTxt');
+  const obSummary = document.getElementById('obSummary');
+  let genRan = false;
+
+  function render() {
+    steps.forEach((s, i) => s.classList.toggle('active', i === step - 1));
+    dots.forEach((d, i) => d.classList.toggle('on', i < step));
+    btnPrev.hidden = step === 1;
+    btnNext.textContent = step === TOTAL ? '进入微律' : (step === 1 ? '开始认识你' : '下一步');
+    if (step === TOTAL) runGen();
+  }
+  async function runGen() {
+    if (genRan) return; genRan = true;
+    const r = genCore.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    await convergeFx(cx, cy, { count: 18, dur: 900 });
+    genCore.style.opacity = '1'; genCore.style.transform = 'scale(1)';
+    genCore.textContent = '✦';
+    genRing.style.opacity = '1';
+    genTxt.textContent = '正在匹配审核任务白名单…';
+    await sleep(1000);
+    genTxt.textContent = '初始画像已生成';
+    obSummary.hidden = false;
+    haloFx(cx, cy);
+  }
+  function finish() {
+    localStorage.setItem('wl_aurora_onboarded', '1');
+    document.body.style.overflow = '';
+    ob.classList.add('hide');
+    setTimeout(() => ob.remove(), 850);
+    toast('🌸 欢迎来到微律 · 春日极光');
+  }
+  btnNext.addEventListener('click', () => {
+    if (step === TOTAL) { finish(); return; }
+    step += 1; render();
+  });
+  btnPrev.addEventListener('click', () => { if (step > 1) { step -= 1; render(); } });
+  btnSkip.addEventListener('click', finish);
+  /* 引导内选项：单选 / 多选 */
+  document.querySelectorAll('.ob-chips').forEach(group => {
+    group.addEventListener('click', e => {
+      const c = e.target.closest('.chip'); if (!c) return;
+      if (group.dataset.multi) c.classList.toggle('on');
+      else { group.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); }
+      WL.play(600, v => { c.style.transform = `scale(${1 + 0.08 * v})`; }, () => c.style.transform = '');
+    });
+  });
+  render();
+})();
+
+/* ---------- 原型标记：点击重新体验首次引导 ---------- */
+document.getElementById('protoTag').addEventListener('click', () => {
+  const url = new URL(location.href);
+  url.searchParams.set('onboard', '1');
+  location.href = url.toString();
+});
+
+updateProgress();
+</script>
+</body>
+</html>

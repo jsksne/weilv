@@ -1,0 +1,160 @@
+{
+  "manifest_version": "safety_rule_testability_v2",
+  "created_at": "2026-08-17T00:00:00Z",
+  "supersedes": "safety_rule_testability_v1",
+  "audit_ticket": "Stage 6F Phase D",
+  "production_target": "weilv.safety_rules + weilv.basic_rag orchestration + weilv.api request schema",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "method": "Re-derived from scratch: production source re-read (safety_rules.py, basic_rag.py, api/app.py, api schemas), corpus re-scanned field-by-field. v1 rationales NOT copied (v1 contained template corruption: SR-006/SR-009..SR-012 carried copied or SR-008-specific rationales).",
+  "corpus_observations_v2": {
+    "tasks": 23,
+    "target_stage": "all 23 tasks list all three stages [primary_upper, junior_high, senior_high] - stage mismatch unconstructible",
+    "execution_contexts": "varied: MT-BREAK-004 school-only; MT-SED-002 / MT-EYE-007 / MT-SLEEP-003 home-only; MT-EYE-003 includes commute; MT-OUT-001 includes outdoor",
+    "estimated_minutes": [1, 2, 5, 10],
+    "contraindications": "empty list on all 23 tasks",
+    "stop_conditions": "14 of 23 tasks carry exactly one uniform stop condition: vision-abnormality signs -> stop task, enter help/safety flow",
+    "safety_capabilities": {
+      "pause_reading_or_screen": ["MT-EYE-003"],
+      "continue_study": ["MT-BREAK-003", "MT-SED-001", "MT-EYE-001", "MT-EYE-002", "MT-EYE-003", "MT-EYE-004", "MT-EYE-007"],
+      "requires_movement": ["MT-BREAK-004", "MT-SED-001", "MT-SED-002", "MT-REC-001", "MT-REC-002"],
+      "requires_standing": ["MT-BREAK-004", "MT-SED-001", "MT-SED-002"],
+      "requires_outdoor": ["MT-OUT-001"]
+    }
+  },
+  "production_wiring_facts": {
+    "safety_context_builder": "weilv/basic_rag.py:37-46 _safety_context - maps every BasicRagRequest boolean, derives unstable_reading_or_screen and sleep_displaced_by_study",
+    "es_pre_filters": "weilv/basic_rag.py:80-89 _task_filters - review_status/target_stage/execution_contexts/estimated_minutes mirror SR-004/005/006 upstream of the rule engine",
+    "unpopulated_context_keys": "matched_contraindication_task_ids and matched_stop_condition_task_ids are consumed by safety_rules.py:81-84 but produced by NO caller (BasicRagRequest and RecommendationRequest both lack the fields)",
+    "v01_design_contract": "docs/superpowers/specs/2026-08-13-safety-rules-v0.1-design.md: 'The caller supplies explicit booleans/enums and already-matched contraindication or stop-condition task IDs. The module does not interpret natural language.'"
+  },
+  "rule_records": [
+    {
+      "rule_id": "SR-001",
+      "design_intent": "vision abnormality -> stop normal eye tasks, help seeking, no diagnosis",
+      "production_trigger": "request.vision_abnormal=true -> context.vision_abnormal",
+      "production_effect": "evaluate_input_risk returns help_seeking (safety_rules.py:44-45,51-52); basic_rag.py:182-184 exits with empty result BEFORE any retrieval or model call",
+      "formal_fields_used": ["request boolean only; no task fields"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Pure input-level rule; independent of task corpus. Trigger: vision_abnormal=true -> help_seeking with reason vision_abnormal_help_seeking. Control: same query with vision_abnormal=false -> normal allowed flow."
+    },
+    {
+      "rule_id": "SR-002",
+      "design_intent": "obvious physical discomfort -> block activity tasks, no treatment/rehabilitation claims",
+      "production_trigger": "request.physical_discomfort=true AND task domain in {physical_activity, light_recovery, outdoor}",
+      "production_effect": "filter_task_by_safety blocks the task (safety_rules.py:65-70, reason physical_discomfort_blocks_activity); input itself stays allowed",
+      "formal_fields_used": ["task.domain", "task.covered_domains"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Corpus has outdoor/light_recovery tasks. Trigger: physical_discomfort=true with MT-OUT-001 (outdoor) or MT-REC-001 (light_recovery) -> blocked. False-block control: physical_discomfort=true with MT-EYE-005 (eye_health) -> still allowed."
+    },
+    {
+      "rule_id": "SR-003",
+      "design_intent": "medical diagnosis/treatment request -> exit normal tasks, no diagnosis or treatment",
+      "production_trigger": "request.medical_request=true",
+      "production_effect": "evaluate_input_risk returns blocked (safety_rules.py:53-54); basic_rag exits before retrieval",
+      "formal_fields_used": ["request boolean only; no task fields"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Input-level rule, corpus-independent. Trigger: medical_request=true -> blocked. Control: false -> allowed."
+    },
+    {
+      "rule_id": "SR-004",
+      "design_intent": "target stage mismatch -> hard filter",
+      "production_trigger": "request.target_stage not in task.target_stage",
+      "production_effect": "ES term filter (basic_rag.py:83) + rule-level match SR-004 target_stage_mismatch (safety_rules.py:71-72)",
+      "formal_fields_used": ["task.target_stage"],
+      "implemented": "YES",
+      "testable_with_current_corpus": false,
+      "reason": "VERIFIED from corpus: all 23 formal tasks list all three stages, so no request stage can mismatch any task. Rule is implemented and wired (ES + rule layer), but a mismatch case cannot be constructed without fabricating stage-restricted tasks. status: not_testable_with_current_task_corpus."
+    },
+    {
+      "rule_id": "SR-005",
+      "design_intent": "execution context mismatch -> hard filter",
+      "production_trigger": "request.current_context (non-unknown) not in task.execution_contexts",
+      "production_effect": "ES term filter (basic_rag.py:85-86) + rule-level match SR-005 execution_context_mismatch (safety_rules.py:73-76)",
+      "formal_fields_used": ["task.execution_contexts"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "v1 manifest WRONGLY claimed untestable. Corpus execution_contexts differ per task: MT-BREAK-004 is school-only, MT-SED-002/MT-EYE-007/MT-SLEEP-003 are home-only, MT-OUT-001 includes outdoor. Trigger: current_context=home with MT-BREAK-004 -> filtered. Control: current_context=school with MT-BREAK-004 -> passes. False-block control: MT-BREAK-001 (home/school/study_space) at home -> allowed."
+    },
+    {
+      "rule_id": "SR-006",
+      "design_intent": "insufficient available time -> hard filter, never shorten the task",
+      "production_trigger": "request.available_minutes < task.estimated_minutes",
+      "production_effect": "ES range filter (basic_rag.py:87-88) + rule-level match SR-006 available_minutes_insufficient (safety_rules.py:77-80)",
+      "formal_fields_used": ["task.estimated_minutes"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Corpus durations span 1-10 minutes. Trigger: available_minutes=1 with MT-SED-001 (10 min) -> filtered. Control: available_minutes=10 -> passes. False-block control: available_minutes=1 with MT-EYE-005 (1 min) -> allowed."
+    },
+    {
+      "rule_id": "SR-007",
+      "design_intent": "contraindication matched -> hard filter",
+      "production_trigger": "task_id in context.matched_contraindication_task_ids (caller-supplied)",
+      "production_effect": "rule-level block SR-007 contraindication_matched (safety_rules.py:81-82)",
+      "formal_fields_used": ["task.contraindications (via caller-side matching, not in-module)"],
+      "implemented": "PARTIAL",
+      "testable_with_current_corpus": false,
+      "reason": "Two independent blockers: (a) corpus contraindications are EMPTY on all 23 tasks - nothing to match; (b) no production caller populates matched_contraindication_task_ids (absent from BasicRagRequest and RecommendationRequest), so the branch is unreachable end-to-end. Per v0.1 design the matching belongs to the caller; no caller channel exists yet. status: not_testable_with_current_task_corpus; no fabricated contraindications."
+    },
+    {
+      "rule_id": "SR-008",
+      "design_intent": "stop condition hit -> stop task, exit normal flow if needed",
+      "production_trigger": "task_id in context.matched_stop_condition_task_ids (caller-supplied)",
+      "production_effect": "rule-level block SR-008 stop_condition_matched (safety_rules.py:83-84)",
+      "formal_fields_used": ["task.stop_conditions (via caller-side matching, not in-module)"],
+      "implemented": "PARTIAL",
+      "testable_with_current_corpus": "LIMITED",
+      "reason": "Ticket case classification: BETWEEN A and B. Rule branch EXISTS and consumes caller-supplied matched IDs (A at the deterministic rule layer), but NO production producer populates matched_stop_condition_task_ids - absent from BasicRagRequest/RecommendationRequest - so the branch never fires in the live pipeline (B at the orchestration layer). Corpus: 14/23 tasks carry one uniform stop condition (vision-abnormality signs -> stop and enter help/safety flow). That exact trigger is functionally enforced UPSTREAM by SR-001: vision_abnormal=true returns help_seeking and exits the whole flow before task selection (basic_rag.py:182-184), which is strictly stronger than a per-task block. v0.1 design explicitly delegates matching to the caller and excludes natural-language interpretation, so the deterministic contract AS DESIGNED is implemented. NOT classified a P0/P1 production gap: with the current corpus there is no reachable unsafe state (the only stop condition is covered by SR-001). Recorded as PARTIAL / LIMITED: unit-testable by injecting the context key; end-to-end untestable through the current API schema; flagged for v0.2 (add request channel or stop-condition matcher)."
+    },
+    {
+      "rule_id": "SR-009",
+      "design_intent": "cannot move now -> filter movement/standing/outdoor tasks",
+      "production_trigger": "request.cannot_move=true AND (task domains intersect activity set OR capabilities intersect movement set)",
+      "production_effect": "rule-level block SR-009 movement_currently_unavailable (safety_rules.py:85-89)",
+      "formal_fields_used": ["task.domain", "task.covered_domains", "task.safety_capabilities"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Corpus has movement/outdoor capabilities (MT-OUT-001, MT-REC-001/002, MT-BREAK-004, MT-SED-001/002). Trigger: cannot_move=true with MT-OUT-001 -> blocked. False-block control: cannot_move=true with MT-EYE-005 (no capabilities, eye_health) -> allowed."
+    },
+    {
+      "rule_id": "SR-010",
+      "design_intent": "unstable/moving environment -> allow only simple pause tasks, block complex ones",
+      "production_trigger": "unstable_reading_or_screen=true (derived: unstable_environment AND activity_context in reading/writing/screen) AND task lacks pause_reading_or_screen capability",
+      "production_effect": "rule-level block SR-010 unstable_context_complex_task_blocked (safety_rules.py:90-91); derivation in basic_rag.py:41-44",
+      "formal_fields_used": ["task.safety_capabilities"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Exactly one corpus task (MT-EYE-003) carries pause_reading_or_screen; all others lack it. Trigger: unstable_environment=true + activity_context=screen with MT-EYE-005 -> blocked (already exercised as SR-010 match in formal run case TRG-015). Control: same context with MT-EYE-003 -> allowed."
+    },
+    {
+      "rule_id": "SR-011",
+      "design_intent": "sleep displaced by study -> block continue-study tasks",
+      "production_trigger": "sleep_displaced_by_study=true (request.sleep_being_crowded) AND task has continue_study capability",
+      "production_effect": "rule-level block SR-011 sleep_displaced_by_study (safety_rules.py:92-93)",
+      "formal_fields_used": ["task.safety_capabilities"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Seven corpus tasks carry continue_study (MT-BREAK-003, MT-SED-001, MT-EYE-001/002/003/004/007). Trigger: sleep_being_crowded=true with MT-EYE-001 -> blocked. Control: same flag with MT-SLEEP-001 (no continue_study) -> allowed."
+    },
+    {
+      "rule_id": "SR-012",
+      "design_intent": "no safe whitelist task -> return no_safe_task, never create/lower filters",
+      "production_trigger": "all candidate tasks filtered (or reranker returns none)",
+      "production_effect": "select_safe_tasks appends SR-012 no_safe_whitelist_task (safety_rules.py:119-122); basic_rag.py:236-245 returns no_safe_task when reranked list is empty",
+      "formal_fields_used": ["aggregate over all filters"],
+      "implemented": "YES",
+      "testable_with_current_corpus": true,
+      "reason": "Constructible deterministically: current_context=outdoor AND available_minutes=1 leaves only MT-OUT-001 (outdoor) which fails SR-006 (10 min > 1) -> no_safe_task with SR-012. Control: same context with available_minutes=10 -> MT-OUT-001 allowed."
+    }
+  ],
+  "summary_counts": {
+    "implemented_YES": ["SR-001", "SR-002", "SR-003", "SR-004", "SR-005", "SR-006", "SR-009", "SR-010", "SR-011", "SR-012"],
+    "implemented_PARTIAL": ["SR-007", "SR-008"],
+    "implemented_NO": [],
+    "fully_testable": ["SR-001", "SR-002", "SR-003", "SR-005", "SR-006", "SR-009", "SR-010", "SR-011", "SR-012"],
+    "limited_testable": ["SR-008"],
+    "not_testable_with_current_corpus": ["SR-004", "SR-007"]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "manifest_id": "stage9_public_release_exclusion_rules_v1",
+  "schema_version": "1.1",
+  "frozen_order": [
+    "missing_required_operational_fields",
+    "invalid_decision_slot",
+    "travel_or_technical_decision_gap",
+    "study_day_outside_1_42",
+    "not_available",
+    "inconsistent_action_encoding",
+    "duplicate_decision_key",
+    "invalid_primary_outcome"
+  ],
+  "rules": [
+    {
+      "rule_id": "R1",
+      "rule": "missing_required_operational_fields",
+      "source_fields": [
+        "user.index",
+        "decision.index",
+        "sugg.decision.utime",
+        "sugg.decision.slot",
+        "is.randomized",
+        "send",
+        "send.active",
+        "send.sedentary"
+      ],
+      "excluded": 736,
+      "remaining_after": 7538,
+      "classification": "FROZEN_PREREG",
+      "note": "any required operational field blank"
+    },
+    {
+      "rule_id": "R2",
+      "rule": "invalid_decision_slot",
+      "source_fields": [
+        "sugg.decision.slot"
+      ],
+      "excluded": 23,
+      "remaining_after": 7515,
+      "classification": "FROZEN_PREREG",
+      "note": "decision slot not in 1..5 or unparseable"
+    },
+    {
+      "rule_id": "R3",
+      "rule": "travel_or_technical_decision_gap",
+      "source_fields": [
+        "decision.index.nogap"
+      ],
+      "excluded": 300,
+      "remaining_after": 7215,
+      "classification": "PUBLIC_RELEASE_OPERATIONALIZATION",
+      "note": "rows excluded from the released no-gap decision index; matches the paper's 390 travel/technical count when the column is present"
+    },
+    {
+      "rule_id": "R4",
+      "rule": "study_day_outside_1_42",
+      "source_fields": [
+        "sugg.decision.utime",
+        "study.day.nogap",
+        "study.day"
+      ],
+      "excluded": 456,
+      "remaining_after": 6759,
+      "classification": "PUBLIC_RELEASE_OPERATIONALIZATION",
+      "note": "derived study day missing or outside 1..42",
+      "day_source": "derived_from_utime",
+      "reconstructability": "DERIVED_DETERMINISTICALLY_FROM_PUBLIC_FIELDS"
+    },
+    {
+      "rule_id": "R5",
+      "rule": "not_available",
+      "source_fields": [
+        "avail"
+      ],
+      "excluded": 854,
+      "remaining_after": 5905,
+      "classification": "FROZEN_PREREG",
+      "note": "avail != True"
+    },
+    {
+      "rule_id": "R6",
+      "rule": "inconsistent_action_encoding",
+      "source_fields": [
+        "send",
+        "send.active",
+        "send.sedentary"
+      ],
+      "excluded": 0,
+      "remaining_after": 5905,
+      "classification": "FROZEN_PREREG",
+      "note": "row does not match exactly one frozen action encoding"
+    },
+    {
+      "rule_id": "R7",
+      "rule": "duplicate_decision_key",
+      "source_fields": [
+        "user.index",
+        "decision.index"
+      ],
+      "excluded": 0,
+      "remaining_after": 5905,
+      "classification": "FROZEN_PREREG",
+      "note": "duplicate (user.index, decision.index)"
+    },
+    {
+      "rule_id": "R8",
+      "rule": "invalid_primary_outcome",
+      "source_fields": [
+        "jbsteps30.zero"
+      ],
+      "excluded": 0,
+      "remaining_after": 5905,
+      "classification": "FROZEN_PREREG",
+      "note": "jbsteps30.zero blank, non-finite or negative"
+    }
+  ],
+  "final_cohort": {
+    "definition": "reproducible Stage 9 public-release cohort; not a fabricated reconstruction of the paper cohort",
+    "rows": 5905
+  },
+  "paper_comparison_only": {
+    "paper_included_decision_points": 7540,
+    "paper_available_decision_points": 6061,
+    "note": "comparison targets only; no identity is claimed"
+  }
+}

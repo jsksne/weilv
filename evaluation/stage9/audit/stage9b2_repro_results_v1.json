@@ -1,0 +1,226 @@
+{
+  "all_pass": true,
+  "cases": {
+    "F001_A_cf_signal_none": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true,
+        "diag_signal_neutral_fallback": true
+      },
+      "pass": true
+    },
+    "F001_A2_cf_signal_none_with_tie": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_B_mixed_type_versions": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "cf_applied_true": true,
+        "metadata_fallback_not_affect_ranking": true,
+        "version_fallbacks_neutral": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_list": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_dict": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_bool": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_nan": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_inf": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_cf_signal_neg_inf": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true
+      },
+      "pass": true
+    },
+    "F001_C_malformed_metadata_ranking_unaffected": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "cf_applied_true": true,
+        "cf_signal_decides_tie": true,
+        "neighbor_fallback_zero": true,
+        "version_fallbacks_neutral": true
+      },
+      "pass": true
+    },
+    "F002_neighbor_count_string": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "ranking_unaffected": true,
+        "fallback_neutral_zero": true,
+        "cf_applied_true": true
+      },
+      "pass": true
+    },
+    "F002_neighbor_count_none": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "ranking_unaffected": true,
+        "fallback_neutral_zero": true,
+        "cf_applied_true": true
+      },
+      "pass": true
+    },
+    "F002_neighbor_count_dict": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "ranking_unaffected": true,
+        "fallback_neutral_zero": true,
+        "cf_applied_true": true
+      },
+      "pass": true
+    },
+    "F002_neighbor_count_nan": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "ranking_unaffected": true,
+        "fallback_neutral_zero": true,
+        "cf_applied_true": true
+      },
+      "pass": true
+    },
+    "F002_neighbor_count_inf": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "ranking_unaffected": true,
+        "fallback_neutral_zero": true,
+        "cf_applied_true": true
+      },
+      "pass": true
+    },
+    "RANKING_contract_sort_semantics": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "sort_semantics_exact": true,
+        "adjusted_groups_ascending": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "no_mutation_object_identity": true,
+        "evidence_ids_unchanged": true
+      },
+      "pass": true
+    },
+    "FAILCLOSED_no_clamping_out_of_range": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "above_range_fails_closed_not_clamped": true,
+        "below_range_fails_closed_not_clamped": true
+      },
+      "pass": true
+    },
+    "GUARD_blocked_resurrection_zero": {
+      "exception": null,
+      "checks": {
+        "no_exception": true,
+        "original_ordering_preserved": true,
+        "multiset_identical": true,
+        "cardinality_identical": true,
+        "evidence_ids_unchanged": true,
+        "cf_applied_false": true,
+        "reason_matches": true,
+        "diag_before_eq_after_ids": true,
+        "no_blocked_task_present": true
+      },
+      "pass": true
+    }
+  }
+}

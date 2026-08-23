@@ -1,0 +1,15 @@
+Stage 9B.1 repair - relevant contract references (frozen, unchanged)
+Generated: 2026-08-19
+
+evaluation/manifests/stage9_metric_preregistration_v1_1.json
+  sha256: 405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d
+evaluation/stage9/stage9_methodology_decision_v1_1.md
+  sha256: 55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6
+evaluation/stage9/stage9_implementation_contract_v1_1.md
+  sha256: 47618931b55508d5cf5a7cc1748a9073a834198806b099aa84a7f4752e2156fb
+evaluation/stage9/stage9_safety_integration_contract_v1_1.md
+  sha256: 281c497e4c1b7d6f97eaea03678fd686312e63d7c158ec0e1bbf6e1e19054282
+evaluation/claims/claim_registry_cf_draft_v1_1.csv
+  sha256: 7ba6e7112ac1e4c061eb541ba47fd093517bc280337d870ef849ebd5e1fa3582
+evaluation/stage9/audit/stage9b_audit_findings_v1.csv
+  (independent audit findings that produced F-001/F-002)

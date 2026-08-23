@@ -1,0 +1,44 @@
+{
+  "manifest_id": "stage9b_freeze_integrity_audit_v1",
+  "audit_date": "2026-08-18",
+  "auditor": "independent preformal code audit (Stage 9B, GLM-5.3)",
+  "acceptance_zip": {
+    "path": "evaluation/stage9b_preformal_implementation_acceptance_bundle.zip",
+    "expected_sha256": "52c0dbdbdd93b1736346ef9e31acbd2ea7ae2c1c6757b72aec4ef7646335776f",
+    "observed_sha256": "52c0dbdbdd93b1736346ef9e31acbd2ea7ae2c1c6757b72aec4ef7646335776f",
+    "match": true
+  },
+  "freeze_manifest": "evaluation/stage9/preformal/stage9_evaluator_freeze_manifest_v1.json",
+  "freeze_manifest_fields": {
+    "formal_mode_executed": false,
+    "formal_results_computed": false
+  },
+  "files": [
+    {"file": "evaluation/stage9/preprocess_heartsteps_v1.py", "expected_sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4", "observed_sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4", "match": true},
+    {"file": "evaluation/stage9/run_stage9_external_cf.py", "expected_sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714", "observed_sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714", "match": true},
+    {"file": "evaluation/runners/_stage9b_preflight.py", "expected_sha256": "9937defb49cb005b5ae8fd42e0ea945427c171baecfc674c3c5e46ec076455d4", "observed_sha256": "9937defb49cb005b5ae8fd42e0ea945427c171baecfc674c3c5e46ec076455d4", "match": true},
+    {"file": "evaluation/runners/_stage9b_preformal_bundle.py", "expected_sha256": "32703b92c65de5a389809e0d4bd5b1cc4f23bca61360cb561153f7224263c0de", "observed_sha256": "32703b92c65de5a389809e0d4bd5b1cc4f23bca61360cb561153f7224263c0de", "match": true},
+    {"file": "src/weilv/collaborative_ranking.py", "expected_sha256": "71f8b67ae3e0a661894d44e50b887c3b4676a2b3f1c28e524eef92a52665c835", "observed_sha256": "71f8b67ae3e0a661894d44e50b887c3b4676a2b3f1c28e524eef92a52665c835", "match": true},
+    {"file": "evaluation/manifests/stage9_metric_preregistration_v1_1.json", "expected_sha256": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d", "observed_sha256": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d", "match": true},
+    {"file": "evaluation/stage9/stage9_methodology_decision_v1_1.md", "expected_sha256": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6", "observed_sha256": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6", "match": true},
+    {"file": "evaluation/stage9/stage9_implementation_contract_v1_1.md", "expected_sha256": "47618931b55508d5cf5a7cc1748a9073a834198806b099aa84a7f4752e2156fb", "observed_sha256": "47618931b55508d5cf5a7cc1748a9073a834198806b099aa84a7f4752e2156fb", "match": true},
+    {"file": "evaluation/stage9/stage9_safety_integration_contract_v1_1.md", "expected_sha256": "281c497e4c1b7d6f97eaea03678fd686312e63d7c158ec0e1bbf6e1e19054282", "observed_sha256": "281c497e4c1b7d6f97eaea03678fd686312e63d7c158ec0e1bbf6e1e19054282", "match": true},
+    {"file": "evaluation/claims/claim_registry_cf_draft_v1_1.csv", "expected_sha256": "7ba6e7112ac1e4c061eb541ba47fd093517bc280337d870ef849ebd5e1fa3582", "observed_sha256": "7ba6e7112ac1e4c061eb541ba47fd093517bc280337d870ef849ebd5e1fa3582", "match": true},
+    {"file": "tests/test_stage9_heartsteps_preprocessing.py", "expected_sha256": "67049fa49f38ec8b99ad938d5d5fa79ee9df4153de6b98d7af7a1ab6a5dbf612", "observed_sha256": "67049fa49f38ec8b99ad938d5d5fa79ee9df4153de6b98d7af7a1ab6a5dbf612", "match": true},
+    {"file": "tests/test_stage9_external_cf.py", "expected_sha256": "a1f10ac3baa8d43e9565427f541ba544a70a1d251b4dad4b2fae7ad3a1c969b8", "observed_sha256": "a1f10ac3baa8d43e9565427f541ba544a70a1d251b4dad4b2fae7ad3a1c969b8", "match": true},
+    {"file": "tests/test_collaborative_ranking.py", "expected_sha256": "878985323026f42a3d67f6059933f7ad48d5b3399a33a1e17e7203175c9dfa1b", "observed_sha256": "878985323026f42a3d67f6059933f7ad48d5b3399a33a1e17e7203175c9dfa1b", "match": true},
+    {"file": "tests/conftest.py", "expected_sha256": "af9f84c4d8eed1c74daaecccf77fc5610830d7de90bc7ebd2390b79f198321ea", "observed_sha256": "af9f84c4d8eed1c74daaecccf77fc5610830d7de90bc7ebd2390b79f198321ea", "match": true}
+  ],
+  "heartsteps_source_gate": {
+    "name": "HeartSteps V1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477",
+    "hash_check_source": "stage9_preformal_integrity_v1.json (heartsteps_hashes=PASS) + prior session SHA-256 verification of all 4 CSVs",
+    "users_csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+    "suggestions_csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+    "gfsteps_csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+    "jbsteps_csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3",
+    "match": true
+  },
+  "mismatched_files": [],
+  "verdict": "PASS"
+}

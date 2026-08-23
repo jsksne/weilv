@@ -1,0 +1,77 @@
+{
+  "manifest_id": "stage9b_snips_audit_v1",
+  "audit_date": "2026-08-18",
+  "auditor": "independent preformal code audit (Stage 9B, GLM-5.3)",
+  "audited_file": "evaluation/stage9/run_stage9_external_cf.py",
+  "sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+  "propensities": {"none": 0.4, "walking": 0.3, "antisedentary": 0.3, "verified": true},
+  "weight_formula": {
+    "spec": "w_t = I(A_t == pi(X_t)) / p(A_t | X_t), deterministic policy pi",
+    "implementation": "indicator(matching action) divided by frozen action propensity",
+    "verified": true
+  },
+  "participant_value": {
+    "spec": "V_SNIPS_u = sum(w_t * y_t) / sum(w_t), per participant",
+    "verified": true,
+    "row_independence_note": "evaluator aggregates per participant; 5905 decision rows are NOT treated as independent participants"
+  },
+  "ess": {
+    "spec": "ESS_u = (sum w_t)^2 / sum(w_t^2)",
+    "verified": true,
+    "synthetic_fixture": {"value": 1.5909090909090908, "ess": 2.951219512195122, "test": "snips_weight_value_ess_exact", "passed": true}
+  },
+  "paired_delta": {
+    "spec": "Delta_u = V_CF_u - V_HISTORY_u (participant-paired)",
+    "verified": true
+  },
+  "aggregate": {"spec": "mean participant Delta_u", "verified": true},
+  "bootstrap": {
+    "spec": "paired participant bootstrap, 10000 replicates, seed 20260818",
+    "row_level_bootstrap_present": false,
+    "verified": true,
+    "determinism_fixture": {"test": "bootstrap_seed_determinism", "ci_lower": 0.08777027027027028, "ci_upper": 0.18790540540540543, "passed": true, "note": "synthetic fixture only; not a real-data result"}
+  },
+  "zero_support": {
+    "spec": "if sum(w)==0 or ESS==0 for any participant/policy: retain and report participant, no imputation, no silent drop, primary aggregate = NOT_EVALUABLE, CR-CF-001 cannot be SUPPORTED",
+    "verified": true,
+    "synthetic_fixture": {"test": "zero_support_detected", "reason": "zero_denominator_or_ess", "passed": true}
+  },
+  "claim_logic_cr_cf_001": {
+    "hardcoded": false,
+    "supported_iff": [
+      "Delta_V > 0",
+      "participant-bootstrap 95% CI lower bound > 0",
+      "positive denominator / ESS for every participant and both policies",
+      "all integrity gates pass"
+    ],
+    "otherwise": "UNSUPPORTED or NOT_EVALUABLE with explicit reason",
+    "verified": true,
+    "note": "logic verified by code read + synthetic fixtures only; real claim status NOT computed during this audit"
+  },
+  "amendment_am_001": {
+    "title": "is.randomized SNIPS scope",
+    "created_before_formal_result": true,
+    "formal_result_still_not_computed": true,
+    "alters_primary_analysis": false,
+    "scope": "primary never filters on is.randomized; amendment adds a SECONDARY sensitivity (SNIPS restricted to is.randomized==True rows) plus documents the field as a required nonblank operational/data-quality field",
+    "justified_by_public_release_semantics": true,
+    "transparently_recorded": "PREREGISTRATION_AMENDMENTS block in frozen run_stage9_external_cf.py + stage9b_self_audit_checklist_v1.md",
+    "post_result_favorable_analysis_risk": "none - no formal result exists; pre-result clarification documented honestly",
+    "classification": "PASS"
+  },
+  "precheck_formal_lock": {
+    "default_mode": "PRECHECK",
+    "formal_requires_explicit_flag": "--formal",
+    "precheck_calls_real_lopo_driver": false,
+    "precheck_calls_real_delta_evaluator": false,
+    "precheck_calls_real_bootstrap": false,
+    "precheck_calls_real_cr_cf_001": false,
+    "indirect_call_paths_searched": "preflight runner + bundle builder + evaluator entry points; none reach the formal LOPO/Delta/bootstrap path without --formal",
+    "frozen_artifact_flags": {"formal_mode_executed": false, "formal_results_computed": false},
+    "real_delta_v_in_preformal_outputs": false,
+    "real_bootstrap_ci_in_preformal_outputs": false,
+    "real_cr_cf_001_in_preformal_outputs": false,
+    "verified": true
+  },
+  "verdict": "PASS"
+}

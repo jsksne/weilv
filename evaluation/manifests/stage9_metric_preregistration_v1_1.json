@@ -1,0 +1,230 @@
+{
+  "manifest_id": "stage9_metric_preregistration_v1_1",
+  "schema_version": "1.1",
+  "frozen_at": "2026-08-18",
+  "stage": "9A_methodology_only",
+  "formal_results_computed": false,
+  "selected_design": "C_external_mechanism_validation",
+  "heartsteps_suitability": "PARTIAL",
+  "direct_23_task_validation": false,
+  "source": {
+    "name": "HeartSteps V1",
+    "official_url": "https://github.com/klasnja/HeartStepsV1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477",
+    "license": "CC-BY-4.0",
+    "population": "healthy sedentary adults age 18-60",
+    "enrolled_n": 44,
+    "analyzed_n": 37,
+    "public_n": 37,
+    "suggestions_rows": 8274,
+    "hashes": {
+      "users.csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+      "suggestions.csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+      "gfsteps.csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+      "jbsteps.csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3"
+    }
+  },
+  "interaction": {
+    "unit": "available participant decision point",
+    "actions": ["none", "walking", "antisedentary"],
+    "assignment_probabilities": {
+      "none": 0.4,
+      "walking": 0.3,
+      "antisedentary": 0.3
+    },
+    "primary_outcome": "natural_log(jbsteps30.zero + 0.5)",
+    "primary_missing_handling": "after non-outcome eligibility and known travel/technical exclusions, use the released zero-imputed Jawbone 30-minute field following the original HeartSteps primary-analysis treatment",
+    "explicit_feedback_use": "descriptive_only_no_rating_prediction_metric",
+    "not_negative_labels": ["no_response", "snooze", "blank"],
+    "completion_observed": false,
+    "zero_imputed_fields_primary": true,
+    "raw_jbsteps30_use": "complete_case_sensitivity_only",
+    "google_fit_use": "separate_sensor_sensitivity_only",
+    "primary_outcome_is_not": ["task_completion", "user_preference"]
+  },
+  "eligibility": {
+    "required_nonmissing": [
+      "user.index",
+      "decision.index",
+      "sugg.decision.utime",
+      "sugg.decision.slot",
+      "is.randomized",
+      "send",
+      "send.active",
+      "send.sedentary",
+      "jbsteps30.zero"
+    ],
+    "availability": "avail == True",
+    "decision_slots": [1, 2, 3, 4, 5],
+    "study_days_inclusive": [1, 42],
+    "action_encoding": {
+      "none": "send=False and send.active=False and send.sedentary=False",
+      "walking": "send=True and send.active=True and send.sedentary=False",
+      "antisedentary": "send=True and send.active=False and send.sedentary=True"
+    },
+    "duplicate_key": ["user.index", "decision.index"],
+    "duplicate_policy": "fail",
+    "row_flow_required": true,
+    "paper_denominators_are_comparators_not_assumed_identity": true
+  },
+  "context": {
+    "mode": "context_aware",
+    "prediction_time_fields": [
+      "sugg.decision.slot",
+      "recognized.activity",
+      "dec.location.category",
+      "dec.weather.condition",
+      "jbsteps30pre",
+      "derived_study_week"
+    ],
+    "activity_buckets": ["STILL", "ON_FOOT", "IN_VEHICLE", "other", "unknown"],
+    "location_buckets": ["home", "work", "other", "unknown"],
+    "weather_buckets": ["precipitation_or_snow", "other", "unknown"],
+    "prior_step_buckets": ["missing", "0", "1_199", "ge_200"],
+    "post_response_predictors_forbidden": true
+  },
+  "split": {
+    "outer": "leave_one_participant_out_37_folds",
+    "target_adaptation_days": [1, 7],
+    "target_test_days": [8, 42],
+    "target_in_source_training": false,
+    "source_history_rule": "source relative study time strictly earlier than target prediction relative time",
+    "target_history_rule": "target timestamp strictly earlier than prediction timestamp",
+    "random_row_split_forbidden": true,
+    "future_interactions_forbidden": true
+  },
+  "model": {
+    "family": "contextual_user_neighborhood_residual",
+    "stable_item_definition": "action_x_decision_slot",
+    "context_base": "additive smoothed action-context means",
+    "personal_signal": "smoothed strictly-prior target residual mean with action-slot, action, overall fallback",
+    "similarity": "cosine on co-observed action-slot residual cells",
+    "similarity_shrinkage": "n_common/(n_common+10)",
+    "minimum_common_cells": 3,
+    "positive_similarity_only": true,
+    "max_neighbors": 5,
+    "minimum_contributing_neighbors": 3,
+    "mean_shrinkage": "n/(n+10)",
+    "residual_clip": "outer-training 5th and 95th percentiles",
+    "insufficient_data_signal": 0,
+    "test_set_tuning_forbidden": true,
+    "rejected_families": [
+      "matrix_factorization",
+      "BPR",
+      "implicit_ALS",
+      "LightFM",
+      "item_kNN"
+    ]
+  },
+  "baselines": [
+    "GLOBAL_ACTION",
+    "CONTEXT_ONLY",
+    "EXTERNAL_PERSONAL_HISTORY",
+    "EXTERNAL_CF_ONLY",
+    "EXTERNAL_PERSONAL_PLUS_CF"
+  ],
+  "primary_comparison": {
+    "method": "EXTERNAL_PERSONAL_PLUS_CF",
+    "baseline": "EXTERNAL_PERSONAL_HISTORY",
+    "isolated_increment": "cf_signal"
+  },
+  "metrics": {
+    "primary": {
+      "name": "participant_balanced_incremental_SNIPS_policy_value",
+      "outcome": "natural_log(jbsteps30.zero + 0.5)",
+      "participant_weight": "w_t = I(A_t == policy(X_t)) / p(A_t | X_t)",
+      "participant_value": "V_SNIPS_u(policy) = sum_t(w_t*y_t) / sum_t(w_t)",
+      "participant_ess": "ESS_u(policy) = (sum_t w_t)^2 / sum_t(w_t^2)",
+      "formula": "mean_user(V_SNIPS_u(EXTERNAL_PERSONAL_PLUS_CF)-V_SNIPS_u(EXTERNAL_PERSONAL_HISTORY))",
+      "policy": "top_scored_action",
+      "score_tie_order": ["none", "antisedentary", "walking"],
+      "higher_is_better": true
+    },
+    "secondary": [
+      "participant_balanced_MAE_on_natural_log_jbsteps30_zero_plus_0_5",
+      "neighbor_coverage",
+      "action_selection_coverage",
+      "cold_start_fallback_rate",
+      "SNIPS_effective_sample_size",
+      "raw_jbsteps30_complete_case_sensitivity",
+      "Google_Fit_sensor_sensitivity",
+      "primary_vs_raw_complete_case_conclusion_stability"
+    ],
+    "precision_at_k_primary": false,
+    "rmse_primary": false
+  },
+  "statistics": {
+    "independent_unit": "participant",
+    "paired_participant_differences": true,
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260818,
+    "confidence_interval": "percentile_95",
+    "row_level_independence_assumption_forbidden": true,
+    "zero_support_behavior": {
+      "condition": "sum_weights_eq_0_or_ESS_eq_0_for_either_primary_policy",
+      "participant_silently_dropped": false,
+      "participant_value_imputed": false,
+      "reporting": "retain and report participant as zero_support with policy-specific denominator and ESS",
+      "aggregate_primary_metric": "NOT_COMPUTED",
+      "primary_comparison_status": "NOT_EVALUABLE",
+      "CR-CF-001": "CANNOT_BE_SUPPORTED"
+    }
+  },
+  "claim_support": {
+    "CR-CF-001": {
+      "support_if_all": [
+        "primary_delta_gt_0",
+        "participant_bootstrap_95ci_lower_gt_0",
+        "both_policies_positive_weight_denominator_and_effective_sample_size_for_every_included_participant",
+        "all_data_integrity_gates_pass"
+      ],
+      "otherwise": "UNSUPPORTED_or_NOT_EVALUABLE"
+    },
+    "CR-CF-002": {
+      "support_if_all": [
+        "candidate_expansion_count_eq_0",
+        "blocked_task_resurrection_count_eq_0"
+      ]
+    },
+    "CR-CF-003": {
+      "support_if_all": [
+        "unsafe_escape_count_eq_0",
+        "evidence_contamination_count_eq_0",
+        "output_guard_contract_violation_count_eq_0",
+        "task_mutation_count_eq_0",
+        "non_allowed_terminal_state_cf_calls_eq_0"
+      ]
+    },
+    "CR-CF-004": {
+      "stage9_external_status": "NOT_EVALUATED",
+      "reason": "no scientifically valid public user_x_exact_weilv_task interaction subset"
+    },
+    "CR-CF-REAL-001": {
+      "status": "UNSUPPORTED",
+      "immutable": true
+    }
+  },
+  "product_contract": {
+    "heartsteps_scores_imported": false,
+    "cf_position": "after_personal_or_agentic_safe_ranking_before_final_selection",
+    "mechanism": "exact_adjusted_rank_tie_break_only",
+    "alpha": null,
+    "candidate_set_invariance": true,
+    "neutral_fallback": true,
+    "minimum_target_interactions": 10,
+    "minimum_neighbors": 3,
+    "cf_signal_range": [-1.0, 1.0],
+    "safety_priority": "absolute"
+  },
+  "provenance_levels": {
+    "heartsteps_records": "real_external_human_data",
+    "weilv_mapping": "human_designed_semantic_mapping",
+    "adapter_tests": "synthetic_engineering_evidence"
+  },
+  "no_code_gate": {
+    "project_runtime_model_calls": 0,
+    "production_cf_code": 0,
+    "production_behavior_changes": 0,
+    "formal_stage9_results": 0
+  }
+}

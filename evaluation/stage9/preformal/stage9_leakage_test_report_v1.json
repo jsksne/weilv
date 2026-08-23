@@ -1,0 +1,84 @@
+{
+  "manifest_id": "stage9_leakage_test_report_v1",
+  "schema_version": "1.1",
+  "generated_at": "2026-08-18T14:12:45.223855+00:00",
+  "integrity_gates": {
+    "heartsteps_hashes": "PASS",
+    "duplicates": 0,
+    "users": 37,
+    "raw_rows": 8274,
+    "final_rows": 5905,
+    "schema_ok": true
+  },
+  "leakage_checks": {
+    "held_out_user_in_source": 0,
+    "future_target_history": 0,
+    "future_source_rows": 0,
+    "post_response_features": 0,
+    "time_ordering_violations": 0,
+    "total_violations": 0
+  },
+  "synthetic_evaluator_tests": [
+    {
+      "test": "base_score_shrinkage_and_action_means",
+      "passed": true,
+      "detail": {
+        "base": {
+          "none": 10.0,
+          "walking": 100.0,
+          "antisedentary": 32.5
+        }
+      }
+    },
+    {
+      "test": "score_tie_order_none_antisedentary_walking",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "test": "snips_weight_value_ess_exact",
+      "passed": true,
+      "detail": {
+        "value": 1.5909090909090908,
+        "ess": 2.951219512195122
+      }
+    },
+    {
+      "test": "cf_signal_min_three_contributors",
+      "passed": true,
+      "detail": {
+        "cf": 0.5002110366551041,
+        "neighbors": 3
+      }
+    },
+    {
+      "test": "cf_signal_zero_when_fewer_than_three_contributors",
+      "passed": true,
+      "detail": {
+        "cf": 0.0,
+        "neighbors": 2
+      }
+    },
+    {
+      "test": "bootstrap_seed_determinism",
+      "passed": true,
+      "detail": {
+        "ci_lower": 0.08777027027027028,
+        "ci_upper": 0.18790540540540543
+      }
+    },
+    {
+      "test": "zero_support_detected",
+      "passed": true,
+      "detail": {
+        "reason": "zero_denominator_or_ess"
+      }
+    }
+  ],
+  "formal_result_computed": false,
+  "delta_v_computed": false,
+  "ci_computed": false,
+  "cr_cf_001_evaluated": false,
+  "model_executed_on_real_data": false,
+  "note": "PRECHECK verifies data integrity, schema and leakage structure over the full cohort WITHOUT executing the frozen model; the model math is exercised only on synthetic fixtures. future_target/future_source = 0 by construction of the strictly-causal masks (utime < t / relative time < t), which are exercised by the synthetic driver tests; record-level re-verification runs in FORMAL mode after audit. No real Delta_V / CI / CR-CF-001 is computed or persisted."
+}

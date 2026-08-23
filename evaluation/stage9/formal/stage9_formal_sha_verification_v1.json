@@ -1,0 +1,29 @@
+{
+  "report_id": "stage9_formal_sha_verification_v1",
+  "created_at": "2026-08-19",
+  "formal_attempt": 2,
+  "run_dir": "evaluation/runs/20260819T103447Z_stage9_formal",
+  "pre_run": {
+    "freeze_v3_files": "14/14 MATCH, 0 mismatches",
+    "heartsteps_source": "4/4 PASS",
+    "attempt_1_recorded": "FAILED_PRE_COMPUTATION (freeze v3 field formal_attempt_1)",
+    "prior_formal_result": "none"
+  },
+  "post_run": {
+    "freeze_v3_files": "14/14 MATCH, 0 mismatches",
+    "heartsteps_source": "4/4 PASS",
+    "source_shas_unchanged": true,
+    "no_source_file_changed_during_execution": true
+  },
+  "run_internal_sha_manifest": {
+    "valid": true,
+    "files_checked": 4,
+    "matches": 4,
+    "file_shas": {
+      "claim_evaluation.json": "2de248d9370ce37d30801f2c3bb0262b52f87a93a20e0a7b3f58bc6c82c086bd",
+      "fold_assignments.csv": "b23fd78072e05d3d392d098371ff6329ae1260f8fa19f69b2f3bbb960ccc5ef5",
+      "per_participant_metrics.csv": "eadb0e95907937916d694ef1cbd9d955a40248ead693c6ac80ecbb79b5db2260",
+      "run_manifest.json": "0bc66bfb6e4c24f7b6c4325045d5aebff211f417cea717a37b1681e874f83dae"
+    }
+  }
+}

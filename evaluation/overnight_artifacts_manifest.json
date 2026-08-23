@@ -1,0 +1,62 @@
+{
+  "zip_path": "evaluation\\overnight_artifacts.zip",
+  "zip_sha256": "e8250c11ed89270eb434906e3b89ae5fd3c6c4d786233fcdbc5cf10d05647b50",
+  "entries": [
+    {
+      "archive_path": "task_recommendation_gold_v1.jsonl",
+      "source_path": "evaluation/datasets/task_recommendation_gold_v1.jsonl",
+      "sha256": "cd1c3686be08adb576a75adce072270b9c4224a5749c5b064e0fe34a0316d282",
+      "size_bytes": 64063,
+      "exists": true
+    },
+    {
+      "archive_path": "stage_6E-1/per_case_results.jsonl",
+      "source_path": "evaluation/runs/20260816T155009Z_task_recommendation_v1/per_case_results.jsonl",
+      "sha256": "5d4a94f10d877900a3ff42afecd2a70a2bff27b9f560e7efc2076fcd45e32137",
+      "size_bytes": 24041,
+      "exists": true
+    },
+    {
+      "archive_path": "stage_6E-1/metrics.json",
+      "source_path": "evaluation/runs/20260816T155009Z_task_recommendation_v1/metrics.json",
+      "sha256": "029d6f9d61ebbcef0100235f0d35be41e09b4d2e08a066caac3e61990a951d59",
+      "size_bytes": 6322,
+      "exists": true
+    },
+    {
+      "archive_path": "stage_6E-1/provenance.json",
+      "source_path": "evaluation/runs/20260816T155009Z_task_recommendation_v1/provenance.json",
+      "sha256": "a20a0b4a5b736e3a271df520a3f58bf6e1f824f4bf902527ef2956c99f590706",
+      "size_bytes": 1211,
+      "exists": true
+    },
+    {
+      "archive_path": "stage_6F-A/per_task_results.jsonl",
+      "source_path": "evaluation/runs/20260816T155329Z_evidence_contract_v1/per_task_results.jsonl",
+      "sha256": "f523cb74fa0d1ba4770e7db8e9cfe6945820fa71b8d3d8b393c93d81416f35c7",
+      "size_bytes": 9907,
+      "exists": true
+    },
+    {
+      "archive_path": "stage_6F-B/output_guard_contract_v1.jsonl",
+      "source_path": "evaluation/datasets/output_guard_contract_v1.jsonl",
+      "sha256": "1138dd020bf56c84774d004c156518343602269f6d38ef54a6cf426118b66d05",
+      "size_bytes": 5131,
+      "exists": true
+    },
+    {
+      "archive_path": "safety_rule_testability_v1.json",
+      "source_path": "evaluation/manifests/safety_rule_testability_v1.json",
+      "sha256": "82c127bd27c65d9072b44b2f57fc498345b62fd2658ce7493b7af9f4800aff8e",
+      "size_bytes": 7237,
+      "exists": true
+    },
+    {
+      "archive_path": "safety_gold_draft_v1.jsonl",
+      "source_path": "evaluation/datasets/safety_gold_draft_v1.jsonl",
+      "sha256": "c6da07b2fdeb864f4b083e26981c276a959af73251601804ec6d010c4e0e0bb1",
+      "size_bytes": 12853,
+      "exists": true
+    }
+  ]
+}

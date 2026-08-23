@@ -1,0 +1,224 @@
+{
+  "manifest_version": "safety_rule_testability_v1",
+  "created_at": "2026-08-16T15:56:01.576723+00:00",
+  "production_target": "weilv.safety_rules",
+  "task_corpus_sha256": "40d53d96a89124f387d65dea3e97bbeb8da878ef1e9ccd2fbc971cd08096bb48",
+  "corpus_observations": {
+    "target_stage_count": 3,
+    "target_stages": [
+      "junior_high",
+      "primary_upper",
+      "senior_high"
+    ],
+    "common_execution_contexts": [],
+    "task_durations_minutes": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "has_continue_study_capability": true,
+    "has_pause_reading_or_screen_capability": true,
+    "has_requires_movement_capability": true,
+    "has_physical_discomfort_blockable": true,
+    "has_contraindications": false,
+    "has_stop_conditions": true
+  },
+  "rule_records": [
+    {
+      "rule_id": "SR-001",
+      "name": "视力异常求助",
+      "category": "input_risk",
+      "priority": "critical",
+      "production_trigger": {
+        "vision_abnormal": true
+      },
+      "production_effect": [
+        "stop_normal_eye_tasks",
+        "help_seeking",
+        "no_diagnosis"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": null
+    },
+    {
+      "rule_id": "SR-002",
+      "name": "明显身体不适",
+      "category": "input_risk",
+      "priority": "high",
+      "production_trigger": {
+        "physical_discomfort": true
+      },
+      "production_effect": [
+        "block_activity_tasks",
+        "no_treatment_or_rehabilitation",
+        "help_seeking_if_needed"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": null
+    },
+    {
+      "rule_id": "SR-003",
+      "name": "医疗诊断或治疗请求",
+      "category": "input_risk",
+      "priority": "critical",
+      "production_trigger": {
+        "medical_request": true
+      },
+      "production_effect": [
+        "exit_normal_tasks",
+        "no_diagnosis_or_treatment"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": null
+    },
+    {
+      "rule_id": "SR-004",
+      "name": "学段不匹配",
+      "category": "task_filter",
+      "priority": "normal",
+      "production_trigger": {
+        "target_stage_mismatch": true
+      },
+      "production_effect": [
+        "hard_filter"
+      ],
+      "testability": "limited_or_not_testable_with_current_task_corpus",
+      "rationale": "All 23 formal tasks support target_stage in ['junior_high', 'primary_upper', 'senior_high']; no stage-restricted tasks exist to differentiate SR-004."
+    },
+    {
+      "rule_id": "SR-005",
+      "name": "执行场景不匹配",
+      "category": "task_filter",
+      "priority": "normal",
+      "production_trigger": {
+        "execution_context_mismatch": true
+      },
+      "production_effect": [
+        "hard_filter"
+      ],
+      "testability": "limited_or_not_testable_with_current_task_corpus",
+      "rationale": "All 23 tasks share execution_contexts superset of []; no task is restricted to a single context."
+    },
+    {
+      "rule_id": "SR-006",
+      "name": "可用时间不足",
+      "category": "task_filter",
+      "priority": "normal",
+      "production_trigger": {
+        "available_minutes_insufficient": true
+      },
+      "production_effect": [
+        "hard_filter",
+        "do_not_shorten_task"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": "All 23 tasks share execution_contexts superset of []; no task is restricted to a single context."
+    },
+    {
+      "rule_id": "SR-007",
+      "name": "禁忌条件命中",
+      "category": "task_filter",
+      "priority": "high",
+      "production_trigger": {
+        "contraindication_matched": true
+      },
+      "production_effect": [
+        "hard_filter"
+      ],
+      "testability": "limited_or_not_testable_with_current_task_corpus",
+      "rationale": "All 23 formal tasks have empty contraindications lists."
+    },
+    {
+      "rule_id": "SR-008",
+      "name": "停止条件命中",
+      "category": "task_stop",
+      "priority": "critical",
+      "production_trigger": {
+        "stop_condition_matched": true
+      },
+      "production_effect": [
+        "stop_task",
+        "exit_normal_flow_if_needed"
+      ],
+      "testability": "limited_or_not_testable_with_current_task_corpus",
+      "rationale": "Production does not surface task.stop_conditions for filter routing; no scenario can deterministically exercise SR-008 without fabricating stop-condition data."
+    },
+    {
+      "rule_id": "SR-009",
+      "name": "当前不可活动",
+      "category": "task_filter",
+      "priority": "high",
+      "production_trigger": {
+        "cannot_move": true
+      },
+      "production_effect": [
+        "filter_movement_tasks"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": "Production does not surface task.stop_conditions for filter routing; no scenario can deterministically exercise SR-008 without fabricating stop-condition data."
+    },
+    {
+      "rule_id": "SR-010",
+      "name": "移动或不稳定环境",
+      "category": "task_filter",
+      "priority": "high",
+      "production_trigger": {
+        "unstable_reading_or_screen": true
+      },
+      "production_effect": [
+        "allow_simple_pause_task_only",
+        "block_complex_tasks"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": "Production does not surface task.stop_conditions for filter routing; no scenario can deterministically exercise SR-008 without fabricating stop-condition data."
+    },
+    {
+      "rule_id": "SR-011",
+      "name": "睡眠安全边界",
+      "category": "task_filter",
+      "priority": "high",
+      "production_trigger": {
+        "sleep_displaced_by_study": true
+      },
+      "production_effect": [
+        "block_continue_study_tasks"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": "Production does not surface task.stop_conditions for filter routing; no scenario can deterministically exercise SR-008 without fabricating stop-condition data."
+    },
+    {
+      "rule_id": "SR-012",
+      "name": "无安全白名单任务",
+      "category": "fallback",
+      "priority": "high",
+      "production_trigger": {
+        "no_safe_task": true
+      },
+      "production_effect": [
+        "return_no_safe_task",
+        "do_not_create_task",
+        "do_not_lower_filters",
+        "explanation_or_help_seeking_if_needed"
+      ],
+      "testability": "fully_testable_with_current_task_corpus",
+      "rationale": "Production does not surface task.stop_conditions for filter routing; no scenario can deterministically exercise SR-008 without fabricating stop-condition data."
+    }
+  ],
+  "testable_rules": [
+    "SR-001",
+    "SR-002",
+    "SR-003",
+    "SR-006",
+    "SR-009",
+    "SR-010",
+    "SR-011",
+    "SR-012"
+  ],
+  "not_testable_rules": [
+    "SR-004",
+    "SR-005",
+    "SR-007",
+    "SR-008"
+  ]
+}

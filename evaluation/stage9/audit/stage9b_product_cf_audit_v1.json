@@ -1,0 +1,72 @@
+{
+  "manifest_id": "stage9b_product_cf_audit_v1",
+  "audit_date": "2026-08-18",
+  "auditor": "independent preformal code audit (Stage 9B, GLM-5.3)",
+  "audited_files": {
+    "src/weilv/collaborative_ranking.py": "71f8b67ae3e0a661894d44e50b887c3b4676a2b3f1c28e524eef92a52665c835",
+    "src/weilv/personal_rag.py": "integration point: apply_cf_to_ranking called after safe Personal ranking",
+    "src/weilv/agentic_rag.py": "integration point: apply_cf_to_ranking called after safe Agentic ranking"
+  },
+  "ordering_contract": {
+    "executes_after_safe_ranking": true,
+    "reorders_only_exact_adjusted_rank_ties": true,
+    "primary_key": "adjusted_rank (unchanged)",
+    "secondary_key": "descending cf_signal",
+    "tertiary_keys": ["base_task_rank", "task_id"],
+    "no_exact_tie_no_change": true,
+    "verified": "sort key tuple in apply_cf_tiebreak"
+  },
+  "invariants": {
+    "candidate_multiset_identical": {"verified": true, "mechanism": "post-sort comparison sorted(before_ids) != sorted(after_ids) rolls back to original order"},
+    "candidate_cardinality_identical": {"verified": true, "mechanism": "length check with rollback"},
+    "no_task_addition": true,
+    "no_task_removal": true,
+    "no_task_mutation": true,
+    "no_evidence_id_mutation": true,
+    "no_blocked_task_resurrection": {"verified": true, "mechanism": "adapter receives post-Safety candidate list only; reorder-only semantics cannot resurrect a blocked/terminal task; adapter tests assert"},
+    "no_context_duration_safety_override": true,
+    "preformal_counters": {"candidate_set_violations": 0, "blocked_task_resurrection": 0}
+  },
+  "fail_closed": {
+    "scenarios_tested_and_passing": ["unknown task signal", "duplicate task signal", "NaN signal", "+infinity signal", "-infinity signal", "score < -1", "score > 1", "missing cf artifact (None)", "corrupt artifact (non-dict)", "missing adjusted_rank", "missing base_task_rank", "provider exception", "sort failure"],
+    "outcome": "original safe ordering preserved with explicit cf_fallback_reason; no candidate mutation",
+    "defects_found": [
+      {
+        "finding_id": "F-001",
+        "severity": "MAJOR",
+        "scenario": "corrupt signal entry with cf_signal=None (key present), or mixed-type model_version/data_version values",
+        "observed": "validate_signals correctly REJECTS, but _diagnostics then crashes while building the fallback report: float(None) -> TypeError; sorted({5,'v1'}) -> TypeError",
+        "consequence": "caller receives an exception instead of the guaranteed safe original ordering - violates the fail-closed 'No crash' requirement for corrupt artifacts",
+        "reachability": "not reachable via production defaults (provider=None strict no-op; neutral_cf_provider always well-formed); does not affect the external formal evaluator",
+        "evidence": "synthetic repro executed 2026-08-18 against frozen SHA 71f8b6: TypeError float() argument must be a string or a real number, not 'NoneType'; TypeError '<' not supported between instances of 'str' and 'int'"
+      },
+      {
+        "finding_id": "F-002",
+        "severity": "MINOR",
+        "scenario": "signal entry with non-numeric neighbor_count (e.g. string 'many'); field is diagnostics metadata, never a ranking input, never validated",
+        "observed": "int('many') -> ValueError inside _diagnostics (also on the success path after validation passes)",
+        "consequence": "same crash-instead-of-fail-closed shape, but only for a metadata field",
+        "evidence": "synthetic repro executed 2026-08-18: ValueError invalid literal for int() with base 10: 'many'"
+      }
+    ]
+  },
+  "data_transfer_boundary": {
+    "heartsteps_scores_in_product": "NONE",
+    "heartsteps_action_constants_in_product_provider": "NONE",
+    "heartsteps_user_data_in_product_provider": "NONE",
+    "heartsteps_trained_values_in_product_provider": "NONE",
+    "production_provider": "neutral (cf_signal=0.0, model_version=neutral-v0.1, data_version=none)",
+    "coarse_domain_only_mappings_become_learned_weights": false,
+    "preformal_counter": "heartsteps_parameters_transferred_to_product: NO"
+  },
+  "safety_regression": {
+    "basic_rag_changed": "NO",
+    "api_changed": "NO",
+    "safety_filtering_altered": false,
+    "evidence_binding_altered": false,
+    "output_guard_altered": false,
+    "terminal_behavior_altered": false,
+    "guard_contract_violations": 0
+  },
+  "verdict": "FAIL_UNTIL_REPAIR (F-001 MAJOR open; all ordering/invariant/transfer checks PASS)"
+}

@@ -1,0 +1,4 @@
+﻿claim_id,claim,status,evaluation_rule,evidence,run_id
+CR-EVID-001,Exact task evidence is loaded without contamination.,SUPPORTED,Exact Evidence Match Rate = 100% AND Evidence Contamination Rate = 0% AND Missing Evidence Rate = 0%.,"{""exact_rate"": 1.0, ""contamination_rate"": 0.0, ""missing_rate"": 0.0, ""n"": 23}",20260816T155329Z_evidence_contract_v1
+CR-EVID-002,Invalid/incomplete formal evidence fails closed.,SUPPORTED,All injected invalid fixtures must produce empty result (no unsupported evidence delivered).,"{""n"": 3, ""all_passed"": true}",20260816T155329Z_evidence_contract_v1
+CR-EVID-REAL-001,Exact evidence grounding proves medical effectiveness.,UNSUPPORTED,Always UNSUPPORTED because evidence grounding does not measure real adolescent medical outcomes.,"[""not_measured""]",20260816T155329Z_evidence_contract_v1

@@ -1,0 +1,42 @@
+{
+  "review_rows": 33,
+  "unique_review_ids": 33,
+  "source_rows": 33,
+  "mapping_rows": 33,
+  "bijection_source_to_blinded": true,
+  "applicable_cases": 11,
+  "basic_rows": 11,
+  "personal_rows": 11,
+  "agentic_rows": 11,
+  "scenario_unchanged": true,
+  "soft_preference_unchanged": true,
+  "selected_task_unchanged": true,
+  "reviewer_visible_system_labels": 0,
+  "reviewer_visible_aggregate_metrics": 0,
+  "reviewer_visible_gold_task_labels": 0,
+  "reviewer_visible_case_id": 0,
+  "reviewer_fields_blank": true,
+  "reviewer_visible_columns": [
+    "consensus_alignment",
+    "consensus_notes",
+    "consensus_status",
+    "gold_soft_preferences",
+    "review_id",
+    "reviewer_A_alignment",
+    "reviewer_A_notes",
+    "reviewer_B_alignment",
+    "reviewer_B_notes",
+    "reviewer_C_alignment",
+    "reviewer_C_notes",
+    "scenario",
+    "selected_task_id",
+    "selected_task_title"
+  ],
+  "randomization": {
+    "seed": 20260818,
+    "method": "single deterministic shuffle of the 33 frozen source rows; opaque IDs SP-001..SP-033 assigned in shuffled order",
+    "case_id_and_system_removed": true
+  },
+  "all_checks_pass": true,
+  "generated_at": "2026-08-18T03:31:54.403951+00:00"
+}

@@ -1,0 +1,131 @@
+{
+  "manifest_id": "stage9_evaluator_freeze_manifest_v3",
+  "schema_version": "1.1",
+  "supersedes": "stage9_evaluator_freeze_manifest_v2",
+  "refrozen_at": "2026-08-19",
+  "purpose": "refresh the Stage 9B freeze after the Stage 9C.1 formal integrity-gate wiring repair; the repair was triggered by Formal Attempt #1 failing before any CF computation because check_integrity_gates() returned no schema_ok key while run_formal() requires integrity_gates[\"schema_ok\"] is True",
+  "reason_for_refreeze": "Stage 9C.1 formal integrity-gate wiring repair after Formal Attempt #1 pre-computation failure",
+  "formal_mode_executed": true,
+  "formal_attempt_1": "FAILED_PRE_COMPUTATION",
+  "formal_attempt_1_note": "Attempt #1 DID invoke --formal but produced no formal computation/result; it failed at the FORMAL integrity-gate check before any Delta_V / CI / CR-CF-001 was computed or persisted (see stage9_formal_attempt1_failure_log_v1.json).",
+  "formal_results_computed": false,
+  "changed_since_v2": [
+    "evaluator/run_stage9_external_cf.py",
+    "evaluator/tests/test_stage9_external_cf.py"
+  ],
+  "files": {
+    "evaluator/preprocess_heartsteps_v1.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\preprocess_heartsteps_v1.py",
+      "sha256": "69b1a08849dee8c7921a5661d2ce3dd6e00916be835d29db2d8260654f92cde4",
+      "unchanged_vs_v2": true
+    },
+    "evaluator/run_stage9_external_cf.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\run_stage9_external_cf.py",
+      "sha256": "915f883e047b4fb8d2572cf99f2b44ee8062a6041c58db7dd40c0f011d3141b7",
+      "unchanged_vs_v2": false,
+      "v2_sha256": "99a11edd3e09521236cbf21893231eef15783d231898be3fae125bc67b03a714",
+      "note": "Stage 9C.1 wiring repair: _cli() now computes check_schema(analysis_rows) and sets integrity_gates[\"schema_ok\"] = schema[\"schema_ok\"] before run_formal(); PRECHECK path untouched"
+    },
+    "evaluator/_stage9b_preflight.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\runners\\_stage9b_preflight.py",
+      "sha256": "9937defb49cb005b5ae8fd42e0ea945427c171baecfc674c3c5e46ec076455d4",
+      "unchanged_vs_v2": true
+    },
+    "evaluator/_stage9b_preformal_bundle.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\runners\\_stage9b_preformal_bundle.py",
+      "sha256": "32703b92c65de5a389809e0d4bd5b1cc4f23bca61360cb561153f7224263c0de",
+      "unchanged_vs_v2": true
+    },
+    "product/collaborative_ranking.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\src\\weilv\\collaborative_ranking.py",
+      "sha256": "bafbb13958f3d45ecc7b4269680375fe5e5ab754f6ac3ccd03f9f2a5f85281bf",
+      "unchanged_vs_v2": true,
+      "note": "unchanged by Stage 9C.1 (v2 freeze retained)"
+    },
+    "methodology/stage9_metric_preregistration_v1_1.json": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\manifests\\stage9_metric_preregistration_v1_1.json",
+      "sha256": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d",
+      "unchanged_vs_v2": true
+    },
+    "methodology/stage9_methodology_decision_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_methodology_decision_v1_1.md",
+      "sha256": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6",
+      "unchanged_vs_v2": true
+    },
+    "methodology/stage9_implementation_contract_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_implementation_contract_v1_1.md",
+      "sha256": "47618931b55508d5cf5a7cc1748a9073a834198806b099aa84a7f4752e2156fb",
+      "unchanged_vs_v2": true
+    },
+    "methodology/stage9_safety_integration_contract_v1_1.md": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\stage9\\stage9_safety_integration_contract_v1_1.md",
+      "sha256": "281c497e4c1b7d6f97eaea03678fd686312e63d7c158ec0e1bbf6e1e19054282",
+      "unchanged_vs_v2": true
+    },
+    "methodology/claim_registry_cf_draft_v1_1.csv": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\evaluation\\claims\\claim_registry_cf_draft_v1_1.csv",
+      "sha256": "7ba6e7112ac1e4c061eb541ba47fd093517bc280337d870ef849ebd5e1fa3582",
+      "unchanged_vs_v2": true
+    },
+    "evaluator/tests/test_stage9_heartsteps_preprocessing.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_stage9_heartsteps_preprocessing.py",
+      "sha256": "67049fa49f38ec8b99ad938d5d5fa79ee9df4153de6b98d7af7a1ab6a5dbf612",
+      "unchanged_vs_v2": true
+    },
+    "evaluator/tests/test_stage9_external_cf.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_stage9_external_cf.py",
+      "sha256": "a556a72c1e13b8d079c38396d458125fd36f9418eb59df3094cf103dee812f99",
+      "unchanged_vs_v2": false,
+      "v2_sha256": "a1f10ac3baa8d43e9565427f541ba544a70a1d251b4dad4b2fae7ad3a1c969b8",
+      "note": "Stage 9C.1 regression tests added: formal CLI schema_ok wiring, valid-schema gate True, invalid-schema fail-closed, no real formal computation, PRECHECK gates unchanged"
+    },
+    "product/tests/test_collaborative_ranking.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\test_collaborative_ranking.py",
+      "sha256": "51411379f450ef1dc92046590aad913d42620c27a771938f7d24a828721df8c1",
+      "unchanged_vs_v2": true
+    },
+    "product/tests/conftest.py": {
+      "path": "C:\\Users\\Thinkpad\\Desktop\\NewWeb AI智护\\tests\\conftest.py",
+      "sha256": "af9f84c4d8eed1c74daaecccf77fc5610830d7de90bc7ebd2390b79f198321ea",
+      "unchanged_vs_v2": true
+    }
+  },
+  "methodology_manifest_sha256": {
+    "metric_preregistration": "405151d484397df14f8245f53974e626dca858f7cf3e1f45ad235637ea67098d",
+    "methodology_decision": "55f1eaf6b407bcdff45830c80dfc6dd800f3e2f30ad17b5a27ff021a09b032b6"
+  },
+  "methodology_reference": {
+    "metric_preregistration": "stage9_metric_preregistration_v1_1.json",
+    "methodology_decision": "stage9_methodology_decision_v1_1.md",
+    "implementation_contract": "stage9_implementation_contract_v1_1.md",
+    "safety_contract": "stage9_safety_integration_contract_v1_1.md",
+    "claim_registry": "claim_registry_cf_draft_v1_1.csv"
+  },
+  "stage9c1_repair": {
+    "repair_report": "evaluation/stage9/repair/stage9c1_formal_gate_repair_report_v1.md",
+    "failure_log": "evaluation/stage9/formal/stage9_formal_attempt1_failure_log_v1.json",
+    "execution_record": "evaluation/stage9/formal/stage9_formal_execution_record_v1.json",
+    "scope": "NARROW PRE-RESULT EVALUATOR WIRING REPAIR ONLY",
+    "excluded": [
+      "no CF model change",
+      "no LOPO change",
+      "no SNIPS change",
+      "no outcome change",
+      "no eligibility change",
+      "no bootstrap change",
+      "no temporal-censoring change",
+      "no methodology change"
+    ]
+  },
+  "heartsteps_source": {
+    "name": "HeartSteps V1",
+    "commit": "3016391de426116bdef41880d72bc8cd4b9b2477",
+    "hashes": {
+      "users.csv": "b07d93573b014e0ae1da822c616e9e811551ad77dc8390fb52a03202f7df0ed1",
+      "suggestions.csv": "60ee7896183d7084a084f9a6e8ef2d0afea2e7fecdb41d6b15382ce1745c5ddb",
+      "gfsteps.csv": "1c65688ef3ee6cb973ffa089b375947edb832166b00ccb3112fafe2ef72f956c",
+      "jbsteps.csv": "bd4a2104037514d8a818465ad483218b56f6c2cd78d57a6643818715aebd77e3"
+    }
+  },
+  "interpretation_label": "ONE-STEP CONTEXTUAL OFF-POLICY VALUE UNDER THE RANDOMIZED LOGGED-HISTORY DISTRIBUTION; not 35-day deployment value, not long-term efficacy, not causal 微律 CF value, not youth effectiveness"
+}

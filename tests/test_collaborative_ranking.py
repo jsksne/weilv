@@ -420,6 +420,9 @@ def test_personal_rag_integration_cf_reorders_exact_ties(monkeypatch):
                 "reason_codes": [], "explanation_guard": {}}
 
     monkeypatch.setattr(personal_rag, "_finalize_selected_task", fake_finalize)
+    # B1 surfacing needs a real ES client; this test asserts CF tie-break
+    # semantics only, so the surfacing walk is stubbed.
+    monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *a, **k: [])
     result = personal_rag.run_personal_rag(
         type("Request", (), {"query": "q"})(), "u1", None, "key",
         cf_provider=cf_provider,

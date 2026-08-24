@@ -9,6 +9,7 @@ from weilv.basic_rag import (
     _finalize_selected_task,
     _run_basic_pipeline,
     _selected_task,
+    _surfaced_tasks,
 )
 from weilv.collaborative_ranking import apply_cf_to_ranking
 from weilv.personal_memory_retrieval import retrieve_personal_memories
@@ -149,4 +150,5 @@ def run_personal_rag(
         result["personalization"] = personalized[0]["personalization"]
         if cf_diagnostics is not None:
             result["cf"] = cf_diagnostics
+        result["tasks"] = _surfaced_tasks(personalized, result, client, knowledge_index)
     return result

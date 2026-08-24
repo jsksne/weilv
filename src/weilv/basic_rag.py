@@ -129,6 +129,45 @@ def _selected_task(task: dict) -> dict:
     return {field: task[field] for field in fields}
 
 
+def _surfaced_task_view(task: dict, sources: list[dict]) -> dict:
+    """Minimal display fields for one surfaced task; never exposes ranking
+    internals such as reranker scores, embeddings or raw query text."""
+    return {
+        "task_id": task["task_id"],
+        "title": task["title"],
+        "instruction": task["instruction"],
+        "estimated_minutes": task["estimated_minutes"],
+        "sources": sources,
+    }
+
+
+def _surfaced_tasks(
+    ordered_tasks: list[dict],
+    primary_result: dict,
+    client,
+    knowledge_index: str,
+    max_tasks: int = 3,
+) -> list[dict]:
+    """Expose up to ``max_tasks`` tasks from the same run, in the same order.
+
+    The primary task keeps its exact existing evidence/guard treatment. Ranks
+    2+ reuse the same evidence grounding gate (``load_task_evidence`` + exact
+    evidence match) and are skipped when they fail; the walk never re-ranks.
+    """
+    tasks = [
+        _surfaced_task_view(primary_result["selected_task"], primary_result.get("sources", []))
+    ]
+    for task in ordered_tasks[1:]:
+        if len(tasks) >= max_tasks:
+            break
+        candidate = _selected_task(task)
+        evidence = load_task_evidence(client, candidate, knowledge_index)
+        if [item["chunk_id"] for item in evidence] != candidate["evidence_chunk_ids"]:
+            continue
+        tasks.append(_surfaced_task_view(candidate, _sources(evidence)))
+    return tasks
+
+
 def _sources(knowledge: list[dict]) -> list[dict]:
     fields = ("chunk_id", "document_id", "source_locator", "source_url")
     return [{field: item[field] for field in fields} for item in knowledge]
@@ -309,7 +348,7 @@ def _basic_result_from_pipeline(
     knowledge_index: str,
     task_index: str,
 ) -> dict:
-    return _finalize_selected_task(
+    result = _finalize_selected_task(
         request,
         _selected_task(pipeline["reranked_tasks"][0]),
         pipeline,
@@ -318,6 +357,11 @@ def _basic_result_from_pipeline(
         knowledge_index,
         task_index,
     )
+    if result["status"] == "allowed":
+        result["tasks"] = _surfaced_tasks(
+            pipeline["reranked_tasks"], result, client, knowledge_index
+        )
+    return result
 
 
 def run_basic_rag(

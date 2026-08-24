@@ -33,6 +33,17 @@ class RecommendationRequest(StrictRequest):
     sleep_being_crowded: bool = False
 
 
+class SurfacedTask(BaseModel):
+    """Minimal display contract for one same-run surfaced recommendation task."""
+
+    recommendation_id: str | None = None
+    task_id: str
+    title: str
+    instruction: str
+    estimated_minutes: int
+    sources: list[dict[str, Any]] = Field(default_factory=list)
+
+
 class RecommendationResponse(BaseModel):
     status: str
     selected_task: dict[str, Any] | None = None
@@ -45,6 +56,7 @@ class RecommendationResponse(BaseModel):
     personalization: dict[str, Any] | None = None
     recommendation_id: str | None = None
     feedback_available: bool = False
+    tasks: list[SurfacedTask] | None = None
 
 
 class AgenticRecommendationResponse(RecommendationResponse):

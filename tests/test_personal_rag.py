@@ -235,6 +235,7 @@ def test_personal_rag_reuses_query_embedding_and_llm_cannot_change_selection(mon
             "explanation": "choose A instead",
         },
     )
+    monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *_args, **_kwargs: [])
 
     result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
 
@@ -388,6 +389,7 @@ def test_personal_rag_uses_shared_exact_evidence_and_guard_finalize(monkeypatch)
         lambda *args, **kwargs: finalized.append((args, kwargs))
         or {"status": "allowed", "selected_task": {"task_id": "A"}},
     )
+    monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *_args, **_kwargs: [])
 
     result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
 

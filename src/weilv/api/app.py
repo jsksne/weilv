@@ -133,26 +133,41 @@ def recommendations(payload: RecommendationRequest, request: Request):
     if result.get("status") != "allowed" or not result.get("selected_task"):
         return result
 
-    recommendation_id = str(uuid4())
-    session = {
-        "recommendation_id": recommendation_id,
-        "user_id": payload.user_id,
-        "status": result["status"],
-        "selected_task_id": result["selected_task"]["task_id"],
-        "target_stage": payload.target_stage,
-        "current_context": payload.current_context,
-        "activity_context": payload.activity_context,
-        "available_minutes": payload.available_minutes,
-        "created_at": datetime.now(UTC).isoformat(),
-        "feedback": None,
-        "feedback_updated_at": None,
-        "memory_persisted": False,
-    }
+    client = _dependency(request, "es_client")
+    tasks = result.get("tasks")
+    if tasks is None:
+        tasks = [
+            {"recommendation_id": str(uuid4()), "task_id": result["selected_task"]["task_id"]}
+        ]
+    else:
+        for task in tasks:
+            task["recommendation_id"] = str(uuid4())
+    now = datetime.now(UTC).isoformat()
     try:
-        create_recommendation_log(_dependency(request, "es_client"), session)
+        for task in tasks:
+            create_recommendation_log(
+                client,
+                {
+                    "recommendation_id": task["recommendation_id"],
+                    "user_id": payload.user_id,
+                    "status": result["status"],
+                    "selected_task_id": task["task_id"],
+                    "target_stage": payload.target_stage,
+                    "current_context": payload.current_context,
+                    "activity_context": payload.activity_context,
+                    "available_minutes": payload.available_minutes,
+                    "created_at": now,
+                    "feedback": None,
+                    "feedback_updated_at": None,
+                    "memory_persisted": False,
+                },
+            )
     except (ApiError, RuntimeError, ValueError):
+        for task in tasks:
+            task["recommendation_id"] = None
         return result
-    result.update(recommendation_id=recommendation_id, feedback_available=True)
+    result["recommendation_id"] = tasks[0]["recommendation_id"]
+    result["feedback_available"] = True
     return result
 
 

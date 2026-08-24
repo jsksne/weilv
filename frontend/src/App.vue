@@ -12,16 +12,18 @@ import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import { useUiDataSource } from '@/composables/useUiDataSource'
 import { createUiDataSource } from '@/data/createUiDataSource'
 import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
+import { getConfiguredRecommendationContext } from '@/config/recommendationContext'
+import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
+import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
 import type { ShellContract, UiDataSource } from '@/contracts'
+import type { TodayTaskAction, TodayTaskView } from '@/contracts'
 
 /**
- * Sprint 4：产品运行态切换为 Shell + TodayView（fixture-driven Demo，
- * 不请求 API）。真实 Shell 导航（导航胶囊 / glider / 日期 / avatar）
- * 首次在实际产品运行态可见。
- *
- * legacy 表单流保留在 ?legacy=1 查询参数之后（可回滚 backup，
- * 既有 flow 测试经该入口继续覆盖；Sprint 9 移除）。
+ * Sprint 9：正式集成入口。
+ * Demo → FixtureUiDataSource（fixture only）；Production → ApiUiDataSource（API only）。
+ * Production 用户身份来自显式 VITE_USER_ID（可替换 integration seam，非认证系统）。
+ * 旧组件/旧 CSS/旧 flow 源码保留，但只在 ?legacy=1 之后（Sprint 10 清理）。
  */
 
 const legacyMode =
@@ -33,9 +35,19 @@ const configurationError = ref<Error | null>(null)
 let dataSource: UiDataSource | null = null
 if (!legacyMode) {
   try {
-    dataSource = createUiDataSource()
+    const mode = getConfiguredUiMode()
+    const options =
+      mode === 'production'
+        ? { userId: getConfiguredUserId(), recommendationContext: getConfiguredRecommendationContext() }
+        : {}
+    dataSource = createUiDataSource(mode, options)
   } catch (cause) {
-    configurationError.value = cause instanceof Error ? cause : new Error('UI mode 配置无效。')
+    configurationError.value =
+      cause instanceof UiModeConfigurationError || cause instanceof UserContextConfigurationError
+        ? cause
+        : cause instanceof Error
+          ? cause
+          : new Error('UI 配置无效。')
   }
 }
 
@@ -51,18 +63,32 @@ const errorMessage = computed(() => ui.error.value?.message ?? 'UI 数据配置�
 
 const bundle = computed(() => ui.data.value)
 const today = computed(() => bundle.value?.today ?? createUnavailableTodayContract('UI 数据加载中。'))
+
+/** Sprint 9：Production 任务动作 → B2 事件（用该任务自己的 recommendation_id）。 */
+function onTaskAction(task: TodayTaskView, action: TodayTaskAction): void {
+  if (!task.recommendationId) return
+  if (dataSource?.submitTaskAction) void dataSource.submitTaskAction(task.recommendationId, action)
+}
+
 /* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从 DataSource Contract 取数 */
-const daily = useDailyTasks(today)
+const daily = useDailyTasks(today, { onAction: onTaskAction })
 const onboardingVisible = ref(false)
 const onboarding = computed(() => bundle.value?.onboarding ?? null)
+const productionNewUser = computed(
+  () =>
+    bundle.value?.profile.state.mode === 'production' &&
+    bundle.value.profile.state.status === 'unavailable' &&
+    bundle.value.profile.targetStage === 'unavailable',
+)
 
 watch(
-  [() => ui.status.value, onboarding],
-  ([status, model]) => {
+  [() => ui.status.value, onboarding, productionNewUser],
+  ([status, model, newUser]) => {
+    if (status !== 'ready' || !model) return
+    const isDemo = model.state.mode === 'demo'
     if (
-      status === 'ready' &&
-      model?.state.mode === 'demo' &&
-      !hasDemoOnboardingCompleted(model.storageKey)
+      (isDemo && !hasDemoOnboardingCompleted(model.storageKey)) ||
+      (!isDemo && newUser)
     ) {
       onboardingVisible.value = true
     }
@@ -99,6 +125,19 @@ function openOnboarding(): void {
 function closeOnboarding(): void {
   onboardingVisible.value = false
 }
+
+/**
+ * Production 引导完成：重新加载 bundle（真实 Profile 已写入），
+ * 由真实 Profile 状态驱动进入 Today。失败/跳过不假装完成。
+ */
+function onOnboardingComplete(): void {
+  closeOnboarding()
+  if (bundle.value?.onboarding.state.mode === 'production') void ui.load()
+}
+
+async function refreshProfile(): Promise<void> {
+  if (dataSource && bundle.value?.profile.state.mode === 'production') await ui.load()
+}
 </script>
 
 <template>
@@ -110,7 +149,11 @@ function closeOnboarding(): void {
       <AssistantView :model="bundle.assistant" :data-source="dataSource ?? undefined" />
     </template>
     <template #profile>
-      <ProfileView :model="bundle.profile" />
+      <ProfileView
+        :model="bundle.profile"
+        :data-source="dataSource ?? undefined"
+        :on-refresh="refreshProfile"
+      />
     </template>
     <template #weekly>
       <WeeklyView :model="bundle.weekly" />
@@ -129,6 +172,7 @@ function closeOnboarding(): void {
   <OnboardingFlow
     v-if="onboardingVisible && !legacyMode && onboarding"
     :model="onboarding"
-    @complete="closeOnboarding"
+    :submit="dataSource?.submitOnboarding"
+    @complete="onOnboardingComplete"
   />
 </template>

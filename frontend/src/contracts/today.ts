@@ -12,6 +12,15 @@ import type { UiDataAvailability, UiFieldAvailability, UiState } from './common'
 
 export type TodayTaskTone = 'default' | 'eye' | 'move' | 'sleep'
 
+/** B2 任务动作事件（与 backend TaskAction 一致的六个动作）。 */
+export type TodayTaskAction =
+  | 'started'
+  | 'completed'
+  | 'partially_completed'
+  | 'skipped'
+  | 'replaced'
+  | 'restored'
+
 export type TodayRecommendationStatus =
   | 'allowed'
   | 'blocked'
@@ -21,6 +30,10 @@ export type TodayRecommendationStatus =
 
 export interface TodayTaskView {
   id: string
+  /** B1：后端正式任务 id（用于展示与追溯）。 */
+  taskId: string
+  /** B1/B2：该任务自己的 recommendation_id（B2 事件必须用它）。 */
+  recommendationId?: string
   /** 原型 t-eye / t-move / t-sleep 色调类（default 即粉色无后缀） */
   tone: TodayTaskTone
   domain: string

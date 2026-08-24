@@ -3,13 +3,18 @@ import type {
   FeedbackRequest,
   FeedbackResponse,
   HealthResponse,
+  MemoryDeleteResponse,
+  MemoryListResponse,
   QuestionnaireAnswerValue,
   QuestionnaireSchema,
   QuestionnaireState,
   RecommendationRequest,
   RecommendationResponse,
+  TaskAction,
+  TaskEventResponse,
   UserProfile,
   UserProfileUpsertRequest,
+  WeeklyResponse,
 } from './types'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
@@ -130,4 +135,39 @@ export function skipQuestionnaire(userId: string): Promise<QuestionnaireState> {
     `/api/v1/users/${encodeURIComponent(userId)}/questionnaire/skip`,
     { method: 'POST' },
   )
+}
+
+/** B2：提交任务动作事件（不是 Feedback）。 */
+export function postTaskEvent(
+  userId: string,
+  recommendationId: string,
+  action: TaskAction,
+): Promise<TaskEventResponse> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/recommendations/${encodeURIComponent(recommendationId)}/events`,
+    jsonRequest('POST', { action }),
+  )
+}
+
+/** B4：Memory list。 */
+export function getUserMemories(userId: string): Promise<MemoryListResponse> {
+  return request(`/api/v1/users/${encodeURIComponent(userId)}/memories`, { method: 'GET' })
+}
+
+/** B4：Memory delete（后端由 forget_memory 完成）。 */
+export function deleteUserMemory(userId: string, memoryId: string): Promise<MemoryDeleteResponse> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/memories/${encodeURIComponent(memoryId)}/delete`,
+    { method: 'POST' },
+  )
+}
+
+/** B5：Weekly 只读聚合（UTC date 边界，见 B5 contract）。 */
+export function getWeekly(
+  userId: string,
+  startDate: string,
+  endDate: string,
+): Promise<WeeklyResponse> {
+  const query = `?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
+  return request(`/api/v1/users/${encodeURIComponent(userId)}/weekly${query}`, { method: 'GET' })
 }

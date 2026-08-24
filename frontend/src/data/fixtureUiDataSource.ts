@@ -46,6 +46,27 @@ export class FixtureUiDataSource implements UiDataSource {
     })
   }
 
+  /** Demo 任务动作是本地状态，不写 B2 事件。 */
+  submitTaskAction() {
+    return Promise.resolve({ status: 'demo_local' })
+  }
+
+  /** Demo 使用 fixture Memory，不读 B4 API。 */
+  getUserMemories() {
+    return Promise.resolve({
+      enabled: profileFixture.memory.enabled,
+      consent: profileFixture.memory.consent,
+      items: profileFixture.memory.items,
+      canDelete: profileFixture.memory.canDelete,
+      notice: profileFixture.memory.notice,
+    })
+  }
+
+  /** Demo 撕除只影响本地 fixture 状态，不调 B4 delete。 */
+  deleteUserMemory() {
+    return Promise.resolve({ status: 'demo_local' })
+  }
+
   getWeekly() {
     return Promise.resolve(weeklyFixture)
   }

@@ -2,11 +2,15 @@ import { frozenOnboardingSteps } from '@/data/onboardingSteps'
 import type {
   AgenticRecommendationResponse,
   EvidenceSource,
+  MemoryListResponse,
   QuestionnaireSchema,
   QuestionnaireState,
   RecommendationResponse,
   SelectedTask,
+  SurfacedTask,
   UserProfile,
+  WeeklyEvent,
+  WeeklyResponse,
 } from '@/api/types'
 import type {
   AssistantAnalysisStage,
@@ -17,15 +21,21 @@ import type {
   AssistantRetrievalStage,
   AssistantSafetyNotice,
   AssistantSource,
+  MemoryItemContract,
+  MemoryConsentState,
   OnboardingContract,
   OnboardingAnswerValue,
   ProfileContract,
+  ProfileMemoryListContract,
   ShellContract,
   TodayContract,
   TodayDataAvailability,
   TodayRecommendationStatus,
   TodayTaskView,
   WeeklyContract,
+  WeeklyTextSegment,
+  WeeklyTimelineItem,
+  WeeklyTimelineStatus,
 } from '@/contracts'
 
 export function createProductionShellContract(): ShellContract {
@@ -127,6 +137,69 @@ export function createUnavailableWeeklyContract(
     timelineTitle: '推荐的调整轨迹',
     timeline: [],
     insight: { title: '本周洞察', segments: [], quote: '' },
+  }
+}
+
+const WEEKLY_ACTION_LABELS: Record<string, string> = {
+  started: '开始',
+  completed: '完成',
+  partially_completed: '部分完成',
+  skipped: '跳过',
+  replaced: '替换',
+  restored: '恢复',
+}
+
+function toWeeklyTimelineItem(event: WeeklyEvent, index: number): WeeklyTimelineItem {
+  const status: WeeklyTimelineStatus =
+    event.action === 'replaced' || event.action === 'restored'
+      ? 'adjusted'
+      : event.action === 'skipped'
+        ? 'skipped'
+        : 'completed'
+  const actionLabel = WEEKLY_ACTION_LABELS[event.action] ?? event.action
+  return {
+    id: `${event.recommendation_id}-${index}`,
+    /* B5 事件时间为 UTC ISO；只取时间部分展示，日期语义不重新解释。 */
+    time: event.recorded_at.slice(11, 16),
+    action: event.action,
+    tag: actionLabel,
+    description: event.title ? `${event.title} · ${actionLabel}` : actionLabel,
+    status,
+  }
+}
+
+/** B5：只读统计映射；insight 只包含确定性统计事实，不生成 AI 结论。 */
+export function adaptWeeklyResponse(
+  dto: WeeklyResponse,
+  message = 'Production Weekly 统计（UTC 日期边界）。',
+): WeeklyContract {
+  const counts = dto.totals?.action_counts ?? {}
+  const segments: WeeklyTextSegment[] = [
+    { text: `完成 ${counts.completed ?? 0} 项 · 累计 ${dto.totals?.completed_minutes ?? 0} 分钟` },
+  ]
+  if ((counts.skipped ?? 0) > 0) segments.push({ text: `跳过 ${counts.skipped} 项` })
+  if ((counts.replaced ?? 0) > 0) segments.push({ text: `替换 ${counts.replaced} 项` })
+
+  return {
+    state: { status: 'ready', mode: 'production', message },
+    dataAvailability: dto.days?.length ? 'available' : 'unavailable',
+    header: {
+      title: '这一周，薇薇的变化 🌱',
+      description: `统计区间 ${dto.start_date} ～ ${dto.end_date}（UTC 日期边界）`,
+    },
+    chart: {
+      title: '每日完成任务的分钟数',
+      note: '只统计白名单小任务',
+    },
+    days: (dto.days ?? []).map(day => day.date.slice(5)),
+    minutes: (dto.days ?? []).map(day => day.completed_minutes),
+    timelineTitle: '推荐的调整轨迹',
+    timeline: (dto.events ?? []).map(toWeeklyTimelineItem),
+    insight: {
+      title: '本周统计',
+      segments,
+      quote: '',
+    },
   }
 }
 
@@ -281,46 +354,68 @@ export function createProductionAssistantContract(): AssistantContract {
   }
 }
 
-function toTodayTask(dto: SelectedTask, explanation: string | null): TodayTaskView {
+function toTodayTask(
+  task: SurfacedTask | SelectedTask,
+  recommendationId: string | null,
+  explanation: string | null,
+): TodayTaskView {
+  const id = task.task_id
   return {
-    id: 'production-selected-task',
+    id,
+    taskId: id,
+    recommendationId: recommendationId ?? undefined,
     tone: 'default',
-    domain: dto.covered_domains[0] ?? '微任务',
-    meta: `约 ${dto.estimated_minutes} 分钟`,
-    name: dto.title,
-    description: dto.instruction,
-    why: explanation ?? '任务解释不可用。',
+    domain: 'covered_domains' in task ? task.covered_domains[0] ?? '微任务' : '微任务',
+    meta: `约 ${task.estimated_minutes} 分钟`,
+    name: task.title,
+    description: task.instruction,
+    /* B1：只有 rank1 有 LLM explanation；task2/task3 诚实省略。 */
+    why: explanation ?? '任务解释暂不可用。',
     whyIcon: 'flower',
   }
 }
 
 export function adaptRecommendationResponse(dto: RecommendationResponse): TodayContract {
   const recommendationStatus: TodayRecommendationStatus = dto.status
-  const selectedTask = dto.status === 'allowed' && dto.selected_task
-    ? toTodayTask(dto.selected_task, dto.explanation)
-    : null
+  const raw = (dto.tasks ?? []).filter(task => task.task_id)
+  let tasks: TodayTaskView[] = []
+  if (dto.status === 'allowed') {
+    if (raw.length > 0) {
+      tasks = raw.map((task, index) =>
+        toTodayTask(
+          task,
+          task.recommendation_id ?? (index === 0 ? dto.recommendation_id : null),
+          index === 0 ? dto.explanation : null,
+        ),
+      )
+    } else if (dto.selected_task) {
+      /* 兼容旧单任务 backend 响应（无 B1 tasks 字段）。 */
+      tasks = [toTodayTask(dto.selected_task, dto.recommendation_id, dto.explanation)]
+    }
+  }
   const availability: TodayDataAvailability = {
     ...unavailableTodayAvailability,
-    selectedTask: selectedTask ? 'available' : 'unavailable',
+    selectedTask: tasks.length > 0 ? 'available' : 'unavailable',
+    dailyTasks: tasks.length > 0 ? 'available' : 'unavailable',
   }
   const unavailableFields = Object.entries(availability)
     .filter(([, status]) => status === 'unavailable')
     .map(([field]) => field)
   const message =
     dto.explanation ??
-    (selectedTask
-      ? '当前仅有一条后端推荐可用，其余 Today 数据暂不可用。'
+    (tasks.length > 0
+      ? `当前有 ${tasks.length} 条后端推荐任务。`
       : '当前没有后端返回的安全任务。')
 
   return {
     ...createUnavailableTodayContract(message),
     state: { status: 'ready', mode: 'production', message },
-    dataAvailability: selectedTask ? 'partial' : 'unavailable',
+    dataAvailability: tasks.length > 0 ? (tasks.length < 3 ? 'partial' : 'available') : 'unavailable',
     recommendationStatus,
     availability,
     unavailableFields,
     summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],
-    tasks: selectedTask ? [selectedTask] : [],
+    tasks,
   }
 }
 
@@ -370,10 +465,48 @@ export function createUnavailableProfileContract(message = 'Production Profile �
   }
 }
 
-export function adaptProfileResponse(dto: MockProfileResponse): ProfileContract {
+/** B4：Memory list → Profile Memory 展示切片（只展示真实数据）。 */
+export function adaptMemoryListResponse(dto: MemoryListResponse): ProfileMemoryListContract {
+  const enabled = dto.memory_enabled === true
+  const items: MemoryItemContract[] = (dto.memories ?? []).map(memory => ({
+    id: memory.memory_id,
+    icon: 'leaf',
+    lead: memory.memory_type,
+    text: memory.summary,
+  }))
+  return {
+    enabled,
+    consent: enabled ? 'granted' : 'disabled',
+    items,
+    canDelete: enabled,
+    notice: enabled ? '已开启记忆；可删除任意一条（真实删除由后端完成）。' : 'Memory 保持关闭。',
+  }
+}
+
+export function adaptProfileResponse(
+  dto: MockProfileResponse,
+  memories: ProfileMemoryListContract | null = null,
+): ProfileContract {
   const memoryEnabled = dto.memory_enabled === true
-  const consent = memoryEnabled ? 'granted' : dto.memory_enabled === false ? 'disabled' : 'missing'
+  const consent: MemoryConsentState = memoryEnabled
+    ? 'granted'
+    : dto.memory_enabled === false
+      ? 'disabled'
+      : 'missing'
   const unavailableMessage = 'Production 没有偏好统计、完成率和 Memory list/delete 接口。'
+  const memory = memories
+    ? { status: 'available' as const, ...memories }
+    : {
+        status: 'unavailable' as const,
+        enabled: memoryEnabled,
+        consent,
+        items: [],
+        canDelete: false,
+        notice: memoryEnabled
+          ? 'Memory consent 已明确，但 Production Memory list/delete API 暂不可用。'
+          : '没有明确 consent 时，Memory 保持关闭。',
+        unavailableMessage: 'Production Memory list/delete API 暂不可用。',
+      }
 
   return {
     state: { status: 'ready', mode: 'production' },
@@ -393,17 +526,7 @@ export function adaptProfileResponse(dto: MockProfileResponse): ProfileContract 
       summaryLines: [],
       unavailableMessage,
     },
-    memory: {
-      status: 'unavailable',
-      enabled: memoryEnabled,
-      consent,
-      items: [],
-      canDelete: false,
-      notice: memoryEnabled
-        ? 'Memory consent 已明确，但 Production Memory list/delete API 暂不可用。'
-        : '没有明确 consent 时，Memory 保持关闭。',
-      unavailableMessage: 'Production Memory list/delete API 暂不可用。',
-    },
+    memory,
   }
 }
 

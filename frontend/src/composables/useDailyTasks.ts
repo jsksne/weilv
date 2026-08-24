@@ -1,6 +1,6 @@
 import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 
-import type { TodayContract, TodayTaskView } from '@/contracts'
+import type { TodayContract, TodayTaskAction, TodayTaskView } from '@/contracts'
 
 /**
  * Sprint 4：Today 本地交互状态机（迁移自冻结原型脚本）。
@@ -63,6 +63,11 @@ export interface DailyTasksController {
 export interface UseDailyTasksOptions {
   /** 450ms 冷却判定用的时钟，默认 performance.now（测试可注入） */
   now?: () => number
+  /**
+   * Sprint 9：B2 任务动作事件回调（Production 由 App 接 DataSource）。
+   * 只在任务带 recommendation_id 时调用，保证事件写对该任务。
+   */
+  onAction?: (task: TodayTaskView, action: TodayTaskAction) => void
 }
 
 const ACTION_COOLDOWN_MS = 450
@@ -73,6 +78,10 @@ export function useDailyTasks(
 ): DailyTasksController {
   const now = options.now ?? (() => performance.now())
   const model = computed(() => toValue(input))
+
+  function emitAction(entry: DailyTaskEntry, action: TodayTaskAction): void {
+    if (entry.task.recommendationId) options.onAction?.(entry.task, action)
+  }
 
   const entries = ref<readonly DailyTaskEntry[]>([])
   const mood = ref('')
@@ -140,6 +149,7 @@ export function useDailyTasks(
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
     updateEntry(slotId, { interaction: 'started', actions: 'active' })
+    emitAction(entry, 'started')
     return 'applied'
   }
 
@@ -156,6 +166,7 @@ export function useDailyTasks(
         completionStatus: interaction === 'done' ? 'completed' : 'partially_completed',
       },
     ]
+    emitAction(entry, interaction === 'done' ? 'completed' : 'partially_completed')
     return 'applied'
   }
 
@@ -176,6 +187,7 @@ export function useDailyTasks(
       ...pendingFeedback.value.filter(item => item.slotId !== slotId),
       { slotId, completionStatus: 'skipped' },
     ]
+    emitAction(entry, 'skipped')
     return 'applied'
   }
 
@@ -185,6 +197,7 @@ export function useDailyTasks(
     if (!passesCooldown(slotId)) return 'cooldown'
     updateEntry(slotId, { interaction: 'pending', actions: 'initial' })
     pendingFeedback.value = pendingFeedback.value.filter(item => item.slotId !== slotId)
+    emitAction(entry, 'restored')
     return 'applied'
   }
 
@@ -201,6 +214,7 @@ export function useDailyTasks(
     const next = model.value.replacePool[replacePointer % model.value.replacePool.length]!
     replacePointer += 1
     updateEntry(slotId, { task: next, actions: 'initial' })
+    emitAction(entry, 'replaced')
     return 'applied'
   }
 

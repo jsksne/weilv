@@ -71,6 +71,86 @@ export interface RecommendationResponse {
   personalization: PersonalizationAudit | null
   recommendation_id: string | null
   feedback_available: boolean
+  /** B1：同一次 recommendation run 的 surfaced tasks（0～3 条）。 */
+  tasks?: SurfacedTask[] | null
+}
+
+export interface SurfacedTask {
+  recommendation_id: string | null
+  task_id: string
+  title: string
+  instruction: string
+  estimated_minutes: number
+  sources: EvidenceSource[]
+}
+
+export type TaskAction =
+  | 'started'
+  | 'completed'
+  | 'partially_completed'
+  | 'skipped'
+  | 'replaced'
+  | 'restored'
+
+export interface TaskEventRequest {
+  action: TaskAction
+}
+
+export interface TaskEventResponse {
+  status: string
+  recommendation_id: string
+  task_id: string
+  action: string
+  recorded_at: string
+}
+
+export interface MemoryItem {
+  memory_id: string
+  memory_type: string
+  summary: string
+  created_at: string
+  updated_at: string
+}
+
+export interface MemoryListResponse {
+  user_id: string
+  memory_enabled: boolean
+  memories: MemoryItem[]
+}
+
+export interface MemoryDeleteResponse {
+  status: string
+  memory_id: string
+}
+
+export interface WeeklyEvent {
+  recommendation_id: string
+  task_id: string
+  title: string | null
+  action: string
+  recorded_at: string
+}
+
+export interface WeeklyDay {
+  date: string
+  completed_minutes: number
+  action_counts: Record<string, number>
+}
+
+export interface WeeklyTotals {
+  completed_minutes: number
+  action_counts: Record<string, number>
+}
+
+export interface WeeklyResponse {
+  user_id: string
+  start_date: string
+  end_date: string
+  minutes_policy: string
+  days: WeeklyDay[]
+  totals: WeeklyTotals
+  events: WeeklyEvent[]
+  adjustments: WeeklyEvent[]
 }
 
 export interface AgenticDiagnostics {

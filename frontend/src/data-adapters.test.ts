@@ -23,7 +23,7 @@ describe('Sprint 8 DTO to Contract adapters', () => {
       description: '起身活动约10分钟再继续。',
       meta: '约 10 分钟',
     })
-    expect(today.availability.dailyTasks).toBe('unavailable')
+    expect(today.availability.dailyTasks).toBe('available')
     expect(today.availability.sleepStats).toBe('unavailable')
     expect(today.availability.progress).toBe('unavailable')
     expect(today.replacePool).toEqual([])

@@ -52,6 +52,15 @@ export interface MemorySectionContract {
   unavailableMessage?: string
 }
 
+/** B4：从 Memory list API 映射出的 Profile Memory 展示切片。 */
+export interface ProfileMemoryListContract {
+  enabled: boolean
+  consent: MemoryConsentState
+  items: readonly MemoryItemContract[]
+  canDelete: boolean
+  notice: string
+}
+
 export interface ProfileContract {
   state: UiState
   targetStage: ProfileTargetStage

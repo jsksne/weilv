@@ -86,6 +86,7 @@ export const todayFixture = {
   tasks: [
     {
       id: 'today-task-eye-look-far',
+      taskId: 'today-task-eye-look-far',
       tone: 'eye',
       domain: '用眼健康',
       meta: '约 1 分钟 · 极低强度',
@@ -96,6 +97,7 @@ export const todayFixture = {
     },
     {
       id: 'today-task-move-neck-stretch',
+      taskId: 'today-task-move-neck-stretch',
       tone: 'move',
       domain: '颈肩放松',
       meta: '约 3 分钟 · 低强度',
@@ -107,6 +109,7 @@ export const todayFixture = {
     },
     {
       id: 'today-task-sleep-petal-breath',
+      taskId: 'today-task-sleep-petal-breath',
       tone: 'sleep',
       domain: '睡前准备',
       meta: '约 2 分钟 · 极低强度',
@@ -120,6 +123,7 @@ export const todayFixture = {
   replacePool: [
     {
       id: 'today-pool-move-walk',
+      taskId: 'today-pool-move-walk',
       tone: 'move',
       domain: '轻活动',
       meta: '约 5 分钟 · 低强度',
@@ -130,6 +134,7 @@ export const todayFixture = {
     },
     {
       id: 'today-pool-eye-warm-palms',
+      taskId: 'today-pool-eye-warm-palms',
       tone: 'eye',
       domain: '用眼健康',
       meta: '约 1 分钟 · 极低强度',
@@ -140,6 +145,7 @@ export const todayFixture = {
     },
     {
       id: 'today-pool-sleep-sunlight',
+      taskId: 'today-pool-sleep-sunlight',
       tone: 'sleep',
       domain: '轻放松',
       meta: '约 3 分钟 · 极低强度',

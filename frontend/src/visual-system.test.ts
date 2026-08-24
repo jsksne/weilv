@@ -144,7 +144,7 @@ describe('visual system: css entrypoint', () => {
 
     /* 冻结 Shell 资产按原型 <style> 源顺序激活；legacy 必须最先导入，
        否则其 body{font/color/background} 会盖掉冻结视觉（同特异性后者胜）。
-       Sprint 4/5/6：Today、Assistant、Profile 与 Onboarding 页面正式激活 */
+       Sprint 7：Today、Assistant、Profile、Weekly 与 Onboarding 页面正式激活 */
     const activated = [
       'reset',
       'tokens',
@@ -159,6 +159,7 @@ describe('visual system: css entrypoint', () => {
       'today',
       'assistant',
       'profile',
+      'weekly',
       'onboarding',
       'accessibility',
     ] as const
@@ -167,12 +168,12 @@ describe('visual system: css entrypoint', () => {
     expect(entry.indexOf("@import '../style.css'")).toBeLessThan(entry.indexOf("@import './reset.css'"))
   })
 
-  it('keeps Weekly CSS unactivated until the Weekly page sprint', () => {
+  it('keeps the Weekly CSS activation explicit in the entrypoint', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
     expect(entry).toContain("@import './today.css'")
     expect(entry).toContain("@import './profile.css'")
     expect(entry).toContain("@import './onboarding.css'")
-    expect(entry).not.toContain("@import './weekly.css'")
+    expect(entry).toContain("@import './weekly.css'")
   })
 
   it('every split file exists on disk and is non-empty', () => {
@@ -213,6 +214,21 @@ describe('visual system: tokens and fidelity', () => {
     /* 计划内收口：dotPop / valIn 在原型中由脚本运行时注入 <style>，此处为静态资产。 */
     const runtimeKeyframes = ['@keyframesdotPop{', '@keyframesvalIn{']
 
+    /* Sprint 7 additions: data-driven SVG text/points, empty and unavailable
+       states, plus the mobile overflow guard. These have no frozen prototype
+       declaration to compare against. */
+    const weeklySprintExtras = [
+      '.chart-point{',
+      '.chart-value{',
+      '.chart-day{',
+      '.weekly-empty{',
+      '.weekly-status-card{',
+      '.weekly-status-cardstrong{',
+      '.tl-body{min-width:0',
+      '.tl-body{overflow-wrap:anywhere',
+      '@media(max-width:560px)',
+    ]
+
     /* 计划内工程化差异（精确白名单，仅此一对）：`.view.active` 的 viewIn
        fill `both → backwards`。fill:both 在动画结束后永久保留 translateY(0)
        终态，使 `.view` 成为 fixed 后代（.topbar、fx 粒子）的包含块，引发
@@ -245,6 +261,7 @@ describe('visual system: tokens and fidelity', () => {
       if (runtimeKeyframes.some(prefix => key.startsWith(prefix))) continue
       if (key === viewFillMigrated) continue
       if (legacyLeakOverrides.includes(key)) continue
+      if (weeklySprintExtras.some(prefix => key.startsWith(prefix))) continue
       if ((prototypeCounts.get(key) ?? 0) < count) extra.push(key)
     }
 

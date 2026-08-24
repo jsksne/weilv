@@ -5,12 +5,14 @@ import AppShell from '@/layouts/AppShell.vue'
 import TodayView from '@/views/TodayView.vue'
 import AssistantView from '@/views/AssistantView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import WeeklyView from '@/views/WeeklyView.vue'
 import LegacyConsole from '@/views/LegacyConsole.vue'
 import { shellFixture } from '@/data/fixtures/shell.fixture'
 import { todayFixture } from '@/data/fixtures/today.fixture'
 import { assistantFixture } from '@/data/fixtures/assistant.fixture'
 import { onboardingFixture } from '@/data/fixtures/onboarding.fixture'
 import { profileFixture } from '@/data/fixtures/profile.fixture'
+import { weeklyFixture } from '@/data/fixtures/weekly.fixture'
 import { useDailyTasks } from '@/composables/useDailyTasks'
 import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
@@ -78,6 +80,9 @@ function closeOnboarding(): void {
     </template>
     <template #profile>
       <ProfileView :model="profileFixture" />
+    </template>
+    <template #weekly>
+      <WeeklyView :model="weeklyFixture" />
     </template>
   </AppShell>
   <AppShell v-else>

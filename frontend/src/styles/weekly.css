@@ -14,8 +14,14 @@
 .chart-svg { width: 100%; height: auto; display: block; }
 .chart-line { fill: none; stroke: #f78fb0; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 620; stroke-dashoffset: 620; }
 .chart-area { fill: url(#areaGrad2); opacity: 0; }
+.chart-point { animation: dotPop .7s var(--ease-decay) both; }
+.chart-value { font-size: 12px; fill: #93718a; font-family: var(--disp); animation: valIn .6s var(--ease-decay) both; }
+.chart-day { font-size: 11px; fill: #bfa8b5; }
 .view.active .chart-line { animation: chartDraw 1.6s var(--ease-decay) 0.3s forwards; }
 .view.active .chart-area { animation: areaFade 1.2s var(--ease-decay) 1.1s forwards; }
+.weekly-empty { padding: 8px 0 2px; color: var(--ink-3); font-size: 12px; text-align: center; }
+.weekly-status-card { padding: 24px 26px; color: var(--ink-2); font-size: 13px; line-height: 1.9; }
+.weekly-status-card strong { display: block; color: var(--pink-deep); font-family: var(--disp); font-size: 16px; margin-bottom: 6px; }
 .week-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; margin-top: 18px; align-items: start; }
 .tl-card { padding: 24px 26px; }
 .tl-card h3 { font-family: var(--disp); font-weight: 600; font-size: 16px; margin-bottom: 16px; }
@@ -27,7 +33,7 @@
 .tl-dot { flex: none; width: 13px; height: 13px; border-radius: 50%; margin-top: 1px; background: #fff; border: 2.5px solid var(--pink); }
 .tl-item.hit .tl-dot { border-color: var(--teal); }
 .tl-item.adj .tl-dot { border-color: var(--lav); }
-.tl-body { font-size: 12.5px; color: var(--ink-2); line-height: 1.85; }
+.tl-body { min-width: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.85; overflow-wrap: anywhere; }
 .tl-body b { color: var(--ink); font-weight: 500; }
 .tl-tag { display: inline-block; font-size: 10.5px; padding: 2px 9px; border-radius: 99px; margin-left: 6px; }
 .tl-tag.g { color: #3f9484; background: var(--teal-soft); }
@@ -42,4 +48,12 @@
 /* ---------- 响应式（周度页相关，自原型尾部媒体查询拆出） ---------- */
 @media (max-width: 960px) {
   .week-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .chart-card { padding: 22px 16px 14px; }
+  .chart-head { gap: 12px; flex-wrap: wrap; }
+  .tl-card, .insight-card { padding: 22px 18px; }
+  .tl-item { gap: 9px; }
+  .tl-day { width: 32px; }
 }

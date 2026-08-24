@@ -17,7 +17,31 @@ import type {
   OnboardingContract,
   OnboardingAnswerValue,
   ProfileContract,
+  WeeklyContract,
 } from '@/contracts'
+
+/* B5 schema pending: Weekly has no approved Backend DTO or Production adapter. */
+export function createUnavailableWeeklyContract(
+  message = 'Production Weekly 数据暂不可用：B5 schema pending。',
+): WeeklyContract {
+  return {
+    state: { status: 'unavailable', mode: 'production', message },
+    dataAvailability: 'unavailable',
+    header: {
+      title: '这一周，薇薇的变化 🌱',
+      description: '周度历史数据暂不可用。',
+    },
+    chart: {
+      title: '每日完成任务的分钟数',
+      note: '只统计白名单小任务',
+    },
+    days: [],
+    minutes: [],
+    timelineTitle: '推荐的调整轨迹',
+    timeline: [],
+    insight: { title: '本周洞察', segments: [], quote: '' },
+  }
+}
 
 const safetyCopy: Record<Exclude<AssistantSafetyNotice['status'], 'allowed'>, Omit<AssistantSafetyNotice, 'status'>> = {
   blocked: {

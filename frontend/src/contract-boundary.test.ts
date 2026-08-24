@@ -41,7 +41,7 @@ describe('Sprint 2R contract boundary', () => {
     expect(source).not.toMatch(/recommendation|health|memory|agentic|trace/i)
   })
 
-  it('activates the Sprint 6 visual assets while keeping Weekly CSS out of the entrypoint', () => {
+  it('activates the Sprint 7 visual assets including Weekly CSS', () => {
     const entry = readFileSync(join(srcDir, 'styles', 'index.css'), 'utf8')
 
     expect(entry).toContain("@import '../style.css'")
@@ -53,6 +53,6 @@ describe('Sprint 2R contract boundary', () => {
     expect(entry).toContain("@import './assistant.css'")
     expect(entry).toContain("@import './profile.css'")
     expect(entry).toContain("@import './onboarding.css'")
-    expect(entry).not.toContain("@import './weekly.css'")
+    expect(entry).toContain("@import './weekly.css'")
   })
 })

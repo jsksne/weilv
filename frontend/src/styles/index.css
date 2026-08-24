@@ -27,11 +27,11 @@
 @import './navigation.css';
 @import './layout.css';
 
-/* Sprint 6：Today、Assistant、Profile 与 Onboarding 正式激活；
-   weekly 保持未激活 */
+/* Sprint 7：Today、Assistant、Profile、Weekly 与 Onboarding 正式激活 */
 @import './today.css';
 @import './assistant.css';
 @import './profile.css';
+@import './weekly.css';
 @import './onboarding.css';
 
 @import './accessibility.css';

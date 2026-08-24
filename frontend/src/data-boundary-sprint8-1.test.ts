@@ -55,7 +55,10 @@ describe('Sprint 8.1 Production data boundary', () => {
 
     expect(today.recommendationStatus).toBe('unavailable')
     expect(profile.state.status).toBe('unavailable')
-    expect(onboarding.state.status).toBe('unavailable')
+    // B6：Production onboarding 现在是可用五步引导（不依赖旧问卷）。
+    expect(onboarding.state.status).toBe('ready')
+    expect(onboarding.phase).toBe('ready')
+    expect(onboarding.steps).toHaveLength(5)
     await expect(source.askAssistant('真实问题')).rejects.toMatchObject({
       name: 'UiDataContextUnavailableError',
       code: 'ui_context_unavailable',
@@ -72,7 +75,8 @@ describe('Sprint 8.1 Production data boundary', () => {
     const [profile, onboarding] = await Promise.all([source.getProfile(), source.getOnboarding()])
 
     expect(profile.state.status).toBe('unavailable')
-    expect(onboarding.state.status).toBe('unavailable')
+    expect(onboarding.state.status).toBe('ready')
+    expect(onboarding.steps).toHaveLength(5)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 

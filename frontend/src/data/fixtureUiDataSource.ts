@@ -38,6 +38,14 @@ export class FixtureUiDataSource implements UiDataSource {
     return Promise.resolve(onboardingFixture)
   }
 
+  /** Demo 引导只存在本地；提交是本地 no-op，绝不调用真实 API。 */
+  submitOnboarding() {
+    return Promise.resolve({
+      status: 'completed' as const,
+      persistence: [],
+    })
+  }
+
   getWeekly() {
     return Promise.resolve(weeklyFixture)
   }

@@ -1,22 +1,17 @@
-import {
-  getAgenticRecommendation,
-  getQuestionnaireSchema,
-  getQuestionnaireState,
-  getRecommendation,
-  getUserProfile,
-} from '@/api/client'
-import type { RecommendationRequest } from '@/api/types'
-import type { UiDataSource } from '@/contracts'
+import { ApiError, getAgenticRecommendation, getRecommendation, getUserProfile, upsertUserProfile } from '@/api/client'
+import type { RecommendationRequest, TargetStage } from '@/api/types'
+import type { OnboardingSubmitAnswers, OnboardingSubmitResult, UiDataSource } from '@/contracts'
 import {
   adaptAgenticRecommendation,
-  adaptOnboardingContract,
   adaptProfileResponse,
   adaptRecommendationResponse,
   createProductionAssistantContract,
+  createProductionOnboardingContract,
   createProductionShellContract,
   createUnavailableProfileContract,
   createUnavailableTodayContract,
   createUnavailableWeeklyContract,
+  PRODUCTION_TARGET_STAGES,
 } from './adapters'
 
 export interface ApiUiDataSourceOptions {
@@ -97,26 +92,58 @@ export class ApiUiDataSource implements UiDataSource {
     }).then(adaptAgenticRecommendation)
   }
 
-  getProfile() {
+  async getProfile() {
     if (!this.userId) {
-      return Promise.resolve(
-        createUnavailableProfileContract('Production Profile unavailable：缺少真实 userId。'),
-      )
+      return createUnavailableProfileContract('Production Profile unavailable：缺少真实 userId。')
     }
 
-    return getUserProfile(this.userId).then(adaptProfileResponse)
+    try {
+      const profile = await getUserProfile(this.userId)
+      return adaptProfileResponse(profile)
+    } catch (cause) {
+      // 新用户尚无画像：保持 bundle 可加载，Profile 显示未建立状态。
+      if (cause instanceof ApiError && cause.status === 404) {
+        return createUnavailableProfileContract('新用户尚无画像：完成首次引导后建立。')
+      }
+      throw cause
+    }
   }
 
-  async getOnboarding() {
+  getOnboarding() {
+    return Promise.resolve(createProductionOnboardingContract())
+  }
+
+  async submitOnboarding(answers: OnboardingSubmitAnswers): Promise<OnboardingSubmitResult> {
     if (!this.userId) {
-      return adaptOnboardingContract(null, null)
+      return { status: 'error', message: '缺少真实 userId，无法保存引导结果。', persistence: [] }
+    }
+    if (!answers.grade) {
+      return { status: 'error', message: '请先选择学段。', persistence: [] }
+    }
+    if (!PRODUCTION_TARGET_STAGES.includes(answers.grade)) {
+      return {
+        status: 'unsupported',
+        message: `学段「${answers.grade}」当前后端无合法对应值，未保存。`,
+        persistence: [],
+      }
     }
 
-    const [schema, state] = await Promise.all([
-      getQuestionnaireSchema(),
-      getQuestionnaireState(this.userId),
-    ])
-    return adaptOnboardingContract(schema, state)
+    try {
+      await upsertUserProfile(this.userId, {
+        target_stage: answers.grade as TargetStage,
+        memory_enabled: answers.memoryEnabled,
+      })
+      return {
+        status: 'completed',
+        persistence: [
+          { fieldId: 'grade', status: 'persisted' },
+          { fieldId: 'memory_enabled', status: 'persisted' },
+        ],
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : '保存引导结果失败。'
+      return { status: 'error', message, persistence: [] }
+    }
   }
 
   getWeekly() {

@@ -1,3 +1,4 @@
+import { frozenOnboardingSteps } from '@/data/onboardingSteps'
 import type {
   AgenticRecommendationResponse,
   EvidenceSource,
@@ -459,12 +460,86 @@ export function adaptOnboardingContract(
 
   return {
     state,
+    phase: 'unavailable',
     steps: [],
     totalSteps: 0,
     initialAnswers: {},
     summary: { title: '画像生成不可用', lines: [] },
     questionnaire,
     questionnaireCompatibility,
+    persistence: [],
+    consent: { prompt: '', note: '' },
+    storageKey: '',
+  }
+}
+
+/** 后端合法学段（TargetStage）；原型 university 不在其中。 */
+export const PRODUCTION_TARGET_STAGES: readonly string[] = [
+  'primary_upper',
+  'junior_high',
+  'senior_high',
+]
+
+/**
+ * B6：Production 5 步引导。步骤与冻结原型一致，但大学选项如实标记为
+ * unsupported；只有学段与 Memory 偏好会持久化，其余字段仅为本次会话展示。
+ */
+export function createProductionOnboardingContract(
+  message = '完成引导后，只保存你的学段与 Memory 偏好；其余回答仅用于本次会话。',
+): OnboardingContract {
+  const steps = frozenOnboardingSteps.map(step =>
+    step.kind === 'choices'
+      ? {
+          ...step,
+          groups: step.groups?.map(group =>
+            group.id === 'grade'
+              ? {
+                  ...group,
+                  options: group.options.map(option =>
+                    option.value === 'university' ? { ...option, supported: false } : option,
+                  ),
+                }
+              : group,
+          ),
+        }
+      : step,
+  )
+
+  return {
+    state: { status: 'ready', mode: 'production', message },
+    phase: 'ready',
+    steps,
+    totalSteps: frozenOnboardingSteps.length,
+    initialAnswers: {},
+    summary: {
+      title: '✦ 画像已生成',
+      lines: ['已保存你的学段与 Memory 偏好。', '睡眠、近期问题、时长与时段偏好仅本次展示，未写入长期数据。'],
+    },
+    questionnaire: {
+      status: 'unavailable',
+      questionnaireId: null,
+      completionState: null,
+      questionCount: null,
+      answers: {},
+    },
+    questionnaireCompatibility: {
+      status: 'unavailable',
+      prototypeStepCount: 5,
+      backendQuestionCount: null,
+      message: '新引导不使用旧 7 题问卷；只保存学段与 Memory 偏好。',
+    },
+    persistence: [
+      { fieldId: 'grade', status: 'persisted', reason: '写入 profile.target_stage' },
+      { fieldId: 'sleep', status: 'unavailable', reason: '仅本次引导展示，不保存长期数据' },
+      { fieldId: 'issues', status: 'unavailable', reason: '仅本次引导展示，不保存长期数据' },
+      { fieldId: 'duration', status: 'unavailable', reason: '后端暂无正式时长偏好字段' },
+      { fieldId: 'slot', status: 'unavailable', reason: '后端暂无正式时段偏好字段' },
+      { fieldId: 'memory_enabled', status: 'persisted', reason: '写入 profile.memory_enabled' },
+    ],
+    consent: {
+      prompt: '允许微律使用记忆来调整后续建议（默认关闭）',
+      note: '只有你明确开启后才会启用；可随时在设置中关闭。',
+    },
     storageKey: '',
   }
 }

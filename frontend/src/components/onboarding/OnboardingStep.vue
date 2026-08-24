@@ -72,9 +72,11 @@ function toggle(group: OnboardingChoiceGroup, value: string): void {
           v-for="option in group.options"
           :key="option.value"
           class="chip"
-          :class="{ on: selected(group, option.value) }"
+          :class="{ on: selected(group, option.value), disabled: option.supported === false }"
           type="button"
           :data-option="option.value"
+          :disabled="option.supported === false"
+          :title="option.supported === false ? '当前后端不支持该选项' : undefined"
           @click="toggle(group, option.value)"
         >
           {{ option.label }}

@@ -3,7 +3,7 @@
 import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -28,8 +28,10 @@ from weilv.api.schemas import (
     TaskEventResponse,
     TaskFeedbackRequest,
     TaskFeedbackResponse,
+    WeeklyResponse,
 )
 from weilv.api.task_events import append_task_event
+from weilv.api.weekly_queries import aggregate_weekly
 from weilv.basic_rag import BasicRagRequest
 from weilv.elasticsearch_indices import ensure_stage_one_indices, ensure_user_memory_indices
 from weilv.feedback_loop import (
@@ -437,3 +439,23 @@ def delete_user_memory(user_id: str, memory_id: str, request: Request):
     if result["status"] != "forgotten":
         raise HTTPException(status_code=404, detail="memory_not_found")
     return result
+
+
+@app.get("/api/v1/users/{user_id}/weekly", response_model=WeeklyResponse)
+def read_user_weekly(
+    user_id: str,
+    request: Request,
+    start_date: date | None = None,
+    end_date: date | None = None,
+):
+    today = datetime.now(UTC).date()
+    start = start_date or today - timedelta(days=6)
+    end = end_date or today
+    if start > end:
+        raise HTTPException(status_code=422, detail="invalid_date_range")
+    try:
+        return aggregate_weekly(_dependency(request, "es_client"), user_id, start, end)
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error

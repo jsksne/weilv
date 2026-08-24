@@ -160,3 +160,33 @@ class MemoryListResponse(BaseModel):
 class MemoryDeleteResponse(BaseModel):
     status: str
     memory_id: str
+
+
+class WeeklyEventReport(BaseModel):
+    recommendation_id: str
+    task_id: str
+    title: str | None = None
+    action: str
+    recorded_at: str
+
+
+class WeeklyDayReport(BaseModel):
+    date: str
+    completed_minutes: int
+    action_counts: dict[str, int]
+
+
+class WeeklyTotals(BaseModel):
+    completed_minutes: int
+    action_counts: dict[str, int]
+
+
+class WeeklyResponse(BaseModel):
+    user_id: str
+    start_date: str
+    end_date: str
+    minutes_policy: str
+    days: list[WeeklyDayReport] = Field(default_factory=list)
+    totals: WeeklyTotals
+    events: list[WeeklyEventReport] = Field(default_factory=list)
+    adjustments: list[WeeklyEventReport] = Field(default_factory=list)

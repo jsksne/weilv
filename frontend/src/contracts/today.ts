@@ -12,6 +12,13 @@ import type { UiDataAvailability, UiFieldAvailability, UiState } from './common'
 
 export type TodayTaskTone = 'default' | 'eye' | 'move' | 'sleep'
 
+export type TodayRecommendationStatus =
+  | 'allowed'
+  | 'blocked'
+  | 'help_seeking'
+  | 'no_safe_task'
+  | 'unavailable'
+
 export interface TodayTaskView {
   id: string
   /** 原型 t-eye / t-move / t-sleep 色调类（default 即粉色无后缀） */
@@ -118,6 +125,7 @@ export interface TodayFeedbackCopy {
 export interface TodayContract {
   state: UiState
   dataAvailability: UiDataAvailability
+  recommendationStatus: TodayRecommendationStatus
   availability: TodayDataAvailability
   unavailableFields: readonly string[]
   heroTag: string

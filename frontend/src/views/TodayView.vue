@@ -59,6 +59,7 @@ function onSelectMood(value: string): void {
       :data-availability="model.dataAvailability"
     >
       <strong>{{ model.dataAvailability === 'partial' ? '今日可用任务' : '今日数据不可用' }}</strong>
+      <p data-testid="today-recommendation-status">推荐状态：{{ model.recommendationStatus }}</p>
       <p v-if="model.state.message">{{ model.state.message }}</p>
       <p v-if="model.unavailableFields.length" data-testid="today-unavailable-fields">
         未提供：{{ model.unavailableFields.join('、') }}

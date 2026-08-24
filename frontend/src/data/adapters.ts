@@ -22,6 +22,7 @@ import type {
   ShellContract,
   TodayContract,
   TodayDataAvailability,
+  TodayRecommendationStatus,
   TodayTaskView,
   WeeklyContract,
 } from '@/contracts'
@@ -60,6 +61,7 @@ export function createUnavailableTodayContract(
   return {
     state: { status: 'ready', mode: 'production', message },
     dataAvailability: 'unavailable',
+    recommendationStatus: 'unavailable',
     availability: unavailableTodayAvailability,
     unavailableFields: Object.keys(unavailableTodayAvailability),
     heroTag: 'Production · 今日任务',
@@ -292,6 +294,7 @@ function toTodayTask(dto: SelectedTask, explanation: string | null): TodayTaskVi
 }
 
 export function adaptRecommendationResponse(dto: RecommendationResponse): TodayContract {
+  const recommendationStatus: TodayRecommendationStatus = dto.status
   const selectedTask = dto.status === 'allowed' && dto.selected_task
     ? toTodayTask(dto.selected_task, dto.explanation)
     : null
@@ -312,6 +315,7 @@ export function adaptRecommendationResponse(dto: RecommendationResponse): TodayC
     ...createUnavailableTodayContract(message),
     state: { status: 'ready', mode: 'production', message },
     dataAvailability: selectedTask ? 'partial' : 'unavailable',
+    recommendationStatus,
     availability,
     unavailableFields,
     summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],

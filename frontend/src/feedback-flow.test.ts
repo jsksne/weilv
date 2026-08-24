@@ -69,6 +69,25 @@ describe('useFeedbackFlow', () => {
     expect(flow.result.value).toBeNull()
     expect(flow.error.value).toBeNull()
   })
+
+  it('starts Production with an unset draft and only queues explicit completion locally', async () => {
+    const submitFeedback = vi.spyOn(api, 'submitFeedback')
+    const flow = useFeedbackFlow({ mode: 'production' })
+
+    expect(flow.input.completion_status).toBeNull()
+    expect(flow.input.usefulness).not.toBe('neutral')
+    expect(flow.input.difficulty).not.toBe('suitable')
+    expect(flow.input.reason).not.toBe('')
+
+    await flow.submit('real-user', 'real-recommendation')
+    expect(flow.pendingFeedback.value).toBeNull()
+
+    flow.updateField('completion_status', 'completed')
+    await flow.submit('real-user', 'real-recommendation')
+
+    expect(flow.pendingFeedback.value).toEqual({ completion_status: 'completed' })
+    expect(submitFeedback).not.toHaveBeenCalled()
+  })
 })
 
 describe('Feedback visual flow', () => {

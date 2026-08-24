@@ -6,14 +6,6 @@ import { shellFixture } from '@/data/fixtures/shell.fixture'
 import { todayFixture } from '@/data/fixtures/today.fixture'
 import { weeklyFixture } from '@/data/fixtures/weekly.fixture'
 
-function scenarioFor(question: string): keyof typeof assistantFixture.replies {
-  const normalized = question.toLowerCase()
-  if (normalized.includes('睡') || normalized.includes('sleep')) return 'sleep'
-  if (normalized.includes('脖') || normalized.includes('颈') || normalized.includes('neck')) return 'neck'
-  if (normalized.includes('考') || normalized.includes('exam')) return 'exam'
-  return 'fallback'
-}
-
 export class FixtureUiDataSource implements UiDataSource {
   getInitialData(): UiDataBundle {
     return {
@@ -51,6 +43,7 @@ export class FixtureUiDataSource implements UiDataSource {
   }
 
   askAssistant(question: string) {
-    return Promise.resolve(assistantFixture.replies[scenarioFor(question)])
+    void question
+    return Promise.resolve(assistantFixture.replies.fallback)
   }
 }

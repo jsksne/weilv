@@ -13,6 +13,7 @@ export const todayFixture = {
     mode: 'demo',
   },
   dataAvailability: 'available',
+  recommendationStatus: 'allowed',
   availability: {
     selectedTask: 'available',
     dailyTasks: 'available',

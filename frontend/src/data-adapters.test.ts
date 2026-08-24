@@ -1,17 +1,22 @@
 import { flushPromises } from '@vue/test-utils'
 
 import type { AgenticRecommendationResponse } from './api/types'
-import { adaptAgenticRecommendation, adaptRecommendationResponse } from './data/adapters'
+import {
+  adaptAgenticRecommendation,
+  adaptRecommendationResponse,
+  createUnavailableTodayContract,
+} from './data/adapters'
 import { FixtureUiDataSource } from './data/fixtureUiDataSource'
 import { useUiDataSource } from './composables/useUiDataSource'
 import type { UiDataSource } from './contracts'
-import { allowedRecommendation } from './test/recommendationFixtures'
+import { allowedRecommendation, nonAllowedRecommendation } from './test/recommendationFixtures'
 
 describe('Sprint 8 DTO to Contract adapters', () => {
   it('maps one real Recommendation task and marks unsupported Today fields unavailable', () => {
     const today = adaptRecommendationResponse(allowedRecommendation)
 
     expect(today.dataAvailability).toBe('partial')
+    expect(today.recommendationStatus).toBe('allowed')
     expect(today.tasks).toHaveLength(1)
     expect(today.tasks[0]).toMatchObject({
       name: '写作业久坐后的起身活动',
@@ -23,6 +28,19 @@ describe('Sprint 8 DTO to Contract adapters', () => {
     expect(today.availability.progress).toBe('unavailable')
     expect(today.replacePool).toEqual([])
     expect(today.tasks).not.toHaveLength(3)
+  })
+
+  it.each(['allowed', 'blocked', 'help_seeking', 'no_safe_task'] as const)(
+    'preserves Recommendation status %s without using explanation text',
+    status => {
+      const dto = status === 'allowed' ? allowedRecommendation : nonAllowedRecommendation(status)
+
+      expect(adaptRecommendationResponse(dto).recommendationStatus).toBe(status)
+    },
+  )
+
+  it('uses unavailable for a Today contract with no Recommendation request', () => {
+    expect(createUnavailableTodayContract().recommendationStatus).toBe('unavailable')
   })
 
   it('does not expose Agentic trace or internal diagnostics identifiers', () => {

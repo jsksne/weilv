@@ -2,17 +2,17 @@
 import type {
   CompletionStatus,
   Difficulty,
-  FeedbackRequest,
   Usefulness,
 } from '@/api/types'
+import type { FeedbackDraft } from '@/composables/useFeedbackFlow'
 
 const props = defineProps<{
-  input: FeedbackRequest
+  input: FeedbackDraft
   loading: boolean
 }>()
 
 defineEmits<{
-  change: [field: keyof FeedbackRequest, value: FeedbackRequest[keyof FeedbackRequest]]
+  change: [field: keyof FeedbackDraft, value: FeedbackDraft[keyof FeedbackDraft]]
   submit: []
 }>()
 

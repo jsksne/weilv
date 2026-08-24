@@ -141,3 +141,22 @@ class TaskEventResponse(BaseModel):
     task_id: str
     action: str
     recorded_at: str
+
+
+class MemoryItemResponse(BaseModel):
+    memory_id: str
+    memory_type: str
+    summary: str
+    created_at: str
+    updated_at: str
+
+
+class MemoryListResponse(BaseModel):
+    user_id: str
+    memory_enabled: bool
+    memories: list[MemoryItemResponse] = Field(default_factory=list)
+
+
+class MemoryDeleteResponse(BaseModel):
+    status: str
+    memory_id: str

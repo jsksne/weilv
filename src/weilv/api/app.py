@@ -12,8 +12,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from weilv.agentic_rag import run_agentic_rag
+from weilv.api.memory_queries import query_user_memories
 from weilv.api.schemas import (
     AgenticRecommendationResponse,
+    MemoryDeleteResponse,
+    MemoryListResponse,
     ProfileRequest,
     ProfileResponse,
     QuestionnaireAnswerRequest,
@@ -53,6 +56,7 @@ from weilv.user_memory import (
     UserProfile,
     build_memory_id,
     create_memory,
+    forget_memory,
     get_user_profile,
     update_memory,
     upsert_user_profile,
@@ -401,3 +405,35 @@ def record_task_event(
         "action": payload.action,
         "recorded_at": now,
     }
+
+
+@app.get("/api/v1/users/{user_id}/memories", response_model=MemoryListResponse)
+def read_user_memories(user_id: str, request: Request):
+    client = _dependency(request, "es_client")
+    try:
+        memories = query_user_memories(client, user_id)
+        profile = get_user_profile(client, user_id)
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    return {
+        "user_id": user_id,
+        "memory_enabled": bool(profile and profile.memory_enabled),
+        "memories": memories,
+    }
+
+
+@app.post(
+    "/api/v1/users/{user_id}/memories/{memory_id}/delete",
+    response_model=MemoryDeleteResponse,
+)
+def delete_user_memory(user_id: str, memory_id: str, request: Request):
+    client = _dependency(request, "es_client")
+    try:
+        result = forget_memory(client, user_id, memory_id)
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    if result["status"] != "forgotten":
+        raise HTTPException(status_code=404, detail="memory_not_found")
+    return result

@@ -52,38 +52,58 @@ function onSelectMood(value: string): void {
 </script>
 
 <template>
-  <div class="hero stagger">
-    <TodayHero
-      ref="hero"
-      :model="model"
-      :completed="daily.completed.value"
-      :total="daily.total.value"
-      :note="daily.heroProgressNote.value"
-      @check="onCheck"
-    />
-  </div>
-
-  <div class="card observe-card">
-    <ObservationCard :observation="model.observation" />
-  </div>
-
-  <div class="today-grid">
-    <div>
-      <DailyCheckCard
-        ref="checkCard"
-        :model="model"
-        :mood="daily.mood.value"
-        :available-minutes="daily.availableMinutes.value"
-        @select-mood="onSelectMood"
-        @select-time="daily.selectTime"
-      />
-      <TaskList :model="model" :controller="daily" />
+  <template v-if="model.state.mode === 'production'">
+    <div
+      class="card data-status-card"
+      data-testid="today-production-status"
+      :data-availability="model.dataAvailability"
+    >
+      <strong>{{ model.dataAvailability === 'partial' ? '今日可用任务' : '今日数据不可用' }}</strong>
+      <p v-if="model.state.message">{{ model.state.message }}</p>
+      <p v-if="model.unavailableFields.length" data-testid="today-unavailable-fields">
+        未提供：{{ model.unavailableFields.join('、') }}
+      </p>
     </div>
-    <aside>
-      <BreathCard :breath="model.breath" />
-      <RhythmTimeline :rhythm="model.rhythm" />
-    </aside>
-  </div>
+    <TaskList v-if="daily.entries.value.length" :model="model" :controller="daily" />
+    <p v-if="daily.pendingFeedback.value.length" data-testid="pending-feedback" role="status">
+      完成状态已保存在本地，等待补充反馈；尚未同步。
+    </p>
+  </template>
 
-  <DockedTaskProgress :progress="dockedProgress" :sentinel="dockedSentinel" />
+  <template v-else>
+    <div class="hero stagger">
+      <TodayHero
+        ref="hero"
+        :model="model"
+        :completed="daily.completed.value"
+        :total="daily.total.value"
+        :note="daily.heroProgressNote.value"
+        @check="onCheck"
+      />
+    </div>
+
+    <div class="card observe-card">
+      <ObservationCard :observation="model.observation" />
+    </div>
+
+    <div class="today-grid">
+      <div>
+        <DailyCheckCard
+          ref="checkCard"
+          :model="model"
+          :mood="daily.mood.value"
+          :available-minutes="daily.availableMinutes.value"
+          @select-mood="onSelectMood"
+          @select-time="daily.selectTime"
+        />
+        <TaskList :model="model" :controller="daily" />
+      </div>
+      <aside>
+        <BreathCard :breath="model.breath" />
+        <RhythmTimeline :rhythm="model.rhythm" />
+      </aside>
+    </div>
+
+    <DockedTaskProgress :progress="dockedProgress" :sentinel="dockedSentinel" />
+  </template>
 </template>

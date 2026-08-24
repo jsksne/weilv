@@ -3,12 +3,14 @@ import type {
   EvidenceSource,
   QuestionnaireSchema,
   QuestionnaireState,
+  RecommendationResponse,
   SelectedTask,
   UserProfile,
 } from '@/api/types'
 import type {
   AssistantAnalysisStage,
   AssistantAnswerStage,
+  AssistantContract,
   AssistantPipeline,
   AssistantReply,
   AssistantRetrievalStage,
@@ -17,8 +19,90 @@ import type {
   OnboardingContract,
   OnboardingAnswerValue,
   ProfileContract,
+  ShellContract,
+  TodayContract,
+  TodayDataAvailability,
+  TodayTaskView,
   WeeklyContract,
 } from '@/contracts'
+
+export function createProductionShellContract(): ShellContract {
+  return {
+    state: { status: 'ready', mode: 'production' },
+    navigation: [
+      { id: 'today', label: '今日' },
+      { id: 'assistant', label: '问问薇薇' },
+      { id: 'profile', label: '我的画像' },
+      { id: 'weekly', label: '这一周' },
+    ],
+    displayName: '微律',
+    dateLabel: '今日',
+    progress: { completed: 0, total: 0, note: '今日进度不可用。' },
+    toastExample: { id: 'production-shell', message: '' },
+  }
+}
+
+const unavailableTodayAvailability: TodayDataAvailability = {
+  selectedTask: 'unavailable',
+  dailyTasks: 'unavailable',
+  sleepStats: 'unavailable',
+  visionStats: 'unavailable',
+  moodStats: 'unavailable',
+  rhythm: 'unavailable',
+  progress: 'unavailable',
+  replace: 'unavailable',
+  restore: 'unavailable',
+}
+
+export function createUnavailableTodayContract(
+  message = 'Production Today 仅显示后端已提供的数据。',
+): TodayContract {
+  return {
+    state: { status: 'ready', mode: 'production', message },
+    dataAvailability: 'unavailable',
+    availability: unavailableTodayAvailability,
+    unavailableFields: Object.keys(unavailableTodayAvailability),
+    heroTag: 'Production · 今日任务',
+    greetingLead: '你好，',
+    greetingName: '微律用户',
+    summaryLines: [],
+    observation: {
+      mainLead: '今日状态',
+      mainEmphasis: 'unavailable',
+      mainTail: '',
+      summary: '',
+      stats: [],
+      suggestions: [],
+    },
+    moods: [],
+    defaultMood: '',
+    timeOptions: [],
+    defaultTimeMinutes: 0,
+    moodNoteLead: '',
+    moodNoteLines: [],
+    tasksSectionTitle: '今日可用任务',
+    tasksSectionNote: '仅显示后端真实返回的任务',
+    tasks: [],
+    replacePool: [],
+    lowMoodSwap: { taskId: '', name: '', description: '', why: '' },
+    rhythm: { title: '今日节奏', sub: '', items: [] },
+    breath: { title: '呼吸', sub: '', tip: '' },
+    progressNotes: {
+      hero: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
+      docked: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
+    },
+    feedbackCopy: {
+      start: '',
+      done: '',
+      partial: '',
+      skip: '',
+      restore: '',
+      replace: '',
+      lowMood: '',
+      check: '',
+    },
+  }
+}
 
 /* B5 schema pending: Weekly has no approved Backend DTO or Production adapter. */
 export function createUnavailableWeeklyContract(
@@ -97,9 +181,20 @@ function availableAnswer(): AssistantAnswerStage {
   }
 }
 
+function unavailableAnswer(): AssistantAnswerStage {
+  return {
+    id: 'answer',
+    title: '回答',
+    status: 'unavailable',
+    statusLabel: '等待真实回答',
+    statusLabels: { unavailable: '等待真实回答' },
+    visible: false,
+  }
+}
+
 function toSource(source: EvidenceSource): AssistantSource {
   return {
-    label: source.source_locator || source.document_id || source.chunk_id,
+    label: source.source_locator || source.source_url || '参考来源',
     url: source.source_url || undefined,
   }
 }
@@ -136,7 +231,7 @@ export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse): 
   const text = dto.explanation ? [{ text: dto.explanation }] : []
 
   return {
-    id: dto.recommendation_id ?? 'production-agentic-reply',
+    id: 'production-agentic-reply',
     scenario: null,
     pipeline,
     answer: text,
@@ -145,6 +240,82 @@ export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse): 
     sources,
     traceIsReal: false,
     timing: null,
+  }
+}
+
+export function createProductionAssistantContract(): AssistantContract {
+  const reply: AssistantReply = {
+    id: 'production-agentic-reply',
+    scenario: null,
+    pipeline: {
+      analysis: unavailableAnalysis(),
+      retrieval: unavailableRetrieval(),
+      answer: unavailableAnswer(),
+    },
+    answer: [],
+    suggestedTask: null,
+    safety: null,
+    sources: [],
+    traceIsReal: false,
+    timing: null,
+  }
+
+  return {
+    state: { status: 'ready', mode: 'production' },
+    isDemo: false,
+    traceIsReal: false,
+    demoLabel: '',
+    quickPrompts: [
+      { id: 'exam', label: '考试周好累，只有 10 分钟', question: '考试周好累，只有 10 分钟' },
+      { id: 'sleep', label: '最近睡不好', question: '最近睡不好' },
+      { id: 'neck', label: '我脖子有点疼', question: '我脖子有点疼' },
+    ],
+    greeting: {
+      face: '薇薇',
+      segments: [{ text: '告诉我你现在的困扰，我会请求一次真实的 Agentic 推荐。' }],
+    },
+    replies: { exam: reply, sleep: reply, neck: reply, fallback: reply },
+  }
+}
+
+function toTodayTask(dto: SelectedTask, explanation: string | null): TodayTaskView {
+  return {
+    id: 'production-selected-task',
+    tone: 'default',
+    domain: dto.covered_domains[0] ?? '微任务',
+    meta: `约 ${dto.estimated_minutes} 分钟`,
+    name: dto.title,
+    description: dto.instruction,
+    why: explanation ?? '任务解释不可用。',
+    whyIcon: 'flower',
+  }
+}
+
+export function adaptRecommendationResponse(dto: RecommendationResponse): TodayContract {
+  const selectedTask = dto.status === 'allowed' && dto.selected_task
+    ? toTodayTask(dto.selected_task, dto.explanation)
+    : null
+  const availability: TodayDataAvailability = {
+    ...unavailableTodayAvailability,
+    selectedTask: selectedTask ? 'available' : 'unavailable',
+  }
+  const unavailableFields = Object.entries(availability)
+    .filter(([, status]) => status === 'unavailable')
+    .map(([field]) => field)
+  const message =
+    dto.explanation ??
+    (selectedTask
+      ? '当前仅有一条后端推荐可用，其余 Today 数据暂不可用。'
+      : '当前没有后端返回的安全任务。')
+
+  return {
+    ...createUnavailableTodayContract(message),
+    state: { status: 'ready', mode: 'production', message },
+    dataAvailability: selectedTask ? 'partial' : 'unavailable',
+    availability,
+    unavailableFields,
+    summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],
+    tasks: selectedTask ? [selectedTask] : [],
   }
 }
 

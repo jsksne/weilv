@@ -1,5 +1,5 @@
 import type { ShellIconName, ShellTaskProgress } from './shell'
-import type { UiState } from './common'
+import type { UiDataAvailability, UiFieldAvailability, UiState } from './common'
 
 /**
  * Today UI Contract（Sprint 4）。
@@ -91,6 +91,18 @@ export interface TodayProgressNotes {
   docked: readonly [string, string, string, string]
 }
 
+export interface TodayDataAvailability {
+  selectedTask: UiFieldAvailability
+  dailyTasks: UiFieldAvailability
+  sleepStats: UiFieldAvailability
+  visionStats: UiFieldAvailability
+  moodStats: UiFieldAvailability
+  rhythm: UiFieldAvailability
+  progress: UiFieldAvailability
+  replace: UiFieldAvailability
+  restore: UiFieldAvailability
+}
+
 /** 任务与检查交互的冻结 toast 文案（restore 无 toast，为空串） */
 export interface TodayFeedbackCopy {
   start: string
@@ -105,6 +117,9 @@ export interface TodayFeedbackCopy {
 
 export interface TodayContract {
   state: UiState
+  dataAvailability: UiDataAvailability
+  availability: TodayDataAvailability
+  unavailableFields: readonly string[]
   heroTag: string
   greetingLead: string
   greetingName: string

@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import type { AssistantContract, AssistantQuickPrompt, AssistantScenario } from '@/contracts'
+import type {
+  AssistantContract,
+  AssistantPipeline,
+  AssistantQuickPrompt,
+  AssistantReply,
+  AssistantScenario,
+  UiDataSource,
+} from '@/contracts'
 import AssistantHero from '@/components/assistant/AssistantHero.vue'
 import QuickPromptList from '@/components/assistant/QuickPromptList.vue'
 import ConversationLog from '@/components/assistant/ConversationLog.vue'
@@ -9,12 +16,28 @@ import UserMessage from '@/components/assistant/UserMessage.vue'
 import AgentPipeline from '@/components/assistant/AgentPipeline.vue'
 import ChatComposer from '@/components/assistant/ChatComposer.vue'
 import { useAssistantFlow } from '@/composables/useAssistantFlow'
+import { useAgenticRecommendation } from '@/composables/useAgenticRecommendation'
 
 const props = defineProps<{
   model: AssistantContract
+  dataSource?: UiDataSource
 }>()
 
-const { question, reply, pipeline, busy, renderVersion, submit: submitQuestion } = useAssistantFlow(props.model)
+const demoFlow = useAssistantFlow(props.model)
+const agenticFlow = useAgenticRecommendation(props.dataSource ?? null)
+const isDemo = computed(() => props.model.state.mode === 'demo')
+const question = computed(() => (isDemo.value ? demoFlow.question.value : agenticFlow.question.value))
+const reply = computed<AssistantReply | null>(() =>
+  isDemo.value ? demoFlow.reply.value : agenticFlow.reply.value,
+)
+const pipeline = computed<AssistantPipeline | null>(() =>
+  isDemo.value ? demoFlow.pipeline.value : reply.value?.pipeline ?? null,
+)
+const busy = computed(() => (isDemo.value ? demoFlow.busy.value : agenticFlow.busy.value))
+const renderVersion = computed(() =>
+  isDemo.value ? demoFlow.renderVersion.value : agenticFlow.renderVersion.value,
+)
+const error = computed(() => (isDemo.value ? null : agenticFlow.error.value))
 const log = ref<InstanceType<typeof ConversationLog> | null>(null)
 const followLatest = ref(true)
 
@@ -30,7 +53,8 @@ function rememberScrollPosition(): void {
 
 function submit(question: string, scenario: AssistantScenario): void {
   rememberScrollPosition()
-  submitQuestion(question, scenario)
+  if (isDemo.value) demoFlow.submit(question, scenario)
+  else void agenticFlow.submit(question)
 }
 
 function selectPrompt(prompt: AssistantQuickPrompt): void {
@@ -39,6 +63,10 @@ function selectPrompt(prompt: AssistantQuickPrompt): void {
 
 function submitManual(question: string): void {
   submit(question, 'fallback')
+}
+
+function retry(): void {
+  if (question.value) submit(question.value, 'fallback')
 }
 
 watch(renderVersion, async () => {
@@ -65,6 +93,10 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
       {{ model.demoLabel }}
     </p>
     <QuickPromptList :prompts="model.quickPrompts" :busy="busy" @select="selectPrompt" />
+    <p v-if="error" class="ask-error" data-testid="agentic-error" role="alert">
+      {{ error.message }}
+      <button class="btn btn-ghost" type="button" @click="retry">重试</button>
+    </p>
     <ConversationLog ref="log" :greeting="model.greeting">
       <UserMessage v-if="question" :text="question" />
       <AgentPipeline v-if="reply && pipeline" :reply="reply" :pipeline="pipeline" />

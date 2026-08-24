@@ -1,4 +1,5 @@
 import type {
+  AgenticRecommendationResponse,
   FeedbackRequest,
   FeedbackResponse,
   HealthResponse,
@@ -87,6 +88,12 @@ export function upsertUserProfile(
 
 export function getRecommendation(body: RecommendationRequest): Promise<RecommendationResponse> {
   return request('/api/v1/recommendations', jsonRequest('POST', body))
+}
+
+export function getAgenticRecommendation(
+  body: RecommendationRequest,
+): Promise<AgenticRecommendationResponse> {
+  return request('/api/v1/recommend/agentic', jsonRequest('POST', body))
 }
 
 export function submitFeedback(

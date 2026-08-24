@@ -1,0 +1,1582 @@
+diff --git a/SPRINT-8-REPORT.md b/SPRINT-8-REPORT.md
+new file mode 100644
+index 0000000..63e328b
+--- /dev/null
++++ b/SPRINT-8-REPORT.md
+@@ -0,0 +1,81 @@
++# Sprint 8 Report
++
++Inherited:
++eb9ce75 feat: migrate frozen weekly experience
++
++UI mode:
++STRICT
++
++Missing mode:
++ERROR
++
++Invalid mode:
++ERROR
++
++Demo:
++FIXTURE ONLY
++
++Production:
++API ONLY
++
++API failure fixture fallback:
++NONE
++
++Today real mapping:
++PASS — one selected Recommendation task only
++
++Today unavailable gaps:
++PASS
++
++Assistant Agentic mapping:
++PASS
++
++Production fake trace:
++NONE
++
++Profile mapping:
++PASS
++
++Production fake Memory/stats:
++NONE
++
++Weekly Production:
++UNAVAILABLE
++
++Feedback API calls:
++0 in Production task flow
++
++Invented feedback fields:
++NONE
++
++Views importing DTO:
++0 in TodayView, AssistantView, ProfileView, WeeklyView
++
++Internal diagnostics exposed:
++0
++
++Tests:
++183/183 PASS
++
++Lint:
++PASS
++
++Build:
++PASS
++
++Browser Demo:
++PASS — Today, Assistant, Profile, Weekly, Onboarding, and task completion checked
++
++Browser Production:
++PASS — backend unavailable correctly handled with error/retry and no fixture fallback
++
++Python core diff:
++0
++
++Commit:
++feat: add explicit ui data sources
++
++Review package:
++%USERPROFILE%\\Desktop\\review-package-sprint8.zip
++
++STOPPED BEFORE BACKEND INTERFACE GATES
+diff --git a/frontend/.env.example b/frontend/.env.example
+index c2058b5..d04fd72 100644
+--- a/frontend/.env.example
++++ b/frontend/.env.example
+@@ -1 +1,2 @@
++VITE_UI_MODE=demo
+ VITE_API_BASE_URL=http://localhost:8000
+diff --git a/frontend/src/App.vue b/frontend/src/App.vue
+index ae396b4..7d2f56f 100644
+--- a/frontend/src/App.vue
++++ b/frontend/src/App.vue
+@@ -1,5 +1,5 @@
+ <script setup lang="ts">
+-import { computed, onMounted, ref } from 'vue'
++import { computed, ref, watch } from 'vue'
+
+ import AppShell from '@/layouts/AppShell.vue'
+ import TodayView from '@/views/TodayView.vue'
+@@ -7,16 +7,13 @@ import AssistantView from '@/views/AssistantView.vue'
+ import ProfileView from '@/views/ProfileView.vue'
+ import WeeklyView from '@/views/WeeklyView.vue'
+ import LegacyConsole from '@/views/LegacyConsole.vue'
+-import { shellFixture } from '@/data/fixtures/shell.fixture'
+-import { todayFixture } from '@/data/fixtures/today.fixture'
+-import { assistantFixture } from '@/data/fixtures/assistant.fixture'
+-import { onboardingFixture } from '@/data/fixtures/onboarding.fixture'
+-import { profileFixture } from '@/data/fixtures/profile.fixture'
+-import { weeklyFixture } from '@/data/fixtures/weekly.fixture'
+ import { useDailyTasks } from '@/composables/useDailyTasks'
+ import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
++import { useUiDataSource } from '@/composables/useUiDataSource'
++import { createUiDataSource } from '@/data/createUiDataSource'
++import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
+ import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
+-import type { ShellContract } from '@/contracts'
++import type { ShellContract, UiDataSource } from '@/contracts'
+
+ /**
+  * Sprint 4：产品运行态切换为 Shell + TodayView（fixture-driven Demo，
+@@ -32,15 +29,46 @@ const legacyMode =
+   typeof window.location !== 'undefined' &&
+   new URLSearchParams(window.location.search).has('legacy')
+
+-/* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从这里取数 */
+-const daily = useDailyTasks(todayFixture)
+-const onboardingVisible = ref(false)
+-
+-onMounted(() => {
+-  if (!legacyMode && !hasDemoOnboardingCompleted(onboardingFixture.storageKey)) {
+-    onboardingVisible.value = true
++const configurationError = ref<Error | null>(null)
++let dataSource: UiDataSource | null = null
++if (!legacyMode) {
++  try {
++    dataSource = createUiDataSource()
++  } catch (cause) {
++    configurationError.value = cause instanceof Error ? cause : new Error('UI mode 配置无效。')
+   }
++}
++
++const ui = useUiDataSource(dataSource, {
++  autoLoad: !legacyMode && !configurationError.value,
+ })
++if (configurationError.value) {
++  ui.status.value = 'error'
++  ui.error.value = configurationError.value
++}
++const { status, retry } = ui
++const errorMessage = computed(() => ui.error.value?.message ?? 'UI 数据配置或加载失败。')
++
++const bundle = computed(() => ui.data.value)
++const today = computed(() => bundle.value?.today ?? createUnavailableTodayContract('UI 数据加载中。'))
++/* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从 DataSource Contract 取数 */
++const daily = useDailyTasks(today)
++const onboardingVisible = ref(false)
++const onboarding = computed(() => bundle.value?.onboarding ?? null)
++
++watch(
++  [() => ui.status.value, onboarding],
++  ([status, model]) => {
++    if (
++      status === 'ready' &&
++      model?.state.mode === 'demo' &&
++      !hasDemoOnboardingCompleted(model.storageKey)
++    ) {
++      onboardingVisible.value = true
++    }
++  },
++  { immediate: true },
++)
+
+ /* 原型 navDate：冻结「4 月 22 日」+ 按当前日期计算星期 */
+ const frozenDateLabel = (): string => {
+@@ -48,18 +76,21 @@ const frozenDateLabel = (): string => {
+   return `4 月 22 日 · 星期${weekday}`
+ }
+
+-const shell = computed<ShellContract>(() => ({
+-  state: shellFixture.state,
+-  navigation: shellFixture.navigation,
+-  displayName: shellFixture.displayName,
+-  dateLabel: frozenDateLabel(),
+-  progress: {
+-    completed: daily.completed.value,
+-    total: daily.total.value,
+-    note: daily.dockedProgressNote.value,
+-  },
+-  toastExample: shellFixture.toastExample,
+-}))
++const shell = computed<ShellContract>(() => {
++  const base = bundle.value?.shell ?? createProductionShellContract()
++  return {
++    ...base,
++    dateLabel: base.state.mode === 'demo' ? frozenDateLabel() : base.dateLabel,
++    progress:
++      base.state.mode === 'demo'
++        ? {
++            completed: daily.completed.value,
++            total: daily.total.value,
++            note: daily.dockedProgressNote.value,
++          }
++        : base.progress,
++  }
++})
+
+ function openOnboarding(): void {
+   onboardingVisible.value = true
+@@ -71,26 +102,33 @@ function closeOnboarding(): void {
+ </script>
+
+ <template>
+-  <AppShell v-if="!legacyMode" :shell="shell" @replay="openOnboarding">
++  <AppShell v-if="!legacyMode && status === 'ready' && bundle" :shell="shell" @replay="openOnboarding">
+     <template #today>
+-      <TodayView :model="todayFixture" :daily="daily" />
++      <TodayView :model="bundle.today" :daily="daily" />
+     </template>
+     <template #assistant>
+-      <AssistantView :model="assistantFixture" />
++      <AssistantView :model="bundle.assistant" :data-source="dataSource ?? undefined" />
+     </template>
+     <template #profile>
+-      <ProfileView :model="profileFixture" />
++      <ProfileView :model="bundle.profile" />
+     </template>
+     <template #weekly>
+-      <WeeklyView :model="weeklyFixture" />
++      <WeeklyView :model="bundle.weekly" />
+     </template>
+   </AppShell>
+-  <AppShell v-else>
++  <AppShell v-else-if="legacyMode">
+     <LegacyConsole />
+   </AppShell>
++  <section v-else-if="status === 'loading'" data-testid="ui-data-loading" role="status">
++    正在加载微律数据……
++  </section>
++  <section v-else data-testid="ui-data-error" role="alert">
++    <p>{{ errorMessage }}</p>
++    <button type="button" @click="retry">重试</button>
++  </section>
+   <OnboardingFlow
+-    v-if="onboardingVisible && !legacyMode"
+-    :model="onboardingFixture"
++    v-if="onboardingVisible && !legacyMode && onboarding"
++    :model="onboarding"
+     @complete="closeOnboarding"
+   />
+ </template>
+diff --git a/frontend/src/api/agentic-client.test.ts b/frontend/src/api/agentic-client.test.ts
+new file mode 100644
+index 0000000..f33eda2
+--- /dev/null
++++ b/frontend/src/api/agentic-client.test.ts
+@@ -0,0 +1,56 @@
++import { getAgenticRecommendation } from './client'
++import type { AgenticRecommendationResponse, RecommendationRequest } from './types'
++
++const request: RecommendationRequest = {
++  user_id: 'user-001',
++  query: '我现在需要一个小任务',
++  target_stage: 'junior_high',
++  current_context: 'home',
++  activity_context: 'screen',
++  available_minutes: 10,
++  vision_abnormal: false,
++  physical_discomfort: false,
++  medical_request: false,
++  cannot_move: false,
++  unstable_environment: false,
++  sleep_being_crowded: false,
++}
++
++const agenticResponse: AgenticRecommendationResponse = {
++  status: 'help_seeking',
++  selected_task: null,
++  explanation: '请先找一位大人聊聊。',
++  sources: [],
++  context_sources: null,
++  matched_rule_ids: [],
++  reason_codes: [],
++  explanation_guard: null,
++  personalization: null,
++  recommendation_id: null,
++  feedback_available: false,
++  agentic: true,
++  diagnostics: { factor_count: 1 },
++}
++
++function response(body: unknown) {
++  return new Response(JSON.stringify(body), {
++    status: 200,
++    headers: { 'Content-Type': 'application/json' },
++  })
++}
++
++describe('Agentic API client', () => {
++  it('uses the existing client rules and the Agentic endpoint', async () => {
++    const fetchMock = vi.fn().mockResolvedValue(response(agenticResponse))
++    vi.stubGlobal('fetch', fetchMock)
++
++    await expect(getAgenticRecommendation(request)).resolves.toEqual(agenticResponse)
++    expect(fetchMock).toHaveBeenCalledWith(
++      'http://localhost:8000/api/v1/recommend/agentic',
++      expect.objectContaining({
++        method: 'POST',
++        body: JSON.stringify(request),
++      }),
++    )
++  })
++})
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index 21cb1c9..a9e6f93 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -1,4 +1,5 @@
+ import type {
++  AgenticRecommendationResponse,
+   FeedbackRequest,
+   FeedbackResponse,
+   HealthResponse,
+@@ -89,6 +90,12 @@ export function getRecommendation(body: RecommendationRequest): Promise<Recommen
+   return request('/api/v1/recommendations', jsonRequest('POST', body))
+ }
+
++export function getAgenticRecommendation(
++  body: RecommendationRequest,
++): Promise<AgenticRecommendationResponse> {
++  return request('/api/v1/recommend/agentic', jsonRequest('POST', body))
++}
++
+ export function submitFeedback(
+   userId: string,
+   recommendationId: string,
+diff --git a/frontend/src/components/today/TaskCard.vue b/frontend/src/components/today/TaskCard.vue
+index 66e7342..8c45ba4 100644
+--- a/frontend/src/components/today/TaskCard.vue
++++ b/frontend/src/components/today/TaskCard.vue
+@@ -23,6 +23,7 @@ const props = defineProps<{
+   entry: DailyTaskEntry
+   controller: DailyTasksController
+   copy: TodayContract['feedbackCopy']
++  canReplace?: boolean
+ }>()
+
+ const { play, delay, dispose } = useMotionPulse()
+@@ -118,6 +119,10 @@ function animateReplace(): void {
+   })
+ }
+
++function notify(message: string): void {
++  if (message) push(message)
++}
++
+ function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace'): void {
+   const slotId = props.entry.slotId
+   const method = act === 'done' ? 'complete' : act
+@@ -126,27 +131,27 @@ function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace')
+
+   if (act === 'start') {
+     pulseCard(700, v => `translateY(${-3 * v}px)`)
+-    push(props.copy.start)
++    notify(props.copy.start)
+     return
+   }
+   if (act === 'done') {
+     playCompletionFx()
+     pulseCard(950, v => `scale(${1 + 0.02 * v})`)
+-    push(props.copy.done)
++    notify(props.copy.done)
+     return
+   }
+   if (act === 'partial') {
+     pulseCard(700, v => `scale(${1 + 0.012 * v})`)
+-    push(props.copy.partial)
++    notify(props.copy.partial)
+     return
+   }
+   if (act === 'skip') {
+-    push(props.copy.skip)
++    notify(props.copy.skip)
+     return
+   }
+   if (act === 'replace') {
+     animateReplace()
+-    push(props.copy.replace)
++    notify(props.copy.replace)
+   }
+   /* restore：原型无反馈 */
+ }
+@@ -173,13 +178,25 @@ onUnmounted(dispose)
+     <div class="task-actions">
+       <template v-if="entry.actions === 'initial'">
+         <button class="btn btn-primary" type="button" data-act="start" @click="run('start')">开始</button>
+-        <button class="btn btn-ghost" type="button" data-act="replace" @click="run('replace')">换一朵</button>
++        <button
++          v-if="canReplace"
++          class="btn btn-ghost"
++          type="button"
++          data-act="replace"
++          @click="run('replace')"
++        >换一朵</button>
+         <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
+       </template>
+       <template v-else-if="entry.actions === 'active'">
+         <button class="btn btn-ok" type="button" data-act="done" @click="run('done')">✓ 完成啦</button>
+         <button class="btn btn-ghost" type="button" data-act="partial" @click="run('partial')">部分完成</button>
+-        <button class="btn btn-ghost" type="button" data-act="replace" @click="run('replace')">换一朵</button>
++        <button
++          v-if="canReplace"
++          class="btn btn-ghost"
++          type="button"
++          data-act="replace"
++          @click="run('replace')"
++        >换一朵</button>
+         <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
+       </template>
+       <template v-else-if="entry.actions === 'restore'">
+diff --git a/frontend/src/components/today/TaskList.vue b/frontend/src/components/today/TaskList.vue
+index 414e7a5..ef3b87b 100644
+--- a/frontend/src/components/today/TaskList.vue
++++ b/frontend/src/components/today/TaskList.vue
+@@ -24,6 +24,7 @@ defineProps<{
+       :entry="entry"
+       :controller="controller"
+       :copy="model.feedbackCopy"
++      :can-replace="model.state.mode === 'demo'"
+     />
+   </div>
+ </template>
+diff --git a/frontend/src/composables/useAgenticRecommendation.ts b/frontend/src/composables/useAgenticRecommendation.ts
+new file mode 100644
+index 0000000..cb45a46
+--- /dev/null
++++ b/frontend/src/composables/useAgenticRecommendation.ts
+@@ -0,0 +1,34 @@
++import { ref } from 'vue'
++
++import type { AssistantReply, UiDataSource } from '@/contracts'
++
++export function useAgenticRecommendation(source: UiDataSource | null) {
++  const question = ref('')
++  const reply = ref<AssistantReply | null>(null)
++  const busy = ref(false)
++  const error = ref<Error | null>(null)
++  const renderVersion = ref(0)
++
++  async function submit(rawQuestion: string): Promise<boolean> {
++    const nextQuestion = rawQuestion.trim()
++    if (!nextQuestion || busy.value || !source) return false
++
++    question.value = nextQuestion
++    reply.value = null
++    error.value = null
++    busy.value = true
++    renderVersion.value += 1
++    try {
++      reply.value = await source.askAssistant(nextQuestion)
++      return true
++    } catch (cause) {
++      error.value = cause instanceof Error ? cause : new Error('Agentic 推荐失败。')
++      return false
++    } finally {
++      busy.value = false
++      renderVersion.value += 1
++    }
++  }
++
++  return { question, reply, busy, error, renderVersion, submit }
++}
+diff --git a/frontend/src/composables/useDailyTasks.ts b/frontend/src/composables/useDailyTasks.ts
+index 79e8bf5..9e324f8 100644
+--- a/frontend/src/composables/useDailyTasks.ts
++++ b/frontend/src/composables/useDailyTasks.ts
+@@ -1,4 +1,4 @@
+-import { computed, ref, type Ref } from 'vue'
++import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+
+ import type { TodayContract, TodayTaskView } from '@/contracts'
+
+@@ -34,6 +34,13 @@ export interface DailyTaskEntry {
+   actions: TaskActionStage
+ }
+
++export type PendingFeedbackStatus = 'completed' | 'partially_completed' | 'skipped'
++
++export interface PendingFeedback {
++  slotId: string
++  completionStatus: PendingFeedbackStatus
++}
++
+ export interface DailyTasksController {
+   entries: Readonly<Ref<readonly DailyTaskEntry[]>>
+   completed: Readonly<Ref<number>>
+@@ -42,6 +49,7 @@ export interface DailyTasksController {
+   dockedProgressNote: Readonly<Ref<string>>
+   mood: Readonly<Ref<string>>
+   availableMinutes: Readonly<Ref<number>>
++  pendingFeedback: Readonly<Ref<readonly PendingFeedback[]>>
+   start: (slotId: string) => TaskActionResult
+   complete: (slotId: string) => TaskActionResult
+   partial: (slotId: string) => TaskActionResult
+@@ -60,23 +68,35 @@ export interface UseDailyTasksOptions {
+ const ACTION_COOLDOWN_MS = 450
+
+ export function useDailyTasks(
+-  fixture: TodayContract,
++  input: MaybeRefOrGetter<TodayContract>,
+   options: UseDailyTasksOptions = {},
+ ): DailyTasksController {
+   const now = options.now ?? (() => performance.now())
++  const model = computed(() => toValue(input))
++
++  const entries = ref<readonly DailyTaskEntry[]>([])
++  const mood = ref('')
++  const availableMinutes = ref(0)
++  const pendingFeedback = ref<readonly PendingFeedback[]>([])
++  let replacePointer = 0
++  const lastActionAt = new Map<string, number>()
+
+-  const entries = ref<readonly DailyTaskEntry[]>(
+-    fixture.tasks.map((task, index) => ({
++  function reset(next: TodayContract): void {
++    entries.value = next.tasks.map((task, index) => ({
+       slotId: `today-slot-${index}`,
+       task,
+       interaction: 'pending',
+       actions: 'initial',
+-    })),
+-  )
+-  const mood = ref(fixture.defaultMood)
+-  const availableMinutes = ref(fixture.defaultTimeMinutes)
+-  let replacePointer = 0
+-  const lastActionAt = new Map<string, number>()
++    }))
++    mood.value = next.defaultMood
++    availableMinutes.value = next.defaultTimeMinutes
++    pendingFeedback.value = []
++    replacePointer = 0
++    lastActionAt.clear()
++  }
++
++  reset(model.value)
++  watch(model, reset)
+
+   const completed = computed(
+     () => entries.value.filter(entry => entry.interaction === 'done' || entry.interaction === 'partial').length,
+@@ -85,14 +105,16 @@ export function useDailyTasks(
+   /* 契约为固定 4 元组（TodayProgressNotes），Math.min 保证索引 ∈ [0,3]，
+      访问必为 string；noUncheckedIndexedAccess 下需显式断言收窄 */
+   const heroProgressNote = computed(
+-    () => fixture.progressNotes.hero[Math.min(completed.value, fixture.progressNotes.hero.length - 1)]!,
++    () => model.value.progressNotes.hero[Math.min(completed.value, model.value.progressNotes.hero.length - 1)] ?? '当前进度不可用',
+   )
+   const dockedProgressNote = computed(
+-    () => fixture.progressNotes.docked[Math.min(completed.value, fixture.progressNotes.docked.length - 1)]!,
++    () => model.value.progressNotes.docked[Math.min(completed.value, model.value.progressNotes.docked.length - 1)] ?? '当前进度不可用',
+   )
+
+   /* low 心情换卡按初始槽位定位（原型 data-idx="1" 是位置语义） */
+-  const lowMoodSlotIndex = fixture.tasks.findIndex(task => task.id === fixture.lowMoodSwap.taskId)
++  const lowMoodSlotIndex = computed(
++    () => model.value.tasks.findIndex(task => task.id === model.value.lowMoodSwap.taskId),
++  )
+
+   function findEntry(slotId: string): DailyTaskEntry | undefined {
+     return entries.value.find(entry => entry.slotId === slotId)
+@@ -127,6 +149,13 @@ export function useDailyTasks(
+     if (entry.interaction === 'done' || entry.interaction === 'partial') return 'rejected-state'
+     if (!passesCooldown(slotId)) return 'cooldown'
+     updateEntry(slotId, { interaction, actions: 'completed' })
++    pendingFeedback.value = [
++      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
++      {
++        slotId,
++        completionStatus: interaction === 'done' ? 'completed' : 'partially_completed',
++      },
++    ]
+     return 'applied'
+   }
+
+@@ -143,6 +172,10 @@ export function useDailyTasks(
+     if (!entry) return 'rejected-state'
+     if (!passesCooldown(slotId)) return 'cooldown'
+     updateEntry(slotId, { interaction: 'skipped', actions: 'restore' })
++    pendingFeedback.value = [
++      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
++      { slotId, completionStatus: 'skipped' },
++    ]
+     return 'applied'
+   }
+
+@@ -151,6 +184,7 @@ export function useDailyTasks(
+     if (!entry) return 'rejected-state'
+     if (!passesCooldown(slotId)) return 'cooldown'
+     updateEntry(slotId, { interaction: 'pending', actions: 'initial' })
++    pendingFeedback.value = pendingFeedback.value.filter(item => item.slotId !== slotId)
+     return 'applied'
+   }
+
+@@ -162,8 +196,9 @@ export function useDailyTasks(
+   function replace(slotId: string): TaskActionResult {
+     const entry = findEntry(slotId)
+     if (!entry) return 'rejected-state'
++    if (model.value.replacePool.length === 0) return 'rejected-state'
+     if (!passesCooldown(slotId)) return 'cooldown'
+-    const next = fixture.replacePool[replacePointer % fixture.replacePool.length]!
++    const next = model.value.replacePool[replacePointer % model.value.replacePool.length]!
+     replacePointer += 1
+     updateEntry(slotId, { task: next, actions: 'initial' })
+     return 'applied'
+@@ -176,8 +211,8 @@ export function useDailyTasks(
+   function applyMood(value: string): TaskActionResult {
+     mood.value = value
+     if (value !== 'low') return 'applied'
+-    const swap = fixture.lowMoodSwap
+-    const target = entries.value[lowMoodSlotIndex]
++    const swap = model.value.lowMoodSwap
++    const target = entries.value[lowMoodSlotIndex.value]
+     if (target && target.interaction === 'pending') {
+       updateEntry(target.slotId, {
+         task: {
+@@ -204,6 +239,7 @@ export function useDailyTasks(
+     dockedProgressNote,
+     mood,
+     availableMinutes,
++    pendingFeedback,
+     start,
+     complete,
+     partial,
+diff --git a/frontend/src/composables/useFeedbackFlow.ts b/frontend/src/composables/useFeedbackFlow.ts
+index 6577496..bfe3bb1 100644
+--- a/frontend/src/composables/useFeedbackFlow.ts
++++ b/frontend/src/composables/useFeedbackFlow.ts
+@@ -12,11 +12,19 @@ function initialInput(): FeedbackRequest {
+   }
+ }
+
+-export function useFeedbackFlow() {
++export type FeedbackFlowMode = 'demo' | 'production'
++
++export interface PendingFeedback {
++  completion_status: FeedbackRequest['completion_status']
++}
++
++export function useFeedbackFlow(options: { mode?: FeedbackFlowMode } = {}) {
++  const mode = options.mode ?? 'demo'
+   const input = reactive<FeedbackRequest>(initialInput())
+   const loading = ref(false)
+   const result = ref<FeedbackResponse | null>(null)
+   const error = ref<ApiError | null>(null)
++  const pendingFeedback = ref<PendingFeedback | null>(null)
+
+   function updateField<K extends keyof FeedbackRequest>(
+     field: K,
+@@ -28,6 +36,13 @@ export function useFeedbackFlow() {
+   async function submit(userId: string, recommendationId: string): Promise<void> {
+     if (loading.value) return
+
++    if (mode === 'production') {
++      pendingFeedback.value = { completion_status: input.completion_status }
++      result.value = null
++      error.value = null
++      return
++    }
++
+     loading.value = true
+     result.value = null
+     error.value = null
+@@ -47,6 +62,7 @@ export function useFeedbackFlow() {
+     Object.assign(input, initialInput())
+     result.value = null
+     error.value = null
++    pendingFeedback.value = null
+   }
+
+   return {
+@@ -54,6 +70,7 @@ export function useFeedbackFlow() {
+     loading,
+     result,
+     error,
++    pendingFeedback,
+     updateField,
+     submit,
+     reset,
+diff --git a/frontend/src/composables/useUiDataSource.ts b/frontend/src/composables/useUiDataSource.ts
+new file mode 100644
+index 0000000..1ed0294
+--- /dev/null
++++ b/frontend/src/composables/useUiDataSource.ts
+@@ -0,0 +1,47 @@
++import { ref } from 'vue'
++
++import type { UiDataBundle, UiDataSource } from '@/contracts'
++
++export type UiDataSourceStatus = 'idle' | 'loading' | 'ready' | 'error'
++
++export function useUiDataSource(
++  source: UiDataSource | null,
++  options: { autoLoad?: boolean } = {},
++) {
++  const status = ref<UiDataSourceStatus>('idle')
++  const data = ref<UiDataBundle | null>(null)
++  const error = ref<Error | null>(null)
++
++  const initialData = source?.getInitialData?.()
++  if (initialData) {
++    data.value = initialData
++    status.value = 'ready'
++  }
++
++  async function load(): Promise<void> {
++    if (!source || status.value === 'loading') return
++
++    status.value = 'loading'
++    error.value = null
++    data.value = null
++    try {
++      const [shell, today, assistant, profile, onboarding, weekly] = await Promise.all([
++        source.getShell(),
++        source.getToday(),
++        source.getAssistant(),
++        source.getProfile(),
++        source.getOnboarding(),
++        source.getWeekly(),
++      ])
++      data.value = { shell, today, assistant, profile, onboarding, weekly }
++      status.value = 'ready'
++    } catch (cause) {
++      error.value = cause instanceof Error ? cause : new Error('UI 数据加载失败。')
++      status.value = 'error'
++    }
++  }
++
++  if (options.autoLoad !== false && !initialData) void load()
++
++  return { status, data, error, load, retry: load }
++}
+diff --git a/frontend/src/config/uiMode.ts b/frontend/src/config/uiMode.ts
+new file mode 100644
+index 0000000..f3091e0
+--- /dev/null
++++ b/frontend/src/config/uiMode.ts
+@@ -0,0 +1,21 @@
++import type { UiMode } from '@/contracts'
++
++export const UI_MODE_ENV_KEY = 'VITE_UI_MODE'
++
++export class UiModeConfigurationError extends Error {
++  constructor(value: string | undefined) {
++    super(
++      `${UI_MODE_ENV_KEY} must be exactly "demo" or "production"; received ${value ?? 'missing'}.`,
++    )
++    this.name = 'UiModeConfigurationError'
++  }
++}
++
++export function resolveUiMode(value: string | undefined): UiMode {
++  if (value === 'demo' || value === 'production') return value
++  throw new UiModeConfigurationError(value)
++}
++
++export function getConfiguredUiMode(): UiMode {
++  return resolveUiMode(import.meta.env.VITE_UI_MODE)
++}
+diff --git a/frontend/src/contracts/common.ts b/frontend/src/contracts/common.ts
+index efd82e0..7bd6d65 100644
+--- a/frontend/src/contracts/common.ts
++++ b/frontend/src/contracts/common.ts
+@@ -4,6 +4,9 @@ export type UiMode = 'demo' | 'production'
+
+ export type UiLoadState = 'loading' | 'ready' | 'error' | 'unavailable'
+
++export type UiDataAvailability = 'available' | 'partial' | 'unavailable'
++export type UiFieldAvailability = 'available' | 'unavailable'
++
+ export interface UiState {
+   status: UiLoadState
+   mode: UiMode
+diff --git a/frontend/src/contracts/today.ts b/frontend/src/contracts/today.ts
+index bfaf6ac..9830094 100644
+--- a/frontend/src/contracts/today.ts
++++ b/frontend/src/contracts/today.ts
+@@ -1,5 +1,5 @@
+ import type { ShellIconName, ShellTaskProgress } from './shell'
+-import type { UiState } from './common'
++import type { UiDataAvailability, UiFieldAvailability, UiState } from './common'
+
+ /**
+  * Today UI Contract（Sprint 4）。
+@@ -91,6 +91,18 @@ export interface TodayProgressNotes {
+   docked: readonly [string, string, string, string]
+ }
+
++export interface TodayDataAvailability {
++  selectedTask: UiFieldAvailability
++  dailyTasks: UiFieldAvailability
++  sleepStats: UiFieldAvailability
++  visionStats: UiFieldAvailability
++  moodStats: UiFieldAvailability
++  rhythm: UiFieldAvailability
++  progress: UiFieldAvailability
++  replace: UiFieldAvailability
++  restore: UiFieldAvailability
++}
++
+ /** 任务与检查交互的冻结 toast 文案（restore 无 toast，为空串） */
+ export interface TodayFeedbackCopy {
+   start: string
+@@ -105,6 +117,9 @@ export interface TodayFeedbackCopy {
+
+ export interface TodayContract {
+   state: UiState
++  dataAvailability: UiDataAvailability
++  availability: TodayDataAvailability
++  unavailableFields: readonly string[]
+   heroTag: string
+   greetingLead: string
+   greetingName: string
+diff --git a/frontend/src/contracts/uiDataSource.ts b/frontend/src/contracts/uiDataSource.ts
+index 9dcfd3c..d7222f0 100644
+--- a/frontend/src/contracts/uiDataSource.ts
++++ b/frontend/src/contracts/uiDataSource.ts
+@@ -1,13 +1,27 @@
+ import type { AssistantContract } from './assistant'
++import type { AssistantReply } from './assistant'
+ import type { OnboardingContract } from './onboarding'
+ import type { ProfileContract } from './profile'
+ import type { ShellContract } from './shell'
++import type { TodayContract } from './today'
+ import type { WeeklyContract } from './weekly'
+
++export interface UiDataBundle {
++  today: TodayContract
++  assistant: AssistantContract
++  profile: ProfileContract
++  onboarding: OnboardingContract
++  weekly: WeeklyContract
++  shell: ShellContract
++}
++
+ export interface UiDataSource {
++  getInitialData?(): UiDataBundle
+   getShell(): Promise<ShellContract>
+   getAssistant(): Promise<AssistantContract>
+   getProfile(): Promise<ProfileContract>
+   getWeekly(): Promise<WeeklyContract>
+   getOnboarding(): Promise<OnboardingContract>
++  getToday(): Promise<TodayContract>
++  askAssistant(question: string): Promise<AssistantReply>
+ }
+diff --git a/frontend/src/data-adapters.test.ts b/frontend/src/data-adapters.test.ts
+new file mode 100644
+index 0000000..46d07c1
+--- /dev/null
++++ b/frontend/src/data-adapters.test.ts
+@@ -0,0 +1,74 @@
++import { flushPromises } from '@vue/test-utils'
++
++import type { AgenticRecommendationResponse } from './api/types'
++import { adaptAgenticRecommendation, adaptRecommendationResponse } from './data/adapters'
++import { FixtureUiDataSource } from './data/fixtureUiDataSource'
++import { useUiDataSource } from './composables/useUiDataSource'
++import type { UiDataSource } from './contracts'
++import { allowedRecommendation } from './test/recommendationFixtures'
++
++describe('Sprint 8 DTO to Contract adapters', () => {
++  it('maps one real Recommendation task and marks unsupported Today fields unavailable', () => {
++    const today = adaptRecommendationResponse(allowedRecommendation)
++
++    expect(today.dataAvailability).toBe('partial')
++    expect(today.tasks).toHaveLength(1)
++    expect(today.tasks[0]).toMatchObject({
++      name: '写作业久坐后的起身活动',
++      description: '起身活动约10分钟再继续。',
++      meta: '约 10 分钟',
++    })
++    expect(today.availability.dailyTasks).toBe('unavailable')
++    expect(today.availability.sleepStats).toBe('unavailable')
++    expect(today.availability.progress).toBe('unavailable')
++    expect(today.replacePool).toEqual([])
++    expect(today.tasks).not.toHaveLength(3)
++  })
++
++  it('does not expose Agentic trace or internal diagnostics identifiers', () => {
++    const response: AgenticRecommendationResponse = {
++      ...allowedRecommendation,
++      agentic: true,
++      diagnostics: {
++        memory_id: 'UM-secret',
++        matched_rule_id: 'SR-secret',
++        chunk_internal_id: 'KC-secret',
++        raw_query: 'secret query',
++      },
++    }
++    const assistantReply = adaptAgenticRecommendation(response)
++    const serialized = JSON.stringify(assistantReply)
++
++    expect(assistantReply.traceIsReal).toBe(false)
++    expect(assistantReply.pipeline.analysis.status).toBe('unavailable')
++    expect(assistantReply.pipeline.retrieval.status).toBe('unavailable')
++    expect(serialized).not.toContain('UM-secret')
++    expect(serialized).not.toContain('SR-secret')
++    expect(serialized).not.toContain('KC-secret')
++    expect(serialized).not.toContain('secret query')
++    expect(serialized).not.toContain('SRC-007')
++  })
++})
++
++describe('Sprint 8 production failure boundary', () => {
++  it('surfaces API errors without invoking a fixture provider', async () => {
++    const fixture = new FixtureUiDataSource()
++    const fixtureProvider = vi.spyOn(fixture, 'getToday')
++    const source: UiDataSource = {
++      getShell: () => Promise.reject(new Error('api down')),
++      getToday: () => Promise.reject(new Error('api down')),
++      getAssistant: () => Promise.reject(new Error('api down')),
++      getProfile: () => Promise.reject(new Error('api down')),
++      getOnboarding: () => Promise.reject(new Error('api down')),
++      getWeekly: () => Promise.resolve(fixture.getWeekly() as never),
++      askAssistant: () => Promise.reject(new Error('api down')),
++    }
++    const ui = useUiDataSource(source)
++
++    await flushPromises()
++
++    expect(ui.status.value).toBe('error')
++    expect(ui.data.value).toBeNull()
++    expect(fixtureProvider).not.toHaveBeenCalled()
++  })
++})
+diff --git a/frontend/src/data/adapters.ts b/frontend/src/data/adapters.ts
+index e26cfd9..b915765 100644
+--- a/frontend/src/data/adapters.ts
++++ b/frontend/src/data/adapters.ts
+@@ -3,12 +3,14 @@ import type {
+   EvidenceSource,
+   QuestionnaireSchema,
+   QuestionnaireState,
++  RecommendationResponse,
+   SelectedTask,
+   UserProfile,
+ } from '@/api/types'
+ import type {
+   AssistantAnalysisStage,
+   AssistantAnswerStage,
++  AssistantContract,
+   AssistantPipeline,
+   AssistantReply,
+   AssistantRetrievalStage,
+@@ -17,9 +19,91 @@ import type {
+   OnboardingContract,
+   OnboardingAnswerValue,
+   ProfileContract,
++  ShellContract,
++  TodayContract,
++  TodayDataAvailability,
++  TodayTaskView,
+   WeeklyContract,
+ } from '@/contracts'
+
++export function createProductionShellContract(): ShellContract {
++  return {
++    state: { status: 'ready', mode: 'production' },
++    navigation: [
++      { id: 'today', label: '今日' },
++      { id: 'assistant', label: '问问薇薇' },
++      { id: 'profile', label: '我的画像' },
++      { id: 'weekly', label: '这一周' },
++    ],
++    displayName: '微律',
++    dateLabel: '今日',
++    progress: { completed: 0, total: 0, note: '今日进度不可用。' },
++    toastExample: { id: 'production-shell', message: '' },
++  }
++}
++
++const unavailableTodayAvailability: TodayDataAvailability = {
++  selectedTask: 'unavailable',
++  dailyTasks: 'unavailable',
++  sleepStats: 'unavailable',
++  visionStats: 'unavailable',
++  moodStats: 'unavailable',
++  rhythm: 'unavailable',
++  progress: 'unavailable',
++  replace: 'unavailable',
++  restore: 'unavailable',
++}
++
++export function createUnavailableTodayContract(
++  message = 'Production Today 仅显示后端已提供的数据。',
++): TodayContract {
++  return {
++    state: { status: 'ready', mode: 'production', message },
++    dataAvailability: 'unavailable',
++    availability: unavailableTodayAvailability,
++    unavailableFields: Object.keys(unavailableTodayAvailability),
++    heroTag: 'Production · 今日任务',
++    greetingLead: '你好，',
++    greetingName: '微律用户',
++    summaryLines: [],
++    observation: {
++      mainLead: '今日状态',
++      mainEmphasis: 'unavailable',
++      mainTail: '',
++      summary: '',
++      stats: [],
++      suggestions: [],
++    },
++    moods: [],
++    defaultMood: '',
++    timeOptions: [],
++    defaultTimeMinutes: 0,
++    moodNoteLead: '',
++    moodNoteLines: [],
++    tasksSectionTitle: '今日可用任务',
++    tasksSectionNote: '仅显示后端真实返回的任务',
++    tasks: [],
++    replacePool: [],
++    lowMoodSwap: { taskId: '', name: '', description: '', why: '' },
++    rhythm: { title: '今日节奏', sub: '', items: [] },
++    breath: { title: '呼吸', sub: '', tip: '' },
++    progressNotes: {
++      hero: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
++      docked: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
++    },
++    feedbackCopy: {
++      start: '',
++      done: '',
++      partial: '',
++      skip: '',
++      restore: '',
++      replace: '',
++      lowMood: '',
++      check: '',
++    },
++  }
++}
++
+ /* B5 schema pending: Weekly has no approved Backend DTO or Production adapter. */
+ export function createUnavailableWeeklyContract(
+   message = 'Production Weekly 数据暂不可用：B5 schema pending。',
+@@ -97,9 +181,20 @@ function availableAnswer(): AssistantAnswerStage {
+   }
+ }
+
++function unavailableAnswer(): AssistantAnswerStage {
++  return {
++    id: 'answer',
++    title: '回答',
++    status: 'unavailable',
++    statusLabel: '等待真实回答',
++    statusLabels: { unavailable: '等待真实回答' },
++    visible: false,
++  }
++}
++
+ function toSource(source: EvidenceSource): AssistantSource {
+   return {
+-    label: source.source_locator || source.document_id || source.chunk_id,
++    label: source.source_locator || source.source_url || '参考来源',
+     url: source.source_url || undefined,
+   }
+ }
+@@ -136,7 +231,7 @@ export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse):
+   const text = dto.explanation ? [{ text: dto.explanation }] : []
+
+   return {
+-    id: dto.recommendation_id ?? 'production-agentic-reply',
++    id: 'production-agentic-reply',
+     scenario: null,
+     pipeline,
+     answer: text,
+@@ -148,6 +243,82 @@ export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse):
+   }
+ }
+
++export function createProductionAssistantContract(): AssistantContract {
++  const reply: AssistantReply = {
++    id: 'production-agentic-reply',
++    scenario: null,
++    pipeline: {
++      analysis: unavailableAnalysis(),
++      retrieval: unavailableRetrieval(),
++      answer: unavailableAnswer(),
++    },
++    answer: [],
++    suggestedTask: null,
++    safety: null,
++    sources: [],
++    traceIsReal: false,
++    timing: null,
++  }
++
++  return {
++    state: { status: 'ready', mode: 'production' },
++    isDemo: false,
++    traceIsReal: false,
++    demoLabel: '',
++    quickPrompts: [
++      { id: 'exam', label: '考试周好累，只有 10 分钟', question: '考试周好累，只有 10 分钟' },
++      { id: 'sleep', label: '最近睡不好', question: '最近睡不好' },
++      { id: 'neck', label: '我脖子有点疼', question: '我脖子有点疼' },
++    ],
++    greeting: {
++      face: '薇薇',
++      segments: [{ text: '告诉我你现在的困扰，我会请求一次真实的 Agentic 推荐。' }],
++    },
++    replies: { exam: reply, sleep: reply, neck: reply, fallback: reply },
++  }
++}
++
++function toTodayTask(dto: SelectedTask, explanation: string | null): TodayTaskView {
++  return {
++    id: 'production-selected-task',
++    tone: 'default',
++    domain: dto.covered_domains[0] ?? '微任务',
++    meta: `约 ${dto.estimated_minutes} 分钟`,
++    name: dto.title,
++    description: dto.instruction,
++    why: explanation ?? '任务解释不可用。',
++    whyIcon: 'flower',
++  }
++}
++
++export function adaptRecommendationResponse(dto: RecommendationResponse): TodayContract {
++  const selectedTask = dto.status === 'allowed' && dto.selected_task
++    ? toTodayTask(dto.selected_task, dto.explanation)
++    : null
++  const availability: TodayDataAvailability = {
++    ...unavailableTodayAvailability,
++    selectedTask: selectedTask ? 'available' : 'unavailable',
++  }
++  const unavailableFields = Object.entries(availability)
++    .filter(([, status]) => status === 'unavailable')
++    .map(([field]) => field)
++  const message =
++    dto.explanation ??
++    (selectedTask
++      ? '当前仅有一条后端推荐可用，其余 Today 数据暂不可用。'
++      : '当前没有后端返回的安全任务。')
++
++  return {
++    ...createUnavailableTodayContract(message),
++    state: { status: 'ready', mode: 'production', message },
++    dataAvailability: selectedTask ? 'partial' : 'unavailable',
++    availability,
++    unavailableFields,
++    summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],
++    tasks: selectedTask ? [selectedTask] : [],
++  }
++}
++
+ /**
+  * Sprint 6 的 Profile/Questionnaire 适配器只消费 DTO 已有字段。
+  * 真实 DTO 没有偏好统计、完成率或 Memory list/delete，因此这些字段
+diff --git a/frontend/src/data/apiUiDataSource.ts b/frontend/src/data/apiUiDataSource.ts
+new file mode 100644
+index 0000000..60b2e23
+--- /dev/null
++++ b/frontend/src/data/apiUiDataSource.ts
+@@ -0,0 +1,87 @@
++import {
++  getAgenticRecommendation,
++  getQuestionnaireSchema,
++  getQuestionnaireState,
++  getRecommendation,
++  getUserProfile,
++} from '@/api/client'
++import type { RecommendationRequest } from '@/api/types'
++import type { UiDataSource } from '@/contracts'
++import {
++  adaptAgenticRecommendation,
++  adaptOnboardingContract,
++  adaptProfileResponse,
++  adaptRecommendationResponse,
++  createProductionAssistantContract,
++  createProductionShellContract,
++  createUnavailableWeeklyContract,
++} from './adapters'
++
++const defaultRecommendationRequest: RecommendationRequest = {
++  user_id: 'demo-user-001',
++  query: '请给我一个今天可以完成的微任务',
++  target_stage: 'junior_high',
++  current_context: 'home',
++  activity_context: 'screen',
++  available_minutes: 10,
++  vision_abnormal: false,
++  physical_discomfort: false,
++  medical_request: false,
++  cannot_move: false,
++  unstable_environment: false,
++  sleep_being_crowded: false,
++}
++
++export interface ApiUiDataSourceOptions {
++  userId?: string
++  recommendationRequest?: Partial<RecommendationRequest>
++}
++
++export class ApiUiDataSource implements UiDataSource {
++  private readonly userId: string
++  private readonly recommendationRequest: RecommendationRequest
++
++  constructor(options: ApiUiDataSourceOptions = {}) {
++    this.userId = options.userId ?? defaultRecommendationRequest.user_id
++    this.recommendationRequest = {
++      ...defaultRecommendationRequest,
++      ...options.recommendationRequest,
++      user_id: this.userId,
++    }
++  }
++
++  getShell() {
++    return Promise.resolve(createProductionShellContract())
++  }
++
++  getToday() {
++    return getRecommendation(this.recommendationRequest).then(adaptRecommendationResponse)
++  }
++
++  getAssistant() {
++    return Promise.resolve(createProductionAssistantContract())
++  }
++
++  askAssistant(question: string) {
++    return getAgenticRecommendation({
++      ...this.recommendationRequest,
++      query: question,
++    }).then(adaptAgenticRecommendation)
++  }
++
++  getProfile() {
++    return getUserProfile(this.userId).then(adaptProfileResponse)
++  }
++
++  async getOnboarding() {
++    const [schema, state] = await Promise.all([
++      getQuestionnaireSchema(),
++      getQuestionnaireState(this.userId),
++    ])
++    return adaptOnboardingContract(schema, state)
++  }
++
++  getWeekly() {
++    return Promise.resolve(createUnavailableWeeklyContract())
++  }
++}
+diff --git a/frontend/src/data/createUiDataSource.ts b/frontend/src/data/createUiDataSource.ts
+new file mode 100644
+index 0000000..e90471e
+--- /dev/null
++++ b/frontend/src/data/createUiDataSource.ts
+@@ -0,0 +1,11 @@
++import type { UiMode } from '@/contracts'
++import { getConfiguredUiMode } from '@/config/uiMode'
++import { ApiUiDataSource, type ApiUiDataSourceOptions } from './apiUiDataSource'
++import { FixtureUiDataSource } from './fixtureUiDataSource'
++
++export function createUiDataSource(
++  mode: UiMode = getConfiguredUiMode(),
++  options: ApiUiDataSourceOptions = {},
++) {
++  return mode === 'demo' ? new FixtureUiDataSource() : new ApiUiDataSource(options)
++}
+diff --git a/frontend/src/data/fixtureUiDataSource.ts b/frontend/src/data/fixtureUiDataSource.ts
+new file mode 100644
+index 0000000..8c2cad2
+--- /dev/null
++++ b/frontend/src/data/fixtureUiDataSource.ts
+@@ -0,0 +1,56 @@
++import type { UiDataBundle, UiDataSource } from '@/contracts'
++import { assistantFixture } from '@/data/fixtures/assistant.fixture'
++import { onboardingFixture } from '@/data/fixtures/onboarding.fixture'
++import { profileFixture } from '@/data/fixtures/profile.fixture'
++import { shellFixture } from '@/data/fixtures/shell.fixture'
++import { todayFixture } from '@/data/fixtures/today.fixture'
++import { weeklyFixture } from '@/data/fixtures/weekly.fixture'
++
++function scenarioFor(question: string): keyof typeof assistantFixture.replies {
++  const normalized = question.toLowerCase()
++  if (normalized.includes('睡') || normalized.includes('sleep')) return 'sleep'
++  if (normalized.includes('脖') || normalized.includes('颈') || normalized.includes('neck')) return 'neck'
++  if (normalized.includes('考') || normalized.includes('exam')) return 'exam'
++  return 'fallback'
++}
++
++export class FixtureUiDataSource implements UiDataSource {
++  getInitialData(): UiDataBundle {
++    return {
++      shell: shellFixture,
++      today: todayFixture,
++      assistant: assistantFixture,
++      profile: profileFixture,
++      onboarding: onboardingFixture,
++      weekly: weeklyFixture,
++    }
++  }
++
++  getShell() {
++    return Promise.resolve(shellFixture)
++  }
++
++  getToday() {
++    return Promise.resolve(todayFixture)
++  }
++
++  getAssistant() {
++    return Promise.resolve(assistantFixture)
++  }
++
++  getProfile() {
++    return Promise.resolve(profileFixture)
++  }
++
++  getOnboarding() {
++    return Promise.resolve(onboardingFixture)
++  }
++
++  getWeekly() {
++    return Promise.resolve(weeklyFixture)
++  }
++
++  askAssistant(question: string) {
++    return Promise.resolve(assistantFixture.replies[scenarioFor(question)])
++  }
++}
+diff --git a/frontend/src/data/fixtures/today.fixture.ts b/frontend/src/data/fixtures/today.fixture.ts
+index e40dc35..a64ef86 100644
+--- a/frontend/src/data/fixtures/today.fixture.ts
++++ b/frontend/src/data/fixtures/today.fixture.ts
+@@ -12,6 +12,19 @@ export const todayFixture = {
+     status: 'ready',
+     mode: 'demo',
+   },
++  dataAvailability: 'available',
++  availability: {
++    selectedTask: 'available',
++    dailyTasks: 'available',
++    sleepStats: 'available',
++    visionStats: 'available',
++    moodStats: 'available',
++    rhythm: 'available',
++    progress: 'available',
++    replace: 'available',
++    restore: 'available',
++  },
++  unavailableFields: [],
+   heroTag: '✦ 春日极光 · 期中考试周 · 第 2 天',
+   greetingLead: '早上好，',
+   greetingName: '小满',
+diff --git a/frontend/src/test/setup.ts b/frontend/src/test/setup.ts
+index 4aaec14..0f7f647 100644
+--- a/frontend/src/test/setup.ts
++++ b/frontend/src/test/setup.ts
+@@ -1,6 +1,11 @@
+-import { afterEach, vi } from 'vitest'
++import { afterEach, beforeEach, vi } from 'vitest'
++
++beforeEach(() => {
++  vi.stubEnv('VITE_UI_MODE', 'demo')
++})
+
+ afterEach(() => {
+   vi.restoreAllMocks()
+   vi.unstubAllGlobals()
++  vi.unstubAllEnvs()
+ })
+diff --git a/frontend/src/ui-mode.test.ts b/frontend/src/ui-mode.test.ts
+new file mode 100644
+index 0000000..d0e059d
+--- /dev/null
++++ b/frontend/src/ui-mode.test.ts
+@@ -0,0 +1,25 @@
++import { ApiUiDataSource } from './data/apiUiDataSource'
++import { createUiDataSource } from './data/createUiDataSource'
++import { FixtureUiDataSource } from './data/fixtureUiDataSource'
++import { UiModeConfigurationError, resolveUiMode } from './config/uiMode'
++
++describe('Sprint 8 UI mode boundary', () => {
++  it.each([
++    [undefined, 'missing'],
++    ['', 'empty'],
++    ['staging', 'invalid'],
++    ['DEMO', 'invalid'],
++  ])('%s is a configuration error', (value) => {
++    expect(() => resolveUiMode(value)).toThrow(UiModeConfigurationError)
++  })
++
++  it('accepts only demo and production', () => {
++    expect(resolveUiMode('demo')).toBe('demo')
++    expect(resolveUiMode('production')).toBe('production')
++  })
++
++  it('creates exactly one source for the resolved mode', () => {
++    expect(createUiDataSource('demo')).toBeInstanceOf(FixtureUiDataSource)
++    expect(createUiDataSource('production')).toBeInstanceOf(ApiUiDataSource)
++  })
++})
+diff --git a/frontend/src/views/AssistantView.vue b/frontend/src/views/AssistantView.vue
+index fa59f2e..88082b7 100644
+--- a/frontend/src/views/AssistantView.vue
++++ b/frontend/src/views/AssistantView.vue
+@@ -1,7 +1,14 @@
+ <script setup lang="ts">
+-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
++import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+
+-import type { AssistantContract, AssistantQuickPrompt, AssistantScenario } from '@/contracts'
++import type {
++  AssistantContract,
++  AssistantPipeline,
++  AssistantQuickPrompt,
++  AssistantReply,
++  AssistantScenario,
++  UiDataSource,
++} from '@/contracts'
+ import AssistantHero from '@/components/assistant/AssistantHero.vue'
+ import QuickPromptList from '@/components/assistant/QuickPromptList.vue'
+ import ConversationLog from '@/components/assistant/ConversationLog.vue'
+@@ -9,12 +16,28 @@ import UserMessage from '@/components/assistant/UserMessage.vue'
+ import AgentPipeline from '@/components/assistant/AgentPipeline.vue'
+ import ChatComposer from '@/components/assistant/ChatComposer.vue'
+ import { useAssistantFlow } from '@/composables/useAssistantFlow'
++import { useAgenticRecommendation } from '@/composables/useAgenticRecommendation'
+
+ const props = defineProps<{
+   model: AssistantContract
++  dataSource?: UiDataSource
+ }>()
+
+-const { question, reply, pipeline, busy, renderVersion, submit: submitQuestion } = useAssistantFlow(props.model)
++const demoFlow = useAssistantFlow(props.model)
++const agenticFlow = useAgenticRecommendation(props.dataSource ?? null)
++const isDemo = computed(() => props.model.state.mode === 'demo')
++const question = computed(() => (isDemo.value ? demoFlow.question.value : agenticFlow.question.value))
++const reply = computed<AssistantReply | null>(() =>
++  isDemo.value ? demoFlow.reply.value : agenticFlow.reply.value,
++)
++const pipeline = computed<AssistantPipeline | null>(() =>
++  isDemo.value ? demoFlow.pipeline.value : reply.value?.pipeline ?? null,
++)
++const busy = computed(() => (isDemo.value ? demoFlow.busy.value : agenticFlow.busy.value))
++const renderVersion = computed(() =>
++  isDemo.value ? demoFlow.renderVersion.value : agenticFlow.renderVersion.value,
++)
++const error = computed(() => (isDemo.value ? null : agenticFlow.error.value))
+ const log = ref<InstanceType<typeof ConversationLog> | null>(null)
+ const followLatest = ref(true)
+
+@@ -30,7 +53,8 @@ function rememberScrollPosition(): void {
+
+ function submit(question: string, scenario: AssistantScenario): void {
+   rememberScrollPosition()
+-  submitQuestion(question, scenario)
++  if (isDemo.value) demoFlow.submit(question, scenario)
++  else void agenticFlow.submit(question)
+ }
+
+ function selectPrompt(prompt: AssistantQuickPrompt): void {
+@@ -41,6 +65,10 @@ function submitManual(question: string): void {
+   submit(question, 'fallback')
+ }
+
++function retry(): void {
++  if (question.value) submit(question.value, 'fallback')
++}
++
+ watch(renderVersion, async () => {
+   await nextTick()
+   if (followLatest.value) {
+@@ -65,6 +93,10 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
+       {{ model.demoLabel }}
+     </p>
+     <QuickPromptList :prompts="model.quickPrompts" :busy="busy" @select="selectPrompt" />
++    <p v-if="error" class="ask-error" data-testid="agentic-error" role="alert">
++      {{ error.message }}
++      <button class="btn btn-ghost" type="button" @click="retry">重试</button>
++    </p>
+     <ConversationLog ref="log" :greeting="model.greeting">
+       <UserMessage v-if="question" :text="question" />
+       <AgentPipeline v-if="reply && pipeline" :reply="reply" :pipeline="pipeline" />
+diff --git a/frontend/src/views/TodayView.vue b/frontend/src/views/TodayView.vue
+index f9bbdc1..09900dc 100644
+--- a/frontend/src/views/TodayView.vue
++++ b/frontend/src/views/TodayView.vue
+@@ -52,38 +52,58 @@ function onSelectMood(value: string): void {
+ </script>
+
+ <template>
+-  <div class="hero stagger">
+-    <TodayHero
+-      ref="hero"
+-      :model="model"
+-      :completed="daily.completed.value"
+-      :total="daily.total.value"
+-      :note="daily.heroProgressNote.value"
+-      @check="onCheck"
+-    />
+-  </div>
+-
+-  <div class="card observe-card">
+-    <ObservationCard :observation="model.observation" />
+-  </div>
++  <template v-if="model.state.mode === 'production'">
++    <div
++      class="card data-status-card"
++      data-testid="today-production-status"
++      :data-availability="model.dataAvailability"
++    >
++      <strong>{{ model.dataAvailability === 'partial' ? '今日可用任务' : '今日数据不可用' }}</strong>
++      <p v-if="model.state.message">{{ model.state.message }}</p>
++      <p v-if="model.unavailableFields.length" data-testid="today-unavailable-fields">
++        未提供：{{ model.unavailableFields.join('、') }}
++      </p>
++    </div>
++    <TaskList v-if="daily.entries.value.length" :model="model" :controller="daily" />
++    <p v-if="daily.pendingFeedback.value.length" data-testid="pending-feedback" role="status">
++      完成状态已保存在本地，等待补充反馈；尚未同步。
++    </p>
++  </template>
+
+-  <div class="today-grid">
+-    <div>
+-      <DailyCheckCard
+-        ref="checkCard"
++  <template v-else>
++    <div class="hero stagger">
++      <TodayHero
++        ref="hero"
+         :model="model"
+-        :mood="daily.mood.value"
+-        :available-minutes="daily.availableMinutes.value"
+-        @select-mood="onSelectMood"
+-        @select-time="daily.selectTime"
++        :completed="daily.completed.value"
++        :total="daily.total.value"
++        :note="daily.heroProgressNote.value"
++        @check="onCheck"
+       />
+-      <TaskList :model="model" :controller="daily" />
+     </div>
+-    <aside>
+-      <BreathCard :breath="model.breath" />
+-      <RhythmTimeline :rhythm="model.rhythm" />
+-    </aside>
+-  </div>
+
+-  <DockedTaskProgress :progress="dockedProgress" :sentinel="dockedSentinel" />
++    <div class="card observe-card">
++      <ObservationCard :observation="model.observation" />
++    </div>
++
++    <div class="today-grid">
++      <div>
++        <DailyCheckCard
++          ref="checkCard"
++          :model="model"
++          :mood="daily.mood.value"
++          :available-minutes="daily.availableMinutes.value"
++          @select-mood="onSelectMood"
++          @select-time="daily.selectTime"
++        />
++        <TaskList :model="model" :controller="daily" />
++      </div>
++      <aside>
++        <BreathCard :breath="model.breath" />
++        <RhythmTimeline :rhythm="model.rhythm" />
++      </aside>
++    </div>
++
++    <DockedTaskProgress :progress="dockedProgress" :sentinel="dockedSentinel" />
++  </template>
+ </template>

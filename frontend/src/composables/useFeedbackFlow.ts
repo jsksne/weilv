@@ -12,11 +12,19 @@ function initialInput(): FeedbackRequest {
   }
 }
 
-export function useFeedbackFlow() {
+export type FeedbackFlowMode = 'demo' | 'production'
+
+export interface PendingFeedback {
+  completion_status: FeedbackRequest['completion_status']
+}
+
+export function useFeedbackFlow(options: { mode?: FeedbackFlowMode } = {}) {
+  const mode = options.mode ?? 'demo'
   const input = reactive<FeedbackRequest>(initialInput())
   const loading = ref(false)
   const result = ref<FeedbackResponse | null>(null)
   const error = ref<ApiError | null>(null)
+  const pendingFeedback = ref<PendingFeedback | null>(null)
 
   function updateField<K extends keyof FeedbackRequest>(
     field: K,
@@ -27,6 +35,13 @@ export function useFeedbackFlow() {
 
   async function submit(userId: string, recommendationId: string): Promise<void> {
     if (loading.value) return
+
+    if (mode === 'production') {
+      pendingFeedback.value = { completion_status: input.completion_status }
+      result.value = null
+      error.value = null
+      return
+    }
 
     loading.value = true
     result.value = null
@@ -47,6 +62,7 @@ export function useFeedbackFlow() {
     Object.assign(input, initialInput())
     result.value = null
     error.value = null
+    pendingFeedback.value = null
   }
 
   return {
@@ -54,6 +70,7 @@ export function useFeedbackFlow() {
     loading,
     result,
     error,
+    pendingFeedback,
     updateField,
     submit,
     reset,

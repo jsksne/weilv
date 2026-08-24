@@ -23,6 +23,7 @@ const props = defineProps<{
   entry: DailyTaskEntry
   controller: DailyTasksController
   copy: TodayContract['feedbackCopy']
+  canReplace?: boolean
 }>()
 
 const { play, delay, dispose } = useMotionPulse()
@@ -118,6 +119,10 @@ function animateReplace(): void {
   })
 }
 
+function notify(message: string): void {
+  if (message) push(message)
+}
+
 function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace'): void {
   const slotId = props.entry.slotId
   const method = act === 'done' ? 'complete' : act
@@ -126,27 +131,27 @@ function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace')
 
   if (act === 'start') {
     pulseCard(700, v => `translateY(${-3 * v}px)`)
-    push(props.copy.start)
+    notify(props.copy.start)
     return
   }
   if (act === 'done') {
     playCompletionFx()
     pulseCard(950, v => `scale(${1 + 0.02 * v})`)
-    push(props.copy.done)
+    notify(props.copy.done)
     return
   }
   if (act === 'partial') {
     pulseCard(700, v => `scale(${1 + 0.012 * v})`)
-    push(props.copy.partial)
+    notify(props.copy.partial)
     return
   }
   if (act === 'skip') {
-    push(props.copy.skip)
+    notify(props.copy.skip)
     return
   }
   if (act === 'replace') {
     animateReplace()
-    push(props.copy.replace)
+    notify(props.copy.replace)
   }
   /* restore：原型无反馈 */
 }
@@ -173,13 +178,25 @@ onUnmounted(dispose)
     <div class="task-actions">
       <template v-if="entry.actions === 'initial'">
         <button class="btn btn-primary" type="button" data-act="start" @click="run('start')">开始</button>
-        <button class="btn btn-ghost" type="button" data-act="replace" @click="run('replace')">换一朵</button>
+        <button
+          v-if="canReplace"
+          class="btn btn-ghost"
+          type="button"
+          data-act="replace"
+          @click="run('replace')"
+        >换一朵</button>
         <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
       </template>
       <template v-else-if="entry.actions === 'active'">
         <button class="btn btn-ok" type="button" data-act="done" @click="run('done')">✓ 完成啦</button>
         <button class="btn btn-ghost" type="button" data-act="partial" @click="run('partial')">部分完成</button>
-        <button class="btn btn-ghost" type="button" data-act="replace" @click="run('replace')">换一朵</button>
+        <button
+          v-if="canReplace"
+          class="btn btn-ghost"
+          type="button"
+          data-act="replace"
+          @click="run('replace')"
+        >换一朵</button>
         <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
       </template>
       <template v-else-if="entry.actions === 'restore'">

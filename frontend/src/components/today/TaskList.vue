@@ -24,6 +24,7 @@ defineProps<{
       :entry="entry"
       :controller="controller"
       :copy="model.feedbackCopy"
+      :can-replace="model.state.mode === 'demo'"
     />
   </div>
 </template>

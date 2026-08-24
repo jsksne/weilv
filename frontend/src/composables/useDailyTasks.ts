@@ -1,4 +1,4 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 
 import type { TodayContract, TodayTaskView } from '@/contracts'
 
@@ -34,6 +34,13 @@ export interface DailyTaskEntry {
   actions: TaskActionStage
 }
 
+export type PendingFeedbackStatus = 'completed' | 'partially_completed' | 'skipped'
+
+export interface PendingFeedback {
+  slotId: string
+  completionStatus: PendingFeedbackStatus
+}
+
 export interface DailyTasksController {
   entries: Readonly<Ref<readonly DailyTaskEntry[]>>
   completed: Readonly<Ref<number>>
@@ -42,6 +49,7 @@ export interface DailyTasksController {
   dockedProgressNote: Readonly<Ref<string>>
   mood: Readonly<Ref<string>>
   availableMinutes: Readonly<Ref<number>>
+  pendingFeedback: Readonly<Ref<readonly PendingFeedback[]>>
   start: (slotId: string) => TaskActionResult
   complete: (slotId: string) => TaskActionResult
   partial: (slotId: string) => TaskActionResult
@@ -60,23 +68,35 @@ export interface UseDailyTasksOptions {
 const ACTION_COOLDOWN_MS = 450
 
 export function useDailyTasks(
-  fixture: TodayContract,
+  input: MaybeRefOrGetter<TodayContract>,
   options: UseDailyTasksOptions = {},
 ): DailyTasksController {
   const now = options.now ?? (() => performance.now())
+  const model = computed(() => toValue(input))
 
-  const entries = ref<readonly DailyTaskEntry[]>(
-    fixture.tasks.map((task, index) => ({
+  const entries = ref<readonly DailyTaskEntry[]>([])
+  const mood = ref('')
+  const availableMinutes = ref(0)
+  const pendingFeedback = ref<readonly PendingFeedback[]>([])
+  let replacePointer = 0
+  const lastActionAt = new Map<string, number>()
+
+  function reset(next: TodayContract): void {
+    entries.value = next.tasks.map((task, index) => ({
       slotId: `today-slot-${index}`,
       task,
       interaction: 'pending',
       actions: 'initial',
-    })),
-  )
-  const mood = ref(fixture.defaultMood)
-  const availableMinutes = ref(fixture.defaultTimeMinutes)
-  let replacePointer = 0
-  const lastActionAt = new Map<string, number>()
+    }))
+    mood.value = next.defaultMood
+    availableMinutes.value = next.defaultTimeMinutes
+    pendingFeedback.value = []
+    replacePointer = 0
+    lastActionAt.clear()
+  }
+
+  reset(model.value)
+  watch(model, reset)
 
   const completed = computed(
     () => entries.value.filter(entry => entry.interaction === 'done' || entry.interaction === 'partial').length,
@@ -85,14 +105,16 @@ export function useDailyTasks(
   /* 契约为固定 4 元组（TodayProgressNotes），Math.min 保证索引 ∈ [0,3]，
      访问必为 string；noUncheckedIndexedAccess 下需显式断言收窄 */
   const heroProgressNote = computed(
-    () => fixture.progressNotes.hero[Math.min(completed.value, fixture.progressNotes.hero.length - 1)]!,
+    () => model.value.progressNotes.hero[Math.min(completed.value, model.value.progressNotes.hero.length - 1)] ?? '当前进度不可用',
   )
   const dockedProgressNote = computed(
-    () => fixture.progressNotes.docked[Math.min(completed.value, fixture.progressNotes.docked.length - 1)]!,
+    () => model.value.progressNotes.docked[Math.min(completed.value, model.value.progressNotes.docked.length - 1)] ?? '当前进度不可用',
   )
 
   /* low 心情换卡按初始槽位定位（原型 data-idx="1" 是位置语义） */
-  const lowMoodSlotIndex = fixture.tasks.findIndex(task => task.id === fixture.lowMoodSwap.taskId)
+  const lowMoodSlotIndex = computed(
+    () => model.value.tasks.findIndex(task => task.id === model.value.lowMoodSwap.taskId),
+  )
 
   function findEntry(slotId: string): DailyTaskEntry | undefined {
     return entries.value.find(entry => entry.slotId === slotId)
@@ -127,6 +149,13 @@ export function useDailyTasks(
     if (entry.interaction === 'done' || entry.interaction === 'partial') return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
     updateEntry(slotId, { interaction, actions: 'completed' })
+    pendingFeedback.value = [
+      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
+      {
+        slotId,
+        completionStatus: interaction === 'done' ? 'completed' : 'partially_completed',
+      },
+    ]
     return 'applied'
   }
 
@@ -143,6 +172,10 @@ export function useDailyTasks(
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
     updateEntry(slotId, { interaction: 'skipped', actions: 'restore' })
+    pendingFeedback.value = [
+      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
+      { slotId, completionStatus: 'skipped' },
+    ]
     return 'applied'
   }
 
@@ -151,6 +184,7 @@ export function useDailyTasks(
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
     updateEntry(slotId, { interaction: 'pending', actions: 'initial' })
+    pendingFeedback.value = pendingFeedback.value.filter(item => item.slotId !== slotId)
     return 'applied'
   }
 
@@ -162,8 +196,9 @@ export function useDailyTasks(
   function replace(slotId: string): TaskActionResult {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
+    if (model.value.replacePool.length === 0) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    const next = fixture.replacePool[replacePointer % fixture.replacePool.length]!
+    const next = model.value.replacePool[replacePointer % model.value.replacePool.length]!
     replacePointer += 1
     updateEntry(slotId, { task: next, actions: 'initial' })
     return 'applied'
@@ -176,8 +211,8 @@ export function useDailyTasks(
   function applyMood(value: string): TaskActionResult {
     mood.value = value
     if (value !== 'low') return 'applied'
-    const swap = fixture.lowMoodSwap
-    const target = entries.value[lowMoodSlotIndex]
+    const swap = model.value.lowMoodSwap
+    const target = entries.value[lowMoodSlotIndex.value]
     if (target && target.interaction === 'pending') {
       updateEntry(target.slotId, {
         task: {
@@ -204,6 +239,7 @@ export function useDailyTasks(
     dockedProgressNote,
     mood,
     availableMinutes,
+    pendingFeedback,
     start,
     complete,
     partial,

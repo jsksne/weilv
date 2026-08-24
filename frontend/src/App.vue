@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import AppShell from '@/layouts/AppShell.vue'
 import TodayView from '@/views/TodayView.vue'
 import AssistantView from '@/views/AssistantView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 import LegacyConsole from '@/views/LegacyConsole.vue'
 import { shellFixture } from '@/data/fixtures/shell.fixture'
 import { todayFixture } from '@/data/fixtures/today.fixture'
 import { assistantFixture } from '@/data/fixtures/assistant.fixture'
+import { onboardingFixture } from '@/data/fixtures/onboarding.fixture'
+import { profileFixture } from '@/data/fixtures/profile.fixture'
 import { useDailyTasks } from '@/composables/useDailyTasks'
+import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
 import type { ShellContract } from '@/contracts'
 
 /**
@@ -27,6 +32,13 @@ const legacyMode =
 
 /* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从这里取数 */
 const daily = useDailyTasks(todayFixture)
+const onboardingVisible = ref(false)
+
+onMounted(() => {
+  if (!legacyMode && !hasDemoOnboardingCompleted(onboardingFixture.storageKey)) {
+    onboardingVisible.value = true
+  }
+})
 
 /* 原型 navDate：冻结「4 月 22 日」+ 按当前日期计算星期 */
 const frozenDateLabel = (): string => {
@@ -47,33 +59,33 @@ const shell = computed<ShellContract>(() => ({
   toastExample: shellFixture.toastExample,
 }))
 
-/* 未迁移页面：最小 placeholder/unavailable 结构态，不填业务数据 */
-const pendingViews = [
-  { id: 'profile', label: '我的画像' },
-  { id: 'weekly', label: '周度变化' },
-] as const
+function openOnboarding(): void {
+  onboardingVisible.value = true
+}
+
+function closeOnboarding(): void {
+  onboardingVisible.value = false
+}
 </script>
 
 <template>
-  <AppShell v-if="!legacyMode" :shell="shell">
+  <AppShell v-if="!legacyMode" :shell="shell" @replay="openOnboarding">
     <template #today>
       <TodayView :model="todayFixture" :daily="daily" />
     </template>
     <template #assistant>
       <AssistantView :model="assistantFixture" />
     </template>
-    <template v-for="view in pendingViews" :key="view.id" #[view.id]>
-      <div class="card" :data-view-pending="view.id" style="padding: 26px 30px; margin-top: 26px">
-        <h3 style="font-family: var(--disp); font-weight: 600; letter-spacing: 1px">
-          {{ view.label }}
-        </h3>
-        <p style="margin-top: 10px; font-size: 13px; color: var(--ink-2)">
-          该页面尚未迁移（后续 Sprint），此处为结构性占位，无演示数据。
-        </p>
-      </div>
+    <template #profile>
+      <ProfileView :model="profileFixture" />
     </template>
   </AppShell>
   <AppShell v-else>
     <LegacyConsole />
   </AppShell>
+  <OnboardingFlow
+    v-if="onboardingVisible && !legacyMode"
+    :model="onboardingFixture"
+    @complete="closeOnboarding"
+  />
 </template>

@@ -144,7 +144,7 @@ describe('visual system: css entrypoint', () => {
 
     /* 冻结 Shell 资产按原型 <style> 源顺序激活；legacy 必须最先导入，
        否则其 body{font/color/background} 会盖掉冻结视觉（同特异性后者胜）。
-       Sprint 4 起 today.css 随 Today 页迁移正式激活 */
+       Sprint 4/5/6：Today、Assistant、Profile 与 Onboarding 页面正式激活 */
     const activated = [
       'reset',
       'tokens',
@@ -158,6 +158,8 @@ describe('visual system: css entrypoint', () => {
       'layout',
       'today',
       'assistant',
+      'profile',
+      'onboarding',
       'accessibility',
     ] as const
     const imports = [...entry.matchAll(/@import '\.\/([a-z-]+)\.css'/g)].map(m => m[1])
@@ -165,12 +167,12 @@ describe('visual system: css entrypoint', () => {
     expect(entry.indexOf("@import '../style.css'")).toBeLessThan(entry.indexOf("@import './reset.css'"))
   })
 
-  it('keeps page-specific CSS unactivated until the page sprints', () => {
+  it('keeps Weekly CSS unactivated until the Weekly page sprint', () => {
     const entry = readFileSync(join(stylesDir, 'index.css'), 'utf8')
     expect(entry).toContain("@import './today.css'")
-    for (const name of ['profile', 'weekly', 'onboarding']) {
-      expect(entry).not.toContain(`@import './${name}.css'`)
-    }
+    expect(entry).toContain("@import './profile.css'")
+    expect(entry).toContain("@import './onboarding.css'")
+    expect(entry).not.toContain("@import './weekly.css'")
   })
 
   it('every split file exists on disk and is non-empty', () => {

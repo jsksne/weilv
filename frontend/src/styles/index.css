@@ -27,9 +27,11 @@
 @import './navigation.css';
 @import './layout.css';
 
-/* Sprint 4/5：Today 与 Assistant 页面 CSS 正式激活；
-   profile / weekly / onboarding 仍不激活 */
+/* Sprint 6：Today、Assistant、Profile 与 Onboarding 正式激活；
+   weekly 保持未激活 */
 @import './today.css';
 @import './assistant.css';
+@import './profile.css';
+@import './onboarding.css';
 
 @import './accessibility.css';

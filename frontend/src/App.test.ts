@@ -36,15 +36,15 @@ describe('App shell runtime (default)', () => {
     expect(wrapper.findAll('.task-card')).toHaveLength(3)
   })
 
-  it('renders Assistant and keeps later views as structural placeholders', async () => {
+  it('renders Assistant and the migrated Profile view', async () => {
     resetUrl()
     const wrapper = mount(App)
     await flushPromises()
 
     expect(wrapper.get('[data-view="assistant"] .ask-wrap').exists()).toBe(true)
     expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('非真实 Agent trace')
-    expect(wrapper.get('[data-view-pending="profile"]').text()).toContain('我的画像')
-    expect(wrapper.get('[data-view-pending="weekly"]').text()).toContain('周度变化')
+    expect(wrapper.get('[data-view="profile"] [data-testid="profile-view"]').exists()).toBe(true)
+    expect(wrapper.findAll('[data-view="profile"] [data-profile-section]')).toHaveLength(4)
   })
 
   it('never touches the API in the demo runtime', async () => {

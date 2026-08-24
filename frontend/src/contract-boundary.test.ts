@@ -41,16 +41,18 @@ describe('Sprint 2R contract boundary', () => {
     expect(source).not.toMatch(/recommendation|health|memory|agentic|trace/i)
   })
 
-  it('activates the Sprint 4 visual assets but keeps unmigrated page CSS out of the entrypoint', () => {
+  it('activates the Sprint 6 visual assets while keeping Weekly CSS out of the entrypoint', () => {
     const entry = readFileSync(join(srcDir, 'styles', 'index.css'), 'utf8')
 
     expect(entry).toContain("@import '../style.css'")
     for (const asset of ['tokens', 'typography', 'glass', 'animations', 'aurora', 'effects', 'accessibility']) {
       expect(entry).toContain(`@import './${asset}.css'`)
     }
-    /* Sprint 4/5：today.css 与 assistant.css 随页面迁移正式激活 */
+    /* Sprint 4/5/6：Today、Assistant 与 Profile/Onboarding 页面正式激活 */
     expect(entry).toContain("@import './today.css'")
     expect(entry).toContain("@import './assistant.css'")
-    expect(entry).not.toMatch(/@import ['"]\.\/(profile|weekly|onboarding)\.css/)
+    expect(entry).toContain("@import './profile.css'")
+    expect(entry).toContain("@import './onboarding.css'")
+    expect(entry).not.toContain("@import './weekly.css'")
   })
 })

@@ -119,3 +119,25 @@ class QuestionnaireResponse(BaseModel):
 class QuestionnaireSchemaResponse(BaseModel):
     questionnaire_id: str
     questions: list[dict[str, Any]] = Field(default_factory=list)
+
+
+TaskAction = Literal[
+    "started",
+    "completed",
+    "partially_completed",
+    "skipped",
+    "replaced",
+    "restored",
+]
+
+
+class TaskEventRequest(StrictRequest):
+    action: TaskAction
+
+
+class TaskEventResponse(BaseModel):
+    status: str
+    recommendation_id: str
+    task_id: str
+    action: str
+    recorded_at: str

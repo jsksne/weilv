@@ -21,9 +21,12 @@ from weilv.api.schemas import (
     QuestionnaireSchemaResponse,
     RecommendationRequest,
     RecommendationResponse,
+    TaskEventRequest,
+    TaskEventResponse,
     TaskFeedbackRequest,
     TaskFeedbackResponse,
 )
+from weilv.api.task_events import append_task_event
 from weilv.basic_rag import BasicRagRequest
 from weilv.elasticsearch_indices import ensure_stage_one_indices, ensure_user_memory_indices
 from weilv.feedback_loop import (
@@ -364,4 +367,37 @@ def submit_task_feedback(
         "memory_persisted": memory_persisted,
         "memory_id": memory_id,
         "confidence": confidence,
+    }
+
+
+@app.post(
+    "/api/v1/users/{user_id}/recommendations/{recommendation_id}/events",
+    response_model=TaskEventResponse,
+)
+def record_task_event(
+    user_id: str,
+    recommendation_id: str,
+    payload: TaskEventRequest,
+    request: Request,
+):
+    client = _dependency(request, "es_client")
+    try:
+        session = get_recommendation_log(client, user_id, recommendation_id)
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    if session is None or not session.get("selected_task_id"):
+        raise HTTPException(status_code=404, detail="recommendation_not_found")
+
+    now = datetime.now(UTC).isoformat()
+    event = {"action": payload.action, "recorded_at": now}
+    try:
+        append_task_event(client, session, event)
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    return {
+        "status": "recorded",
+        "recommendation_id": recommendation_id,
+        "task_id": session["selected_task_id"],
+        "action": payload.action,
+        "recorded_at": now,
     }

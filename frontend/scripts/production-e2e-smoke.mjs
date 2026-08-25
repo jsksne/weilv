@@ -125,25 +125,54 @@ await new Promise(r => setTimeout(r, 1500))
 result.weeklyView = await page.evaluate(() => !!document.querySelector('[data-testid="weekly-view"]'))
 result.weeklyUnavailable = await page.evaluate(() => !!document.querySelector('[data-testid="weekly-unavailable"]'))
 
-// Assistant（真实 agentic）
+// Assistant（真实 agentic，等待真实新响应完成或真实 error）
 await click('nav .tab[data-view="assistant"]')
 await new Promise(r => setTimeout(r, 800))
 await page.type('[data-testid="chat-input"]', '我写作业快一个小时了，现在有10分钟休息。')
 await click('[data-testid="chat-submit"]')
-await page.waitForFunction(
-  () => document.querySelectorAll('.ask-message').length >= 2 || document.querySelector('[data-testid="agentic-error"]'),
-  { timeout: 90000 },
-).catch(() => {})
-await new Promise(r => setTimeout(r, 1000))
+let assistantDone = false
+try {
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="answer-card"]') || document.querySelector('[data-testid="agentic-error"]'),
+    { timeout: 90000 },
+  )
+  assistantDone = true
+} catch {
+  assistantDone = false
+}
+await new Promise(r => setTimeout(r, 500))
 result.assistantReply = await page.evaluate(() => {
   const error = document.querySelector('[data-testid="agentic-error"]')
   if (error) return `ERROR: ${error.textContent.slice(0, 120)}`
   return document.querySelector('.ask-wrap')?.innerText.slice(0, 200) ?? null
 })
+result.assistantDone = assistantDone
 
 result.fatalErrors = consoleMessages.filter(
   m => m.startsWith('error') && !m.includes('ERR_CONNECTION_REFUSED') && !m.includes('Failed to load resource'),
 )
 result.network = network
+
+/* ---------- hard gate assertions ---------- */
+const failures = []
+const code = (path, status) => network.find(line => line.includes(path) && line.includes(`-> ${status}`))
+if (result.mode !== 'PRODUCTION') failures.push('mode !== PRODUCTION')
+if (result.taskCards < 1) failures.push('taskCards < 1 (B1)')
+if (!code('/api/v1/recommendations', 200) && !code('/api/v1/recommend/agentic', 200)) failures.push('no recommendation 200')
+if (!network.some(line => line.includes('/events') && line.includes('-> 200'))) failures.push('task event not 200 (B2)')
+if (!code('/memories', 200)) failures.push('memories not 200 (B4)')
+if (!code('/weekly', 200)) failures.push('weekly not 200 (B5)')
+if (!network.some(line => line.includes('/recommend/agentic') && line.includes('-> 200'))) failures.push('agentic not 200')
+if (!result.assistantDone) failures.push('assistant final answer not rendered (or error state)')
+if (result.fatalErrors.length > 0) failures.push(`fatal console errors: ${result.fatalErrors.join(' | ')}`)
+if (result.assistantReply && result.assistantReply.startsWith('ERROR:')) failures.push(`assistant error: ${result.assistantReply}`)
+
 console.log(JSON.stringify(result, null, 2))
 await browser.close()
+if (failures.length > 0) {
+  console.error('PRODUCTION E2E GATE FAILED:')
+  for (const failure of failures) console.error(`  - ${failure}`)
+  process.exitCode = 1
+} else {
+  console.log('PRODUCTION E2E GATE: PASS')
+}

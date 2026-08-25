@@ -1,0 +1,61 @@
+{
+  "schema_version": "1",
+  "provenance_scope": "poc_unreviewed",
+  "document_id": "SRC-001",
+  "source_metadata": {
+    "title": "学生常见病多病共防技术指南",
+    "source_org": "国家疾病预防控制局",
+    "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+    "published_at": "2024-05-06",
+    "retrieved_at": "2026-08-10",
+    "document_type": "html",
+    "raw_source_content_sha256": "514077DD88AF9A872881C07A5B945CE606EAEE16EB9284C02D25488D84716651",
+    "raw_source_local_path": "data/raw/source_documents/SRC-001-student-common-diseases-2024.html",
+    "review_status": "source_verified",
+    "conversion_status": "converted",
+    "allowed_for_knowledge_index": false
+  },
+  "external_line_source": {
+    "filename": "SRC-001-student-common-diseases-2024.md",
+    "sha256": "124769dba0c276bb1ea9414abf01750a6da4afae838eba767167f3f9321e1180",
+    "line_count": 209,
+    "not_redistributed": true
+  },
+  "chunks": [
+    {
+      "chunk_id": "KC-SRC-001-001",
+      "document_id": "SRC-001",
+      "source_locator": "data/processed/source_documents/SRC-001-student-common-diseases-2024.md:L105-L105",
+      "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+      "content_sha256": "1bb2ac95fdd49246da71de56aed05a8f03382838c38cb84b9ed88c11f6f3a163"
+    },
+    {
+      "chunk_id": "KC-SRC-001-002",
+      "document_id": "SRC-001",
+      "source_locator": "data/processed/source_documents/SRC-001-student-common-diseases-2024.md:L107-L107",
+      "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+      "content_sha256": "9152bf7dc322492dbc5fa41f6e5d1ecab0990da49f276ae4535cbf1c25d4b6ef"
+    },
+    {
+      "chunk_id": "KC-SRC-001-003",
+      "document_id": "SRC-001",
+      "source_locator": "data/processed/source_documents/SRC-001-student-common-diseases-2024.md:L133-L133",
+      "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+      "content_sha256": "0b32a686d2fd08fbae0a49ec6db3b62113511e084ca8749e550ebbe1d0187949"
+    },
+    {
+      "chunk_id": "KC-SRC-001-004",
+      "document_id": "SRC-001",
+      "source_locator": "data/processed/source_documents/SRC-001-student-common-diseases-2024.md:L137-L137",
+      "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+      "content_sha256": "9e78408c0d546f18507625266ad922701d8d3cd502c172512555638df42060ee"
+    },
+    {
+      "chunk_id": "KC-SRC-001-005",
+      "document_id": "SRC-001",
+      "source_locator": "data/processed/source_documents/SRC-001-student-common-diseases-2024.md:L141-L141",
+      "source_url": "https://www.ndcpa.gov.cn/jbkzzx/c100014/common/content/content_1787407022636773376.html",
+      "content_sha256": "157e3fa22da331c33af87976a6c52e49cac6c982f28f78589f2b0080cf443a63"
+    }
+  ]
+}

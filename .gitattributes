@@ -1,0 +1,6 @@
+# These byte-hashed frozen inputs must check out with LF on every platform.
+evaluation/datasets/personal_rag_users_v1.jsonl text eol=lf
+evaluation/datasets/personal_rag_independent_scenarios_v1.jsonl text eol=lf
+evaluation/datasets/personal_rag_independent_matrix_v1.jsonl text eol=lf
+evaluation/datasets/retrieval_gold_v1.jsonl text eol=lf
+data/metadata/health_knowledge_v1.jsonl text eol=lf

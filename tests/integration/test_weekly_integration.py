@@ -14,12 +14,20 @@ def _client_or_skip():
     return client
 
 
-def _patch_log_index(monkeypatch, prefix):
+def _patch_log_index(monkeypatch, client, prefix):
+    from weilv.elasticsearch_indices import get_user_memory_index_definitions
     from weilv import interaction_logs
+    from weilv.api import task_events
     from weilv.api import weekly_queries
 
     index = f"{prefix}interaction_logs_v1"
+    client.indices.create(
+        index=index,
+        settings={"number_of_shards": 1, "number_of_replicas": 0},
+        mappings=get_user_memory_index_definitions()["interaction_logs_v1"]["mappings"],
+    )
     monkeypatch.setattr(interaction_logs, "INTERACTION_LOG_INDEX", index)
+    monkeypatch.setattr(task_events, "INTERACTION_LOG_INDEX", index)
     monkeypatch.setattr(weekly_queries, "INTERACTION_LOG_INDEX", index)
     return index
 
@@ -30,7 +38,7 @@ def test_weekly_aggregation_over_real_interaction_logs(monkeypatch):
 
     client = _client_or_skip()
     prefix = f"weilv_weekly_{uuid4().hex}_"
-    log_index = _patch_log_index(monkeypatch, prefix)
+    log_index = _patch_log_index(monkeypatch, client, prefix)
     monkeypatch.setattr(
         api,
         "run_personal_rag",
@@ -46,7 +54,7 @@ def test_weekly_aggregation_over_real_interaction_logs(monkeypatch):
     user_id = "poc-weekly-user"
     try:
         api.app.state.es_client = client
-        api.app.state.api_key = None
+        api.app.state.api_key = "test-api-key"
         http = TestClient(api.app)
         recommendation = http.post(
             "/api/v1/recommendations",

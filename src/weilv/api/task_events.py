@@ -17,4 +17,5 @@ def append_task_event(client, session: dict[str, Any], event: dict[str, Any]) ->
         index=INTERACTION_LOG_INDEX,
         id=session["recommendation_id"],
         doc={"task_events": events},
+        refresh="wait_for",
     )

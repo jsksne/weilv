@@ -366,5 +366,5 @@ def forget_memory(client, user_id: str, memory_id: str) -> dict[str, str]:
             "reason_code": "memory_owner_mismatch",
         }
 
-    client.delete(index=USER_MEMORY_INDEX, id=memory_id)
+    client.delete(index=USER_MEMORY_INDEX, id=memory_id, refresh="wait_for")
     return {"status": "forgotten", "memory_id": memory_id}

@@ -693,11 +693,12 @@ def test_invalid_schema_schema_ok_false_blocks_formal(monkeypatch, workdir):
              "raw_rows": 72, "final_rows": 72}
     # the REAL run_formal is used: it must fail closed on schema_ok=False
     # before writing any run directory or executing the model
+    existing_formal_runs = set(Path("evaluation/runs").glob("*_stage9_formal"))
     _formal_cli_run(monkeypatch, workdir, cohort, gates, stub_run_formal=False)
     with pytest.raises(RuntimeError) as excinfo:
         runner_module._cli()
     assert "blocked by integrity gates" in str(excinfo.value)
-    assert not list(Path("evaluation/runs").glob("*_stage9_formal"))
+    assert set(Path("evaluation/runs").glob("*_stage9_formal")) == existing_formal_runs
 
 
 def test_formal_gate_wiring_tests_never_run_real_computation(monkeypatch, workdir):
@@ -705,10 +706,11 @@ def test_formal_gate_wiring_tests_never_run_real_computation(monkeypatch, workdi
     cohort = _synthetic_cohort(users=2, days=12, slots=3)
     gates = {"heartsteps_hashes": "PASS", "duplicates": 0, "users": 2,
              "raw_rows": 72, "final_rows": 72}
+    existing_formal_runs = set(Path("evaluation/runs").glob("*_stage9_formal"))
     captured = _formal_cli_run(monkeypatch, workdir, cohort, gates)
     assert runner_module._cli() == 0
     # stubs did the work: no immutable formal run directory may exist
-    assert not list(Path("evaluation/runs").glob("*_stage9_formal"))
+    assert set(Path("evaluation/runs").glob("*_stage9_formal")) == existing_formal_runs
     assert captured["integrity_gates"]["schema_ok"] is True
 
 

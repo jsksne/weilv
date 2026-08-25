@@ -6,7 +6,7 @@
 ## 前置
 
 - Python venv（`.venv`）已装项目依赖（elasticsearch>=8.19,<9 客户端）。
-- 本机 `.env`：`DASHSCOPE_API_KEY=...`、`ELASTICSEARCH_URL=http://127.0.0.1:9200`（POC 默认）。
+- 进程环境（或本机未跟踪的 `.env`）必须提供 `DASHSCOPE_API_KEY`；`ELASTICSEARCH_URL=http://127.0.0.1:9200` 为 POC 默认。
 - Elasticsearch 8.19.18 Windows ZIP 已位于 `.runtime/elasticsearch-8.19.18`（含内置 JDK）。
 
 ## 1. 启动 Elasticsearch

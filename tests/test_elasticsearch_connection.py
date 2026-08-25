@@ -83,6 +83,7 @@ def test_runtime_environment_diagnostics_never_prints_secret_values():
             "DASHSCOPE_API_KEY": "dashscope-secret",
             "ELASTICSEARCH_URL": "https://elastic-user:es-secret@cluster.example:9243/path?token=x",
             "ELASTICSEARCH_API_KEY": "elastic-api-secret",
+            "WEILV_ELASTICSEARCH_SERVERLESS": "1",
             "WEILV_BOOTSTRAP_ON_START": "1",
         }
     )
@@ -92,6 +93,7 @@ def test_runtime_environment_diagnostics_never_prints_secret_values():
         "DASHSCOPE_API_KEY=PRESENT",
         "ELASTICSEARCH_URL=PRESENT",
         "ELASTICSEARCH_API_KEY=PRESENT",
+        "WEILV_ELASTICSEARCH_SERVERLESS=PRESENT",
         "WEILV_BOOTSTRAP_ON_START=PRESENT",
         "ELASTICSEARCH_URL_TARGET=https://cluster.example",
     ]

@@ -53,6 +53,41 @@ def test_bootstrap_indexes_all_formal_tasks_idempotently_with_frozen_mapping(mon
     assert [action["index"]["_id"] for action in client.bulk_calls[1]["operations"][::2]] == ids
 
 
+def test_bootstrap_micro_tasks_uses_serverless_create_bodies(monkeypatch):
+    from scripts import bootstrap_micro_tasks as bootstrap
+
+    class Indices:
+        def __init__(self):
+            self.names = set()
+            self.create_calls = []
+
+        def exists(self, *, index):
+            return index in self.names
+
+        def create(self, **kwargs):
+            self.names.add(kwargs["index"])
+            self.create_calls.append(kwargs)
+
+    class Client:
+        def __init__(self):
+            self.indices = Indices()
+
+        def bulk(self, **kwargs):
+            return {"errors": False, "items": []}
+
+    monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "1")
+    monkeypatch.setattr(
+        bootstrap,
+        "embed_texts",
+        lambda values, api_key, text_type: [[0.1] * 1024 for _ in values],
+    )
+
+    client = Client()
+    assert bootstrap.bootstrap_micro_tasks(client, "test-key") == 23
+    assert len(client.indices.create_calls) == 3
+    assert all("settings" not in call for call in client.indices.create_calls)
+
+
 def test_bootstrap_rejects_wrong_embedding_dimension(monkeypatch):
     from scripts import bootstrap_micro_tasks as bootstrap
 

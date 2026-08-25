@@ -1,5 +1,34 @@
 """Elasticsearch index definitions for the current retrieval POC."""
 
+import os
+
+_SERVERLESS_TRUE_VALUES = frozenset({"1", "true", "yes"})
+_STANDARD_INDEX_SETTINGS = {"number_of_shards": 1, "number_of_replicas": 0}
+
+
+def elasticsearch_serverless_enabled(environ: dict[str, str] | None = None) -> bool:
+    """Return whether index creation must target Elastic Serverless."""
+
+    values = os.environ if environ is None else environ
+    return values.get("WEILV_ELASTICSEARCH_SERVERLESS", "").strip().lower() in _SERVERLESS_TRUE_VALUES
+
+
+def index_create_kwargs(
+    index_name: str,
+    definition: dict,
+    *,
+    serverless: bool | None = None,
+) -> dict:
+    """Build create-index arguments without sending unsupported Serverless settings."""
+
+    if serverless is None:
+        serverless = elasticsearch_serverless_enabled()
+
+    kwargs = {"index": index_name, "mappings": definition["mappings"]}
+    if not serverless:
+        kwargs["settings"] = _STANDARD_INDEX_SETTINGS.copy()
+    return kwargs
+
 
 def get_index_definitions() -> dict[str, dict]:
     return {
@@ -182,11 +211,7 @@ def ensure_user_memory_indices(client, prefix: str = "") -> list[str]:
         index_name = f"{prefix}{logical_name}"
         if client.indices.exists(index=index_name):
             continue
-        client.indices.create(
-            index=index_name,
-            settings={"number_of_shards": 1, "number_of_replicas": 0},
-            mappings=definition["mappings"],
-        )
+        client.indices.create(**index_create_kwargs(index_name, definition))
         created.append(index_name)
     return created
 
@@ -200,11 +225,7 @@ def ensure_stage_one_indices(client, prefix: str = "") -> list[str]:
         if client.indices.exists(index=index_name):
             continue
 
-        client.indices.create(
-            index=index_name,
-            settings={"number_of_shards": 1, "number_of_replicas": 0},
-            mappings=definition["mappings"],
-        )
+        client.indices.create(**index_create_kwargs(index_name, definition))
         created.append(index_name)
 
     return created
@@ -217,9 +238,5 @@ def ensure_health_knowledge_index(client, index_name: str) -> bool:
         return False
 
     definition = get_index_definitions()["health_knowledge_v1"]
-    client.indices.create(
-        index=index_name,
-        settings={"number_of_shards": 1, "number_of_replicas": 0},
-        mappings=definition["mappings"],
-    )
+    client.indices.create(**index_create_kwargs(index_name, definition))
     return True

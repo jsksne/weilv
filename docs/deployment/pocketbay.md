@@ -9,6 +9,7 @@ The PocketBay deployment is one Docker-backed Web Service: the image builds the 
 - `DASHSCOPE_API_KEY`
 - `ELASTICSEARCH_URL` (an externally managed Elasticsearch 8.x endpoint)
 - One Elasticsearch authentication method: `ELASTICSEARCH_API_KEY`, or both `ELASTICSEARCH_USERNAME` and `ELASTICSEARCH_PASSWORD`
+- `WEILV_ELASTICSEARCH_SERVERLESS=1` when the selected Elastic Cloud deployment is Serverless
 
 TLS certificate verification stays enabled by default. Set `ELASTICSEARCH_CA_CERTS` only when the managed service requires a custom CA file; do not disable verification in production. Do not put secret values in source, Docker build arguments, or the Vue bundle.
 
@@ -19,6 +20,8 @@ PocketBay does not provide Elasticsearch. Use an externally managed Elasticsearc
 Build arguments are intentionally non-secret: `VITE_UI_MODE=production`, `VITE_USER_ID=competition-demo-user`, and `VITE_API_BASE_URL=/`.
 
 For the initial release only, set `WEILV_BOOTSTRAP_ON_START=1`. The image then runs the committed `bootstrap_micro_tasks.py` and `bootstrap_health_knowledge.py` before Uvicorn starts, creating the seven indices and loading 23 micro tasks plus 29 reviewed knowledge chunks. Disable this flag after bootstrap to avoid re-embedding data on later restarts or redeployments.
+
+Before deploying to Elastic Cloud Serverless, set `WEILV_ELASTICSEARCH_SERVERLESS=1` and run `python scripts/probe_elasticsearch_serverless.py` with the same runtime environment. The probe creates, maps, indexes, gets, and deletes one timestamped temporary index; it does not bootstrap production data.
 
 Use `/health` for the PocketBay health check. It is a local FastAPI response and does not call DashScope. Dynamic services may cold-start after PocketBay idle sleep; before a demo, visit `/health` and then open the homepage.
 

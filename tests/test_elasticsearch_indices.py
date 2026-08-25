@@ -216,3 +216,73 @@ def test_user_memory_indices_have_the_frozen_stage_four_contract():
             "reason": {"type": "text", "index": False},
         }
     }
+
+
+def test_standard_index_creation_body_keeps_the_frozen_infrastructure_settings(monkeypatch):
+    from weilv.elasticsearch_indices import get_index_definitions, index_create_kwargs
+
+    monkeypatch.delenv("WEILV_ELASTICSEARCH_SERVERLESS", raising=False)
+    definition = get_index_definitions()["health_knowledge_v1"]
+
+    assert index_create_kwargs("health_knowledge_v1", definition) == {
+        "index": "health_knowledge_v1",
+        "settings": {"number_of_shards": 1, "number_of_replicas": 0},
+        "mappings": definition["mappings"],
+    }
+
+
+def test_serverless_index_creation_omits_only_infrastructure_settings(monkeypatch):
+    from weilv.elasticsearch_indices import get_index_definitions, index_create_kwargs
+
+    monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "yes")
+    definition = get_index_definitions()["health_knowledge_v1"]
+
+    serverless = index_create_kwargs("health_knowledge_v1", definition)
+    standard = index_create_kwargs("health_knowledge_v1", definition, serverless=False)
+
+    assert "settings" not in serverless
+    assert serverless["mappings"] == standard["mappings"] == definition["mappings"]
+
+
+def test_all_seven_formal_indices_use_the_same_serverless_compatibility_rule(monkeypatch):
+    from weilv.elasticsearch_indices import ensure_stage_one_indices, ensure_user_memory_indices
+
+    class Indices:
+        def __init__(self):
+            self.calls = []
+
+        def exists(self, *, index):
+            return False
+
+        def create(self, **kwargs):
+            self.calls.append(kwargs)
+
+    client = type("Client", (), {"indices": Indices()})()
+    monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "1")
+
+    assert len(ensure_stage_one_indices(client)) == 3
+    assert len(ensure_user_memory_indices(client)) == 4
+    assert len(client.indices.calls) == 7
+    assert all("settings" not in call for call in client.indices.calls)
+    assert all(call["mappings"]["properties"] for call in client.indices.calls)
+
+
+def test_named_health_knowledge_index_uses_serverless_compatibility_rule(monkeypatch):
+    from weilv.elasticsearch_indices import ensure_health_knowledge_index
+
+    class Indices:
+        def __init__(self):
+            self.calls = []
+
+        def exists(self, *, index):
+            return False
+
+        def create(self, **kwargs):
+            self.calls.append(kwargs)
+
+    client = type("Client", (), {"indices": Indices()})()
+    monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "true")
+
+    assert ensure_health_knowledge_index(client, "weilv-serverless-probe") is True
+    assert "settings" not in client.indices.calls[0]
+    assert client.indices.calls[0]["mappings"]["properties"]["embedding"]["type"] == "dense_vector"

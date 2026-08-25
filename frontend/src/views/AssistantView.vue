@@ -31,7 +31,9 @@ const reply = computed<AssistantReply | null>(() =>
   isDemo.value ? demoFlow.reply.value : agenticFlow.reply.value,
 )
 const pipeline = computed<AssistantPipeline | null>(() =>
-  isDemo.value ? demoFlow.pipeline.value : reply.value?.pipeline ?? null,
+  isDemo.value
+    ? demoFlow.pipeline.value
+    : agenticFlow.pipeline.value ?? reply.value?.pipeline ?? null,
 )
 const busy = computed(() => (isDemo.value ? demoFlow.busy.value : agenticFlow.busy.value))
 const renderVersion = computed(() =>
@@ -40,6 +42,32 @@ const renderVersion = computed(() =>
 const error = computed(() => (isDemo.value ? null : agenticFlow.error.value))
 const log = ref<InstanceType<typeof ConversationLog> | null>(null)
 const followLatest = ref(true)
+
+/** B3：流式期间 reply 尚未落地，用占位 reply 驱动真实 live pipeline。 */
+const pendingReply: AssistantReply = {
+  id: 'streaming-trace',
+  scenario: null,
+  pipeline: {
+    analysis: {
+      id: 'analysis', title: '问题拆解', status: 'pending', statusLabel: '等待开始',
+      statusLabels: {}, visible: true, lead: null, items: [],
+    },
+    retrieval: {
+      id: 'retrieval', title: '知识检索', status: 'pending', statusLabel: '等待开始',
+      statusLabels: {}, visible: true, chunks: [],
+    },
+    answer: {
+      id: 'answer', title: '回答', status: 'pending', statusLabel: '等待开始',
+      statusLabels: {}, visible: false,
+    },
+  },
+  answer: [],
+  suggestedTask: null,
+  safety: null,
+  sources: [],
+  traceIsReal: true,
+  timing: null,
+}
 
 function isNearBottom(): boolean {
   if (typeof window === 'undefined' || typeof document === 'undefined') return true
@@ -100,7 +128,7 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
     </p>
     <ConversationLog ref="log" :greeting="model.greeting">
       <UserMessage v-if="question" :text="question" />
-      <AgentPipeline v-if="reply && pipeline" :reply="reply" :pipeline="pipeline" />
+      <AgentPipeline v-if="pipeline" :reply="reply ?? pendingReply" :pipeline="pipeline" />
     </ConversationLog>
     <ChatComposer :busy="busy" @submit="submitManual" />
     <p class="ask-foot">

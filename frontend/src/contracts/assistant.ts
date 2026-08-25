@@ -107,6 +107,29 @@ export interface AssistantReply {
   timing: AssistantTiming | null
 }
 
+/** B3：前端公开的粗粒度执行阶段（真实 backend 事件映射，非 fake）。 */
+export type AssistantTraceStage =
+  | 'accepted'
+  | 'safety'
+  | 'analysis'
+  | 'retrieval'
+  | 'ranking'
+  | 'memory'
+  | 'personalization'
+  | 'grounding'
+  | 'generation'
+  | 'completed'
+  | 'error'
+
+export type AssistantTraceStatus = 'active' | 'complete' | 'error'
+
+/** B3：一次 UI 级 trace 事件（由 DataSource 从 sanitized DTO 映射而来）。 */
+export interface AssistantTraceEvent {
+  stage: AssistantTraceStage
+  status: AssistantTraceStatus
+  label: string
+}
+
 export interface AssistantContract {
   state: UiState
   isDemo: boolean

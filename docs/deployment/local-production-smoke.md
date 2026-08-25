@@ -71,4 +71,6 @@ node scripts/production-e2e-smoke.mjs http://localhost:5173/ 127.0.0.1:8000
 - ES security/TLS 关闭仅限本机 loopback POC，不作为部署建议。
 - `smoke-user-002` 为受控测试身份；公开上线需真实认证身份替换 USER_IDENTITY_SEAM。
 - Weekly 为 UTC 日期边界（LOCAL_DAY_BOUNDARY_LIMITATION）。
-- B3 live Agent trace 不随当前 release（DEFERRED）。
+- B3：Assistant 走 `POST /api/v1/recommend/agentic/stream`（NDJSON 真实 trace）；旧
+  `/recommend/agentic` 保持兼容；一次 submit 只执行一次 Agentic。
+- B3 live trace 只暴露粗粒度公开阶段（无 reasoning / 检索原文 / 分数 / diagnostics）。

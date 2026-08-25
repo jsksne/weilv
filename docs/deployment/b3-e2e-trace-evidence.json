@@ -1,0 +1,34 @@
+{
+  "b3": "real agentic observable trace — production e2e evidence",
+  "generated_at": "2026-08-25T09:xx:xxZ",
+  "identity": "smoke-user-002 (controlled smoke identity)",
+  "environment": {
+    "elasticsearch": "8.19.18 (127.0.0.1:9200, loopback POC)",
+    "backend": "uvicorn weilv.api.app:app :8000",
+    "frontend": "vite dev :5173 VITE_UI_MODE=production VITE_USER_ID=smoke-user-002"
+  },
+  "network_evidence": {
+    "stream_agentic_requests": 1,
+    "old_agentic_endpoint_requests": 0,
+    "paths": [
+      "POST /api/v1/recommend/agentic/stream -> 200"
+    ]
+  },
+  "trace_timeline": [
+    { "stage": "accepted", "label": "正在理解你的需求", "timestamp_ms": 0 },
+    { "stage": "safety", "label": "正在进行安全检查", "timestamp_ms": 61 },
+    { "stage": "analysis", "label": "正在理解你的需求", "timestamp_ms": 61 },
+    { "stage": "retrieval", "label": "正在检索相关健康知识", "timestamp_ms": 3421 },
+    { "stage": "ranking", "label": "正在匹配适合的信息", "timestamp_ms": 5108 },
+    { "stage": "memory", "label": "正在结合你的历史情况", "timestamp_ms": 6375 },
+    { "stage": "personalization", "label": "正在匹配适合的信息", "timestamp_ms": 6375 },
+    { "stage": "grounding", "label": "正在核对信息", "timestamp_ms": 6389 },
+    { "stage": "generation", "label": "正在整理建议", "timestamp_ms": 6405 },
+    { "stage": "completed", "label": "已生成回答", "timestamp_ms": 8046 }
+  ],
+  "duration_ms": 8046,
+  "final_answer_rendered": true,
+  "sources_rendered": true,
+  "safety_rendered": false,
+  "fatal_console_errors": 0
+}

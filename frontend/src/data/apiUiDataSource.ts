@@ -7,10 +7,12 @@ import {
   getUserProfile,
   getWeekly,
   postTaskEvent,
+  streamAgenticRecommendation,
   upsertUserProfile,
 } from '@/api/client'
 import type { RecommendationRequest, TargetStage } from '@/api/types'
 import type {
+  AssistantTraceEvent,
   OnboardingSubmitAnswers,
   OnboardingSubmitResult,
   ProfileMemoryListContract,
@@ -182,6 +184,31 @@ export class ApiUiDataSource implements UiDataSource {
       )
     }
     return getAgenticRecommendation(request).then(adaptAgenticRecommendation)
+  }
+
+  /**
+   * B3：一次真实 Agentic 流式执行。onEvent 只携带 sanitized 公开阶段；
+   * 最终回答来自同一次执行（stream 的 completed 事件），不重复调用旧 endpoint。
+   */
+  async askAssistantStreaming(
+    question: string,
+    onEvent: (event: AssistantTraceEvent) => void,
+  ) {
+    if (!this.userId) {
+      throw new UiDataContextUnavailableError(
+        'Production Assistant context unavailable：缺少真实 userId。',
+      )
+    }
+    const request = await this.buildRecommendationRequest(question)
+    if (!request) {
+      throw new UiDataContextUnavailableError(
+        'Production Assistant context unavailable：缺少真实 Profile。',
+      )
+    }
+    const dto = await streamAgenticRecommendation(request, raw => {
+      onEvent({ stage: raw.stage, status: raw.status, label: raw.label })
+    })
+    return adaptAgenticRecommendation(dto, { traceIsReal: true })
   }
 
   async getProfile() {

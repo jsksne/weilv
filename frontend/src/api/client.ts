@@ -1,4 +1,5 @@
 import type {
+  AgentTraceEventDto,
   AgenticRecommendationResponse,
   FeedbackRequest,
   FeedbackResponse,
@@ -99,6 +100,61 @@ export function getAgenticRecommendation(
   body: RecommendationRequest,
 ): Promise<AgenticRecommendationResponse> {
   return request('/api/v1/recommend/agentic', jsonRequest('POST', body))
+}
+
+/**
+ * B3：POST + NDJSON streaming。同一个 Agentic 执行只跑一次；
+ * 完成事件携带最终 sanitized 回答，前端不再重复调用旧 endpoint。
+ */
+export async function streamAgenticRecommendation(
+  body: RecommendationRequest,
+  onEvent: (event: AgentTraceEventDto) => void,
+): Promise<RecommendationResponse> {
+  let response: Response
+  try {
+    response = await fetch(`${apiBaseUrl}/api/v1/recommend/agentic/stream`, jsonRequest('POST', body))
+  } catch {
+    throw new ApiError(0, '无法连接服务', 'network_error')
+  }
+  if (!response.ok || !response.body) {
+    const text = await response.text().catch(() => '')
+    let detail = '服务暂时不可用'
+    try {
+      const parsed: unknown = JSON.parse(text)
+      if (typeof parsed === 'object' && parsed !== null && 'detail' in parsed && typeof parsed.detail === 'string') {
+        detail = parsed.detail
+      }
+    } catch {
+      /* 非 JSON 错误体：保留默认文案。 */
+    }
+    throw new ApiError(response.status, detail, response.status >= 500 ? 'service_unavailable' : `http_${response.status}`)
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let final: RecommendationResponse | null = null
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let newline = buffer.indexOf('\n')
+    while (newline >= 0) {
+      const line = buffer.slice(0, newline).trim()
+      buffer = buffer.slice(newline + 1)
+      if (line) {
+        const event = JSON.parse(line) as AgentTraceEventDto
+        if (event.result) final = event.result
+        onEvent(event)
+      }
+      newline = buffer.indexOf('\n')
+    }
+  }
+  // 流中断 / 未收到 completed：不伪造最终回答。
+  if (!final) {
+    throw new ApiError(0, '服务未返回最终回答', 'stream_interrupted')
+  }
+  return final
 }
 
 export function submitFeedback(

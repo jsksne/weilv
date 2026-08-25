@@ -34,11 +34,26 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage()
 const consoleMessages = []
 const network = []
+let agenticStreamBody = null
+let agenticStreamResolve = null
+const agenticStreamReady = new Promise(resolve => {
+  agenticStreamResolve = resolve
+})
 page.on('console', msg => consoleMessages.push(`${msg.type()}: ${msg.text()}`))
 page.on('response', res => {
   const url = res.url()
   if (url.includes(apiHost)) {
     network.push(`${res.request().method()} ${url.replace(`http://${apiHost}`, '').split('?')[0]} -> ${res.status()}`)
+  }
+  // B3：捕获真实 stream 响应体作为时间顺序 trace evidence（stage/label/相对时间）。
+  if (url.includes('/api/v1/recommend/agentic/stream')) {
+    res
+      .text()
+      .then(text => {
+        agenticStreamBody = text
+      })
+      .catch(() => {})
+      .finally(() => agenticStreamResolve?.())
   }
 })
 
@@ -148,6 +163,26 @@ result.assistantReply = await page.evaluate(() => {
 })
 result.assistantDone = assistantDone
 
+/* ---------- B3：真实 trace evidence（只保留 stage / label / 相对时间） ---------- */
+await Promise.race([agenticStreamReady, new Promise(r => setTimeout(r, 15000))])
+if (agenticStreamBody) {
+  result.agenticTrace = agenticStreamBody
+    .trim()
+    .split('\n')
+    .map(line => JSON.parse(line))
+    .map(event => ({
+      stage: event.stage,
+      label: event.label,
+      timestamp_ms: event.timestamp_ms,
+    }))
+  const completed = result.agenticTrace.find(event => event.stage === 'completed')
+  result.agenticDurationMs = completed?.timestamp_ms ?? null
+}
+const agenticStreamCalls = network.filter(
+  line => line.startsWith('POST ') && line.includes('/agentic/stream') && line.includes('-> 200'),
+).length
+const oldAgenticCalls = network.filter(line => line.startsWith('POST ') && line.includes('/recommend/agentic ->')).length
+
 result.fatalErrors = consoleMessages.filter(
   m => m.startsWith('error') && !m.includes('ERR_CONNECTION_REFUSED') && !m.includes('Failed to load resource'),
 )
@@ -166,6 +201,15 @@ if (!network.some(line => line.includes('/recommend/agentic') && line.includes('
 if (!result.assistantDone) failures.push('assistant final answer not rendered (or error state)')
 if (result.fatalErrors.length > 0) failures.push(`fatal console errors: ${result.fatalErrors.join(' | ')}`)
 if (result.assistantReply && result.assistantReply.startsWith('ERROR:')) failures.push(`assistant error: ${result.assistantReply}`)
+/* B3 单次执行 gate：一次 submit = 一次 stream Agentic 执行，无第二次旧 endpoint 调用 */
+if (agenticStreamCalls !== 1) failures.push(`agentic stream calls != 1: ${agenticStreamCalls}`)
+if (oldAgenticCalls !== 0) failures.push(`old /recommend/agentic called ${oldAgenticCalls} times (double-run)`)
+if (!result.agenticTrace?.some(event => event.stage === 'completed')) failures.push('stream missing completed event')
+if (result.agenticTrace?.some(event => event.stage === 'error')) failures.push('stream contained sanitized error event')
+const traceTimes = (result.agenticTrace ?? []).map(event => event.timestamp_ms ?? 0)
+for (let index = 1; index < traceTimes.length; index += 1) {
+  if (traceTimes[index] < traceTimes[index - 1]) failures.push(`trace timestamps not monotonic at ${index}`)
+}
 
 console.log(JSON.stringify(result, null, 2))
 await browser.close()

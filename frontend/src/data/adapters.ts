@@ -1,6 +1,5 @@
 import { frozenOnboardingSteps } from '@/data/onboardingSteps'
 import type {
-  AgenticRecommendationResponse,
   EvidenceSource,
   MemoryListResponse,
   QuestionnaireSchema,
@@ -21,6 +20,7 @@ import type {
   AssistantRetrievalStage,
   AssistantSafetyNotice,
   AssistantSource,
+  AssistantTraceEvent,
   MemoryItemContract,
   MemoryConsentState,
   OnboardingContract,
@@ -286,7 +286,7 @@ function toSuggestedTask(task: SelectedTask | null) {
   }
 }
 
-function toSafety(dto: AgenticRecommendationResponse): AssistantSafetyNotice | null {
+function toSafety(dto: RecommendationResponse): AssistantSafetyNotice | null {
   if (dto.status === 'allowed') return null
 
   const copy = safetyCopy[dto.status]
@@ -298,10 +298,50 @@ function toSafety(dto: AgenticRecommendationResponse): AssistantSafetyNotice | n
   }
 }
 
-export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse): AssistantReply {
+function tracedAnalysis(): AssistantAnalysisStage {
+  return {
+    id: 'analysis',
+    title: '问题拆解',
+    status: 'done',
+    statusLabel: '已完成分析',
+    statusLabels: { done: '已完成分析' },
+    visible: true,
+    lead: null,
+    items: [],
+  }
+}
+
+function tracedRetrieval(allowed: boolean): AssistantRetrievalStage {
+  return allowed
+    ? {
+        id: 'retrieval',
+        title: '知识检索',
+        status: 'done',
+        statusLabel: '已完成检索',
+        statusLabels: { done: '已完成检索' },
+        visible: true,
+        chunks: [],
+      }
+    : {
+        id: 'retrieval',
+        title: '知识检索',
+        status: 'pending',
+        statusLabel: '未开始',
+        statusLabels: { pending: '未开始' },
+        visible: true,
+        chunks: [],
+      }
+}
+
+export function adaptAgenticRecommendation(
+  dto: RecommendationResponse,
+  options: { traceIsReal?: boolean } = {},
+): AssistantReply {
+  const traced = options.traceIsReal === true
+  const allowed = dto.status === 'allowed'
   const sources = [...dto.sources, ...(dto.context_sources ?? [])].map(toSource)
-  const analysis = unavailableAnalysis()
-  const retrieval = unavailableRetrieval()
+  const analysis = traced ? tracedAnalysis() : unavailableAnalysis()
+  const retrieval = traced ? tracedRetrieval(allowed) : unavailableRetrieval()
   const answer = availableAnswer()
   const pipeline: AssistantPipeline = { analysis, retrieval, answer }
   const text = dto.explanation ? [{ text: dto.explanation }] : []
@@ -314,9 +354,90 @@ export function adaptAgenticRecommendation(dto: AgenticRecommendationResponse): 
     suggestedTask: dto.status === 'allowed' ? toSuggestedTask(dto.selected_task) : null,
     safety: toSafety(dto),
     sources,
-    traceIsReal: false,
+    traceIsReal: traced,
     timing: null,
   }
+}
+
+/* B3：一次 Agentic 执行期间的实时 pipeline 初始状态（不自行推进）。 */
+export function createLiveTracePipeline(): AssistantPipeline {
+  return {
+    analysis: {
+      id: 'analysis',
+      title: '问题拆解',
+      status: 'pending',
+      statusLabel: '等待开始',
+      statusLabels: { active: '正在理解你的需求' },
+      visible: true,
+      lead: null,
+      items: [],
+    },
+    retrieval: {
+      id: 'retrieval',
+      title: '知识检索',
+      status: 'pending',
+      statusLabel: '等待开始',
+      statusLabels: { active: '正在检索相关健康知识' },
+      visible: true,
+      chunks: [],
+    },
+    answer: {
+      id: 'answer',
+      title: '回答',
+      status: 'pending',
+      statusLabel: '等待开始',
+      statusLabels: { active: '正在整理建议' },
+      visible: false,
+    },
+  }
+}
+
+const ANALYSIS_TRACE_STAGES = new Set(['accepted', 'safety', 'analysis'])
+const RETRIEVAL_TRACE_STAGES = new Set([
+  'retrieval',
+  'ranking',
+  'memory',
+  'personalization',
+  'grounding',
+])
+
+/**
+ * B3：用真实 backend trace 事件更新 pipeline。
+ * 仅在收到事件时推进；后一阶段真实事件到达 = 前一阶段已真实完成。
+ */
+export function applyAgentTraceEvent(
+  pipeline: AssistantPipeline,
+  event: AssistantTraceEvent,
+): AssistantPipeline {
+  const next: AssistantPipeline = {
+    analysis: { ...pipeline.analysis },
+    retrieval: { ...pipeline.retrieval },
+    answer: { ...pipeline.answer },
+  }
+  if (event.status === 'error') return next
+  if (ANALYSIS_TRACE_STAGES.has(event.stage)) {
+    next.analysis.status = 'active'
+    next.analysis.statusLabel = event.label
+    next.analysis.statusLabels = { ...next.analysis.statusLabels, active: event.label }
+  } else if (RETRIEVAL_TRACE_STAGES.has(event.stage)) {
+    if (next.analysis.status === 'active') next.analysis.status = 'done'
+    next.retrieval.status = 'active'
+    next.retrieval.statusLabel = event.label
+    next.retrieval.statusLabels = { ...next.retrieval.statusLabels, active: event.label }
+  } else if (event.stage === 'generation') {
+    if (next.analysis.status === 'active') next.analysis.status = 'done'
+    if (next.retrieval.status === 'active') next.retrieval.status = 'done'
+    next.answer.status = 'active'
+    next.answer.statusLabel = event.label
+    next.answer.statusLabels = { ...next.answer.statusLabels, active: event.label }
+    next.answer.visible = true
+  } else if (event.stage === 'completed') {
+    if (next.analysis.status === 'active') next.analysis.status = 'done'
+    if (next.retrieval.status === 'active') next.retrieval.status = 'done'
+    // answer 的 done 由最终 reply 呈现（同一执行），live 期间保持 active/pending，
+    // 避免在真实 reply 尚未落地时渲染空 AnswerCard。
+  }
+  return next
 }
 
 export function createProductionAssistantContract(): AssistantContract {

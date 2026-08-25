@@ -1,6 +1,8 @@
 """Minimal Stage 5 FastAPI application over the frozen Python core."""
 
+import json
 import os
+import time
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import UTC, date, datetime, timedelta
@@ -10,8 +12,15 @@ from uuid import uuid4
 from elasticsearch import ApiError, Elasticsearch
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from weilv.agentic_rag import run_agentic_rag
+from weilv.api.agentic_trace import (
+    STAGE_LABELS,
+    iter_agentic_graph_events,
+    sanitize_final_response,
+    translate_graph_event,
+)
 from weilv.api.memory_queries import query_user_memories
 from weilv.api.schemas import (
     AgenticRecommendationResponse,
@@ -171,6 +180,125 @@ def recommendations(payload: RecommendationRequest, request: Request):
     return result
 
 
+def _agentic_recommendation_session(
+    payload: RecommendationRequest,
+    result: dict,
+    recommendation_id: str,
+) -> dict:
+    """Shared interaction-log session for a real Agentic execution."""
+    diagnostics = result["diagnostics"]
+    return {
+        "recommendation_id": recommendation_id,
+        "user_id": payload.user_id,
+        "status": result["status"],
+        "selected_task_id": result["selected_task"]["task_id"],
+        "target_stage": payload.target_stage,
+        "current_context": payload.current_context,
+        "activity_context": payload.activity_context,
+        "available_minutes": payload.available_minutes,
+        "agentic": True,
+        "factor_count": diagnostics["factor_count"],
+        "memory_hit": diagnostics["memory_hit_count"] > 0,
+        "model_call_counts": diagnostics["model_calls"],
+        "created_at": datetime.now(UTC).isoformat(),
+        "feedback": None,
+        "feedback_updated_at": None,
+        "memory_persisted": False,
+    }
+
+
+def _ndjson_line(payload: dict) -> str:
+    return json.dumps(payload, ensure_ascii=False) + "\n"
+
+
+async def _agentic_stream_generator(
+    payload: RecommendationRequest,
+    client,
+    api_key: str,
+):
+    """Yield sanitized public trace events for one real Agentic execution."""
+    start = time.monotonic()
+    sequence = 0
+
+    def event_payload(stage: str, status: str, result: dict | None = None) -> dict:
+        nonlocal sequence
+        sequence += 1
+        event: dict = {
+            "stage": stage,
+            "status": status,
+            "label": STAGE_LABELS[stage],
+            "sequence": sequence,
+            "timestamp_ms": int((time.monotonic() - start) * 1000),
+        }
+        if result is not None:
+            event["result"] = result
+        return event
+
+    yield _ndjson_line(event_payload("accepted", "active"))
+    result = None
+    seen_nodes: set[str] = set()
+    try:
+        async for event in iter_agentic_graph_events(
+            BasicRagRequest(**payload.model_dump(exclude={"user_id"})),
+            payload.user_id,
+            client,
+            api_key,
+        ):
+            node = (event.get("metadata") or {}).get("langgraph_node")
+            if node:
+                # astream_events 会对同一节点重复发出 on_chain_start；
+                # 粗粒度 trace 每个阶段只出现一次。
+                if node in seen_nodes:
+                    continue
+                seen_nodes.add(node)
+                public = translate_graph_event(event)
+                if public:
+                    yield _ndjson_line(
+                        event_payload(public["stage"], public["status"])
+                    )
+            elif event.get("event") == "on_chain_end":
+                output = (event.get("data") or {}).get("output") or {}
+                result = output.get("result")
+    except Exception:
+        yield _ndjson_line(event_payload("error", "error"))
+        return
+    if result is None:
+        yield _ndjson_line(event_payload("error", "error"))
+        return
+
+    sanitized = sanitize_final_response(result)
+    sanitized["recommendation_id"] = None
+    sanitized["feedback_available"] = False
+    if result.get("status") == "allowed" and result.get("selected_task"):
+        recommendation_id = str(uuid4())
+        try:
+            create_recommendation_log(
+                client,
+                _agentic_recommendation_session(payload, result, recommendation_id),
+            )
+            sanitized["recommendation_id"] = recommendation_id
+            sanitized["feedback_available"] = True
+        except (ApiError, RuntimeError, ValueError):
+            pass
+    yield _ndjson_line(event_payload("completed", "complete", sanitized))
+
+
+@app.post("/api/v1/recommend/agentic/stream")
+async def agentic_recommendation_stream(payload: RecommendationRequest, request: Request):
+    """B3: NDJSON stream of real, sanitized Agentic execution stages.
+
+    Runs the Agentic pipeline exactly once (same graph and semantics as
+    ``/api/v1/recommend/agentic``); the final answer comes from that same
+    execution.  Only public coarse stages are exposed.
+    """
+    client = _dependency(request, "es_client")
+    api_key = _dependency(request, "api_key")
+    return StreamingResponse(
+        _agentic_stream_generator(payload, client, api_key),
+        media_type="application/x-ndjson",
+    )
+
+
 @app.post(
     "/api/v1/recommend/agentic",
     response_model=AgenticRecommendationResponse,
@@ -194,25 +322,7 @@ def agentic_recommendation(payload: RecommendationRequest, request: Request):
         return result
 
     recommendation_id = str(uuid4())
-    diagnostics = result["diagnostics"]
-    session = {
-        "recommendation_id": recommendation_id,
-        "user_id": payload.user_id,
-        "status": result["status"],
-        "selected_task_id": result["selected_task"]["task_id"],
-        "target_stage": payload.target_stage,
-        "current_context": payload.current_context,
-        "activity_context": payload.activity_context,
-        "available_minutes": payload.available_minutes,
-        "agentic": True,
-        "factor_count": diagnostics["factor_count"],
-        "memory_hit": diagnostics["memory_hit_count"] > 0,
-        "model_call_counts": diagnostics["model_calls"],
-        "created_at": datetime.now(UTC).isoformat(),
-        "feedback": None,
-        "feedback_updated_at": None,
-        "memory_persisted": False,
-    }
+    session = _agentic_recommendation_session(payload, result, recommendation_id)
     try:
         create_recommendation_log(_dependency(request, "es_client"), session)
     except (ApiError, RuntimeError, ValueError):

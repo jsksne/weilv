@@ -14,10 +14,17 @@ const props = defineProps<{
 }>()
 
 const stages = computed(() => [props.pipeline.analysis, props.pipeline.retrieval, props.pipeline.answer] as const)
+
+/** B3：可访问性状态文本——每收到一个真实阶段 transition 更新一次。 */
+const liveStatus = computed(() => {
+  const last = [...stages.value].reverse().find(stage => stage.status !== 'pending')
+  return last ? last.statusLabel : ''
+})
 </script>
 
 <template>
   <div class="pipe" data-testid="agent-pipeline">
+    <span class="visually-hidden" role="status" aria-live="polite">{{ liveStatus }}</span>
     <PipelineRail :stages="stages" />
     <ProblemAnalysisStage
       v-if="pipeline.analysis.visible || pipeline.analysis.status === 'unavailable'"
@@ -33,3 +40,17 @@ const stages = computed(() => [props.pipeline.analysis, props.pipeline.retrieval
     <AnswerCard v-if="pipeline.answer.status === 'done' && pipeline.answer.visible" :reply="reply" />
   </div>
 </template>
+
+<style scoped>
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+</style>

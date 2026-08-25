@@ -167,6 +167,33 @@ export interface AgenticRecommendationResponse extends RecommendationResponse {
   diagnostics: AgenticDiagnostics
 }
 
+/** B3：backend 公开的粗粒度 Agentic trace 阶段（真实 pipeline 映射，非 fake）。 */
+export type AgentTraceStage =
+  | 'accepted'
+  | 'safety'
+  | 'analysis'
+  | 'retrieval'
+  | 'ranking'
+  | 'memory'
+  | 'personalization'
+  | 'grounding'
+  | 'generation'
+  | 'completed'
+  | 'error'
+
+export type AgentTraceStatus = 'active' | 'complete' | 'error'
+
+/** B3：一次 sanitized 公共 trace 事件（NDJSON 流中的一行）。 */
+export interface AgentTraceEventDto {
+  stage: AgentTraceStage
+  status: AgentTraceStatus
+  label: string
+  sequence?: number
+  timestamp_ms?: number
+  /** 仅 completed 事件携带：同一次执行产生的最终 sanitized 回答（无内部 diagnostics）。 */
+  result?: RecommendationResponse | null
+}
+
 export interface UserProfileUpsertRequest {
   target_stage: TargetStage
   memory_enabled: boolean

@@ -132,7 +132,7 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
     </ConversationLog>
     <ChatComposer :busy="busy" @submit="submitManual" />
     <p class="ask-foot">
-      回答基于审核知识库与你的历史记忆 · 薇薇不做医疗诊断<br />
+      回答基于审核知识库和你提供的信息 · 薇薇不做医疗诊断<br />
       遇到持续不适，请第一时间告诉家长或老师
     </p>
   </div>

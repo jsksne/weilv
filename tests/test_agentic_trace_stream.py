@@ -66,6 +66,7 @@ def _graph_events(result):
     """Real node-start events followed by the root completion event."""
     for node in NODE_STAGE:
         yield {"event": "on_chain_start", "metadata": {"langgraph_node": node}}
+    yield {"event": "on_chain_start", "metadata": {"langgraph_node": "retrieve_user_memory"}}
     yield {"event": "on_chain_end", "metadata": {}, "data": {"output": {"result": result}}}
 
 
@@ -114,7 +115,9 @@ def test_stream_stage_order_matches_real_pipeline(monkeypatch):
     api, _, _ = _setup(monkeypatch)
     lines = _lines(_post(api))
     stages = [line["stage"] for line in lines if "result" not in line]
-    assert stages == ["accepted", "safety", "analysis", "retrieval", "ranking", "memory", "personalization", "grounding", "generation"]
+    assert stages == ["accepted", "safety", "analysis", "retrieval", "ranking", "personalization", "grounding", "generation"]
+    assert "memory" not in stages
+    assert "正在结合你的历史情况" not in response_text(lines)
     assert all(line["status"] == "active" for line in lines if "result" not in line)
     # terminal nodes must never surface as public stages
     assert "terminal_response" not in json.dumps(stages)
@@ -127,12 +130,13 @@ def test_completed_appears_exactly_once(monkeypatch):
     completed = [line for line in lines if line["stage"] == "completed"]
     assert len(completed) == 1
     assert completed[0]["status"] == "complete"
+    assert completed[0]["label"] == "处理完成"
 
 
 def test_final_answer_matches_single_execution_result(monkeypatch):
     api, _, _ = _setup(monkeypatch)
     lines = _lines(_post(api))
-    completed = [line for line in lines if line["stage"] == "completed"][0]
+    completed = next(line for line in lines if line["stage"] == "completed")
     result = completed["result"]
     assert result["status"] == "allowed"
     assert result["explanation"] == "解释文本"
@@ -197,12 +201,14 @@ def test_safety_blocked_path_never_shows_generation(monkeypatch):
     api, _, log_calls = _setup(monkeypatch, events=events, result=blocked)
     lines = _lines(_post(api))
     stages = [line["stage"] for line in lines]
+    assert stages == ["accepted", "safety", "completed"]
     assert "generation" not in stages
     assert "analysis" not in stages
     assert "retrieval" not in stages
     assert stages[-1] == "completed"
-    completed = [line for line in lines if line["stage"] == "completed"][0]
+    completed = next(line for line in lines if line["stage"] == "completed")
     assert completed["result"]["status"] == "blocked"
+    assert completed["label"] == "处理完成"
     # blocked path never logs an interaction session with a selected task
     assert log_calls == []
 

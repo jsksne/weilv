@@ -9,7 +9,8 @@ diagnostics, secrets) ever leaves the backend.  The final response is
 allowlist-sanitized before being attached to the completed event.
 """
 
-from typing import Any, AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Mapping
+from typing import Any
 
 from weilv.agent_graph import build_agent_graph
 from weilv.agentic_rag import AgenticRagRuntime, initial_diagnostics
@@ -21,7 +22,6 @@ NODE_STAGE: Mapping[str, str] = {
     "analyze_problem": "analysis",
     "retrieve_factor_knowledge": "retrieval",
     "retrieve_agentic_tasks": "ranking",
-    "retrieve_user_memory": "memory",
     "apply_personalization": "personalization",
     "select_and_ground": "grounding",
     "compose_explanation": "generation",
@@ -41,7 +41,7 @@ STAGE_LABELS: Mapping[str, str] = {
     "personalization": "正在匹配适合的信息",
     "grounding": "正在核对信息",
     "generation": "正在整理建议",
-    "completed": "已生成回答",
+    "completed": "处理完成",
     "error": "暂时无法完成，请稍后重试",
 }
 

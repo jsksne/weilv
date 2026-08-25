@@ -67,11 +67,10 @@ const completeStream: AgentTraceEventDto[] = [
   { stage: 'analysis', status: 'active', label: '正在理解你的需求', sequence: 3, timestamp_ms: 40 },
   { stage: 'retrieval', status: 'active', label: '正在检索相关健康知识', sequence: 4, timestamp_ms: 120 },
   { stage: 'ranking', status: 'active', label: '正在匹配适合的信息', sequence: 5, timestamp_ms: 840 },
-  { stage: 'memory', status: 'active', label: '正在结合你的历史情况', sequence: 6, timestamp_ms: 900 },
-  { stage: 'personalization', status: 'active', label: '正在匹配适合的信息', sequence: 7, timestamp_ms: 950 },
-  { stage: 'grounding', status: 'active', label: '正在核对信息', sequence: 8, timestamp_ms: 1300 },
-  { stage: 'generation', status: 'active', label: '正在整理建议', sequence: 9, timestamp_ms: 1800 },
-  { stage: 'completed', status: 'complete', label: '已生成回答', sequence: 10, timestamp_ms: 2840, result: allowedDto() },
+  { stage: 'personalization', status: 'active', label: '正在匹配适合的信息', sequence: 6, timestamp_ms: 950 },
+  { stage: 'grounding', status: 'active', label: '正在核对信息', sequence: 7, timestamp_ms: 1300 },
+  { stage: 'generation', status: 'active', label: '正在整理建议', sequence: 8, timestamp_ms: 1800 },
+  { stage: 'completed', status: 'complete', label: '处理完成', sequence: 9, timestamp_ms: 2840, result: allowedDto() },
 ]
 
 describe('B3 client — stream API transport', () => {
@@ -102,9 +101,10 @@ describe('B3 client — stream API transport', () => {
       expect.objectContaining({ method: 'POST' }),
     )
     expect(events.map(event => event.stage)).toEqual([
-      'accepted', 'safety', 'analysis', 'retrieval', 'ranking', 'memory',
+      'accepted', 'safety', 'analysis', 'retrieval', 'ranking',
       'personalization', 'grounding', 'generation', 'completed',
     ])
+    expect(events.map(event => event.label)).not.toContain('正在结合你的历史情况')
     expect(final.explanation).toBe('真实最终回答：先休息一下，到窗边远眺 1 分钟。')
   })
 
@@ -169,7 +169,7 @@ describe('B3 adapter — real trace pipeline', () => {
     expect(pipeline.retrieval.status).toBe('done')
     expect(pipeline.answer.status).toBe('active')
 
-    pipeline = applyAgentTraceEvent(pipeline, { stage: 'completed', status: 'complete', label: '已生成回答' })
+    pipeline = applyAgentTraceEvent(pipeline, { stage: 'completed', status: 'complete', label: '处理完成' })
     expect(pipeline.analysis.status).toBe('done')
     expect(pipeline.retrieval.status).toBe('done')
     // answer 的 done 由最终 reply 呈现，live 期间保持 active
@@ -179,7 +179,7 @@ describe('B3 adapter — real trace pipeline', () => {
   it('never fabricates generation when the trace stopped early', () => {
     let pipeline = createLiveTracePipeline()
     pipeline = applyAgentTraceEvent(pipeline, { stage: 'safety', status: 'active', label: '正在进行安全检查' })
-    pipeline = applyAgentTraceEvent(pipeline, { stage: 'completed', status: 'complete', label: '已生成回答' })
+    pipeline = applyAgentTraceEvent(pipeline, { stage: 'completed', status: 'complete', label: '处理完成' })
     expect(pipeline.answer.status).toBe('pending') // 未出现 generation，绝不伪造
     expect(pipeline.retrieval.status).toBe('pending')
   })
@@ -212,7 +212,7 @@ describe('B3 DataSource — Production uses the stream API', () => {
 
     const url = fetchMock.mock.calls[0][0] as string
     expect(url).toContain('/agentic/stream')
-    expect(uiEvents).toHaveLength(10)
+    expect(uiEvents).toHaveLength(9)
     expect(uiEvents[0]).toEqual({ stage: 'accepted', status: 'active', label: '正在理解你的需求' })
     expect(reply.traceIsReal).toBe(true)
     expect(reply.answer[0].text).toContain('真实最终回答')
@@ -260,7 +260,7 @@ describe('B3 AssistantView — real trace rendering', () => {
     expect(wrapper.get('[data-stage="answer"]').classes()).toContain('active')
 
     // completed：live 阶段保持 active，最终 reply 落地后变为 done
-    emitEvent?.({ stage: 'completed', status: 'complete', label: '已生成回答' })
+    emitEvent?.({ stage: 'completed', status: 'complete', label: '处理完成' })
     await nextTick()
     expect(wrapper.get('[data-stage="answer"]').classes()).toContain('active')
     expect(wrapper.find('[data-testid="answer-card"]').exists()).toBe(false)
@@ -328,7 +328,7 @@ describe('B3 AssistantView — real trace rendering', () => {
     const source = mockSource((_question, onEvent) => {
       onEvent({ stage: 'accepted', status: 'active', label: '正在理解你的需求' })
       onEvent({ stage: 'safety', status: 'active', label: '正在进行安全检查' })
-      onEvent({ stage: 'completed', status: 'complete', label: '已生成回答' })
+      onEvent({ stage: 'completed', status: 'complete', label: '处理完成' })
       return Promise.resolve(adaptAgenticRecommendation(blockedDto, { traceIsReal: true }))
     })
     const wrapper = mount(AssistantView, { props: { model: productionModel(), dataSource: source } })
@@ -346,7 +346,7 @@ describe('B3 AssistantView — real trace rendering', () => {
   it('shows the real answer text, never a fixture fallback reply', async () => {
     const source = mockSource((_question, onEvent) => {
       onEvent({ stage: 'accepted', status: 'active', label: '正在理解你的需求' })
-      onEvent({ stage: 'completed', status: 'complete', label: '已生成回答' })
+      onEvent({ stage: 'completed', status: 'complete', label: '处理完成' })
       return Promise.resolve(adaptAgenticRecommendation(allowedDto(), { traceIsReal: true }))
     })
     const wrapper = mount(AssistantView, { props: { model: productionModel(), dataSource: source } })
@@ -368,5 +368,14 @@ describe('B3 AssistantView — real trace rendering', () => {
     await wrapper.get('[data-prompt="exam"]').trigger('click')
 
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('uses consent-neutral footer copy', () => {
+    const wrapper = mount(AssistantView, { props: { model: productionModel() } })
+    const footer = wrapper.get('p.ask-foot')
+
+    expect(footer.text()).toContain('回答基于审核知识库和你提供的信息')
+    expect(footer.text()).not.toContain('历史记忆')
+    expect(wrapper.text()).not.toContain('你的记忆')
   })
 })

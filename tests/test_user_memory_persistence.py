@@ -29,7 +29,7 @@ class FakeElasticsearch:
         except KeyError as error:
             raise NotFoundError("not found", meta=None, body=None) from error
 
-    def delete(self, *, index, id):
+    def delete(self, *, index, id, refresh=None):
         del self.documents[(index, id)]
 
 

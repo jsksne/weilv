@@ -174,7 +174,7 @@ def test_append_task_event_accumulates_on_interaction_log_without_feedback_field
             except KeyError as error:
                 raise NotFoundError("not found", meta=None, body=None) from error
 
-        def update(self, *, index, id, doc):
+        def update(self, *, index, id, doc, refresh=None):
             self.documents[(index, id)].update(doc)
 
     client = FakeClient()

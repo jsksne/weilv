@@ -1,11 +1,13 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 import App from './App.vue'
 import * as api from './api/client'
 
 /* ------------------------------------------------------------------
-   Sprint 4：App 默认运行态 = Shell + TodayView（fixture demo，无 API）；
-   legacy 表单流保留在 ?legacy=1 之后（Sprint 9 移除）。
+   Sprint 4+：App 默认运行态 = Shell + TodayView（fixture demo，无 API）。
+   Sprint 9.1：?legacy=1 已移除 —— 不存在第二条 runtime UI path。
    ------------------------------------------------------------------ */
 
 /* 完成任务会触发 TaskCompletionFx 的真实 RAF/timeout（最长 780ms delay）；
@@ -13,19 +15,8 @@ import * as api from './api/client'
    autoUnmount 触发组件 onUnmounted → useMotionPulse.dispose() 清理。 */
 enableAutoUnmount(afterEach)
 
-function openLegacy(): void {
-  window.history.pushState({}, '', '/?legacy=1')
-}
-
-function resetUrl(): void {
-  window.history.pushState({}, '', '/')
-}
-
 describe('App shell runtime (default)', () => {
-  afterEach(resetUrl)
-
   it('mounts the frozen shell navigation with TodayView as the active page', async () => {
-    resetUrl()
     const wrapper = mount(App)
     await flushPromises()
 
@@ -37,7 +28,6 @@ describe('App shell runtime (default)', () => {
   })
 
   it('renders Assistant and the migrated Profile view', async () => {
-    resetUrl()
     const wrapper = mount(App)
     await flushPromises()
 
@@ -48,7 +38,6 @@ describe('App shell runtime (default)', () => {
   })
 
   it('never touches the API in the demo runtime', async () => {
-    resetUrl()
     const health = vi.spyOn(api, 'healthCheck').mockResolvedValue({ status: 'ok' })
     mount(App)
     await flushPromises()
@@ -59,7 +48,6 @@ describe('App shell runtime (default)', () => {
   it('keeps the Assistant suggestion display-only and leaves Today unchanged', async () => {
     vi.useFakeTimers()
     try {
-      resetUrl()
       vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
       const wrapper = mount(App)
       await wrapper.get('nav .tab[data-view="assistant"]').trigger('click')
@@ -75,7 +63,6 @@ describe('App shell runtime (default)', () => {
   })
 
   it('syncs the docked topbar progress from the Today local state', async () => {
-    resetUrl()
     const wrapper = mount(App)
     await flushPromises()
 
@@ -98,44 +85,27 @@ describe('App shell runtime (default)', () => {
   })
 })
 
-describe('App legacy console (gated behind ?legacy=1)', () => {
-  beforeEach(openLegacy)
-  afterEach(resetUrl)
-
-  it('shows the connected state after a successful health check', async () => {
-    vi.spyOn(api, 'healthCheck').mockResolvedValue({ status: 'ok' })
-
+describe('Sprint 9.1 legacy runtime removal', () => {
+  it('ignores ?legacy=1 and always mounts the four-view application with Today default', async () => {
+    window.history.pushState({}, '', '/?legacy=1')
     const wrapper = mount(App)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('服务已连接')
+    expect(wrapper.find('nav.navbar').exists()).toBe(true)
+    expect(wrapper.get('[data-view="today"]').classes()).toContain('active')
+    expect(wrapper.find('[data-testid="questionnaire"]').exists()).toBe(false)
+    expect(wrapper.findAll('.task-card')).toHaveLength(3)
   })
 
-  it('shows a recoverable failure state instead of a blank screen', async () => {
-    vi.spyOn(api, 'healthCheck').mockRejectedValue(
-      new api.ApiError(0, '无法连接服务', 'network_error'),
-    )
-
-    const wrapper = mount(App)
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('微律')
-    expect(wrapper.text()).toContain('暂时无法连接服务')
-    expect(wrapper.get('button').text()).toBe('重新连接')
+  it('no longer imports or branches on the legacy console from the runtime entry', () => {
+    const appSource = readFileSync(join(process.cwd(), 'src', 'App.vue'), 'utf8')
+    expect(appSource).not.toMatch(/URLSearchParams/)
+    expect(appSource).not.toMatch(/location\.search/)
+    expect(appSource).not.toMatch(/legacy/i)
+    expect(appSource).not.toContain('LegacyConsole')
   })
 
-  it('runs health check again after clicking reconnect', async () => {
-    const health = vi
-      .spyOn(api, 'healthCheck')
-      .mockRejectedValueOnce(new api.ApiError(0, '无法连接服务', 'network_error'))
-      .mockResolvedValueOnce({ status: 'ok' })
-
-    const wrapper = mount(App)
-    await flushPromises()
-    await wrapper.get('button').trigger('click')
-    await flushPromises()
-
-    expect(health).toHaveBeenCalledTimes(2)
-    expect(wrapper.text()).toContain('服务已连接')
+  it('retains the old source files in the repository without mounting them', () => {
+    expect(existsSync(join(process.cwd(), 'src', 'views', 'LegacyConsole.vue'))).toBe(true)
   })
 })

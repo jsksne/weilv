@@ -6,7 +6,6 @@ import TodayView from '@/views/TodayView.vue'
 import AssistantView from '@/views/AssistantView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import WeeklyView from '@/views/WeeklyView.vue'
-import LegacyConsole from '@/views/LegacyConsole.vue'
 import { useDailyTasks } from '@/composables/useDailyTasks'
 import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import { useUiDataSource } from '@/composables/useUiDataSource'
@@ -20,39 +19,32 @@ import type { ShellContract, UiDataSource } from '@/contracts'
 import type { TodayTaskAction, TodayTaskView } from '@/contracts'
 
 /**
- * Sprint 9：正式集成入口。
+ * Sprint 9.1：正式集成入口，唯一的应用运行路径。
  * Demo → FixtureUiDataSource（fixture only）；Production → ApiUiDataSource（API only）。
  * Production 用户身份来自显式 VITE_USER_ID（可替换 integration seam，非认证系统）。
- * 旧组件/旧 CSS/旧 flow 源码保留，但只在 ?legacy=1 之后（Sprint 10 清理）。
+ * 旧组件/旧 CSS/旧 flow 源码保留在仓库，但不再挂载、不再作为 alternate runtime。
  */
-
-const legacyMode =
-  typeof window !== 'undefined' &&
-  typeof window.location !== 'undefined' &&
-  new URLSearchParams(window.location.search).has('legacy')
 
 const configurationError = ref<Error | null>(null)
 let dataSource: UiDataSource | null = null
-if (!legacyMode) {
-  try {
-    const mode = getConfiguredUiMode()
-    const options =
-      mode === 'production'
-        ? { userId: getConfiguredUserId(), recommendationContext: getConfiguredRecommendationContext() }
-        : {}
-    dataSource = createUiDataSource(mode, options)
-  } catch (cause) {
-    configurationError.value =
-      cause instanceof UiModeConfigurationError || cause instanceof UserContextConfigurationError
+try {
+  const mode = getConfiguredUiMode()
+  const options =
+    mode === 'production'
+      ? { userId: getConfiguredUserId(), recommendationContext: getConfiguredRecommendationContext() }
+      : {}
+  dataSource = createUiDataSource(mode, options)
+} catch (cause) {
+  configurationError.value =
+    cause instanceof UiModeConfigurationError || cause instanceof UserContextConfigurationError
+      ? cause
+      : cause instanceof Error
         ? cause
-        : cause instanceof Error
-          ? cause
-          : new Error('UI 配置无效。')
-  }
+        : new Error('UI 配置无效。')
 }
 
 const ui = useUiDataSource(dataSource, {
-  autoLoad: !legacyMode && !configurationError.value,
+  autoLoad: !configurationError.value,
 })
 if (configurationError.value) {
   ui.status.value = 'error'
@@ -141,7 +133,7 @@ async function refreshProfile(): Promise<void> {
 </script>
 
 <template>
-  <AppShell v-if="!legacyMode && status === 'ready' && bundle" :shell="shell" @replay="openOnboarding">
+  <AppShell v-if="status === 'ready' && bundle" :shell="shell" @replay="openOnboarding">
     <template #today>
       <TodayView :model="bundle.today" :daily="daily" />
     </template>
@@ -159,9 +151,6 @@ async function refreshProfile(): Promise<void> {
       <WeeklyView :model="bundle.weekly" />
     </template>
   </AppShell>
-  <AppShell v-else-if="legacyMode">
-    <LegacyConsole />
-  </AppShell>
   <section v-else-if="status === 'loading'" data-testid="ui-data-loading" role="status">
     正在加载微律数据……
   </section>
@@ -170,7 +159,7 @@ async function refreshProfile(): Promise<void> {
     <button type="button" @click="retry">重试</button>
   </section>
   <OnboardingFlow
-    v-if="onboardingVisible && !legacyMode && onboarding"
+    v-if="onboardingVisible && onboarding"
     :model="onboarding"
     :submit="dataSource?.submitOnboarding"
     @complete="onOnboardingComplete"

@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 
-import App from './App.vue'
+import App from './views/LegacyConsole.vue'
 import { ApiError } from './api/client'
 import * as api from './api/client'
 import FeedbackForm from './components/FeedbackForm.vue'
@@ -19,8 +19,7 @@ const persistedFeedback = {
 }
 
 function mountApp() {
-  /* Sprint 4：legacy 表单流由 ?legacy=1 查询参数承载 */
-  window.history.pushState({}, '', '/?legacy=1')
+  /* Sprint 9.1：直接挂载保留的 legacy 组件源码（不再是 App runtime 分支）。 */
   vi.spyOn(api, 'healthCheck').mockResolvedValue({ status: 'ok' })
   return mount(App)
 }

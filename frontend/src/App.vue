@@ -16,7 +16,12 @@ import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
 import type { ShellContract, UiDataSource } from '@/contracts'
-import type { TodayTaskAction, TodayTaskView } from '@/contracts'
+import type {
+  OnboardingSubmitAnswers,
+  OnboardingSubmitResult,
+  TodayTaskAction,
+  TodayTaskView,
+} from '@/contracts'
 
 /**
  * Sprint 9.1：正式集成入口，唯一的应用运行路径。
@@ -118,6 +123,16 @@ function closeOnboarding(): void {
   onboardingVisible.value = false
 }
 
+/** 绑定 DataSource 方法到实例（避免解引用后 this 丢失）。 */
+function submitOnboarding(
+  answers: OnboardingSubmitAnswers,
+): Promise<OnboardingSubmitResult> {
+  return (
+    dataSource?.submitOnboarding?.(answers) ??
+    Promise.resolve({ status: 'error', message: '缺少 DataSource，无法保存引导结果。', persistence: [] })
+  )
+}
+
 /**
  * Production 引导完成：重新加载 bundle（真实 Profile 已写入），
  * 由真实 Profile 状态驱动进入 Today。失败/跳过不假装完成。
@@ -161,7 +176,7 @@ async function refreshProfile(): Promise<void> {
   <OnboardingFlow
     v-if="onboardingVisible && onboarding"
     :model="onboarding"
-    :submit="dataSource?.submitOnboarding"
+    :submit="submitOnboarding"
     @complete="onOnboardingComplete"
   />
 </template>

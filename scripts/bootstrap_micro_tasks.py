@@ -13,11 +13,18 @@ from weilv.retrieval_slice import _env_value, load_api_key
 def bootstrap_micro_tasks(client, api_key: str) -> int:
     tasks = load_formal_micro_tasks(FORMAL_TASKS_PATH)
     ensure_stage_one_indices(client)
-    vectors = embed_texts(
-        [embedding_text(task) for task in tasks],
-        api_key=api_key,
-        text_type="document",
-    )
+    # text-embedding-v4 单次批量上限 10；import helper 按批嵌入，不改模型核心。
+    batch_size = 10
+    vectors: list[list[float]] = []
+    texts = [embedding_text(task) for task in tasks]
+    for start in range(0, len(texts), batch_size):
+        vectors.extend(
+            embed_texts(
+                texts[start : start + batch_size],
+                api_key=api_key,
+                text_type="document",
+            )
+        )
     if len(vectors) != len(tasks) or any(len(vector) != EMBEDDING_DIMENSION for vector in vectors):
         raise ValueError(f"micro-task embeddings must have {EMBEDDING_DIMENSION} dimensions")
 

@@ -2,12 +2,10 @@
 
 import sys
 
-from elasticsearch import Elasticsearch
-
 from weilv.dashscope_models import EMBEDDING_DIMENSION, embed_texts
 from weilv.elasticsearch_indices import ensure_stage_one_indices
 from weilv.micro_tasks import FORMAL_TASKS_PATH, embedding_text, load_formal_micro_tasks
-from weilv.retrieval_slice import _env_value, load_api_key
+from weilv.retrieval_slice import create_elasticsearch_client, load_api_key
 
 
 def bootstrap_micro_tasks(client, api_key: str) -> int:
@@ -51,8 +49,7 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     env_file = FORMAL_TASKS_PATH.parents[2] / ".env"
-    es_url = _env_value("ELASTICSEARCH_URL", env_file) or "http://127.0.0.1:9200"
-    client = Elasticsearch(es_url, request_timeout=30)
+    client = create_elasticsearch_client(env_file)
     try:
         count = bootstrap_micro_tasks(client, load_api_key(env_file))
         print(f"Indexed {count} formal micro-tasks into micro_tasks_v1.")

@@ -55,6 +55,30 @@ def load_api_key(env_file: Path = Path(".env")) -> str:
     return api_key
 
 
+def create_elasticsearch_client(
+    env_file: Path = Path(".env"),
+    *,
+    client_factory=Elasticsearch,
+):
+    """Create the local or managed Elasticsearch client from documented environment values."""
+    es_url = _env_value("ELASTICSEARCH_URL", env_file) or "http://127.0.0.1:9200"
+    options: dict[str, object] = {"request_timeout": 30}
+    if api_key := _env_value("ELASTICSEARCH_API_KEY", env_file):
+        options["api_key"] = api_key
+    elif username := _env_value("ELASTICSEARCH_USERNAME", env_file):
+        password = _env_value("ELASTICSEARCH_PASSWORD", env_file)
+        if not password:
+            raise RuntimeError("ELASTICSEARCH_PASSWORD is required with ELASTICSEARCH_USERNAME")
+        options["basic_auth"] = (username, password)
+
+    verify_certs = _env_value("ELASTICSEARCH_VERIFY_CERTS", env_file)
+    if verify_certs is not None:
+        options["verify_certs"] = verify_certs.lower() not in {"0", "false", "no"}
+    if ca_certs := _env_value("ELASTICSEARCH_CA_CERTS", env_file):
+        options["ca_certs"] = ca_certs
+    return client_factory(es_url, **options)
+
+
 def validate_index_target(chunks: list[dict], index_name: str) -> None:
     if index_name == "health_knowledge_v1" and any(
         chunk.get("review_status") != "content_reviewed" for chunk in chunks
@@ -152,15 +176,14 @@ def main() -> None:
 
     env_file = Path(".env")
     api_key = load_api_key(env_file)
-    es_url = _env_value("ELASTICSEARCH_URL", env_file) or "http://127.0.0.1:9200"
     chunks = load_chunks(args.chunks)
     if any(chunk.get("review_status") != "content_reviewed" for chunk in chunks):
         print("WARNING: 包含未完成人工内容审核的技术 POC Chunk；结果不得用于健康推荐。")
 
-    client = Elasticsearch(es_url, request_timeout=30)
+    client = create_elasticsearch_client(env_file)
     try:
         if not client.ping():
-            raise RuntimeError(f"Elasticsearch is not reachable: {es_url}")
+            raise RuntimeError("Elasticsearch is not reachable")
         ensure_health_knowledge_index(client, args.index)
         print_results(run_slice(args.query, chunks, client, api_key, args.index))
     finally:

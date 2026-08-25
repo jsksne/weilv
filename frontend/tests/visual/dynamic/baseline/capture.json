@@ -1,6 +1,6 @@
 {
   "side": "baseline",
-  "capturedAt": "2026-08-25T04:53:12.038Z",
+  "capturedAt": "2026-08-25T06:32:02.754Z",
   "source": "ui-prototypes/02-sakura-spring.html",
   "taskCompletion": [
     {
@@ -218,7 +218,7 @@
         ],
         "safetyRect": {
           "x": 157,
-          "y": 633,
+          "y": 631,
           "w": 766,
           "h": 157
         }
@@ -410,7 +410,7 @@
   "reducedMotion": {
     "viewport": "1080",
     "reduceProbe": {
-      "animationCount": 61,
+      "animationCount": 66,
       "maxAnimationDurationMs": 10,
       "matchMediaReduce": true
     },

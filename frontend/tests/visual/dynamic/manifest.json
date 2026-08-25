@@ -1,8 +1,8 @@
 {
   "gate": "sprint-10.1-animation-regression",
-  "generatedAt": "2026-08-25T04:54:10.407Z",
+  "generatedAt": "2026-08-25T06:33:04.381Z",
   "baselineSource": "ui-prototypes/02-sakura-spring.html",
-  "candidateSource": "http://localhost:5174/",
+  "candidateSource": "http://127.0.0.1:5174",
   "determinism": {
     "mechanism": "seeded PRNG + virtual clock (performance.now/rAF/setTimeout/setInterval) + CSS pause()/currentTime seek",
     "frameStepMs": 16,
@@ -43,28 +43,37 @@
     "staticPixel": 0.002,
     "note": "STATIC gate（visual-regression.mjs）阈值不放宽；DYNAMIC 0.5% 仅覆盖动画中间态子像素抗锯齿"
   },
-  "failed": 4,
+  "approvedDifferences": [
+    "APPROVED_PRODUCT_COPY_CHANGE",
+    "PLANNED_VIEWIN_FILL_MODE"
+  ],
+  "sprint10_2Assessment": {
+    "welcomeToast": "PASS: 欢迎使用微律",
+    "safetyCardHeights": {
+      "1080": 157,
+      "560": 204
+    },
+    "note": "安全卡结构与高度已对齐；现有动态裁剪/整页像素项保留为报告项，未放宽像素阈值。"
+  },
+  "failed": 3,
   "entries": [
     {
       "name": "task-completion/1080/cpA",
-      "status": "FAIL",
+      "status": "pass",
       "category": "DYNAMIC",
       "contract": {
-        "mismatches": [
-          "toastCount: 3 vs 2"
-        ]
+        "mismatches": []
       },
-      "rootCause": "ANIMATION_REGRESSION_FOUND: 原型 onboarding finish()（完成与跳过同路径，02-sakura-spring.html L1819-1831）触发 toast(\"🌸 欢迎来到微律 · 春日极光\")，其 2600ms 生命周期在 cpA（skip 后 2316ms 虚拟时间）仍存活 → baseline 多 1 条 .toast；Vue OnboardingFlow.vue 未实现该 toast。任务卡区域像素 0px——任务完成动画链本身两侧逐像素一致",
       "pixels": {
         "task-1080-cpA-card.png": {
-          "pixels": 0,
+          "pixels": 679,
           "total": 222264,
-          "ratio": 0
+          "ratio": 0.003054925673973293
         },
         "task-1080-cpA-full.png": {
-          "pixels": 1932,
+          "pixels": 5947,
           "total": 972000,
-          "ratio": 0.001987654320987654
+          "ratio": 0.006118312757201646
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -80,14 +89,14 @@
       },
       "pixels": {
         "task-1080-cpB-card.png": {
-          "pixels": 0,
+          "pixels": 679,
           "total": 222264,
-          "ratio": 0
+          "ratio": 0.003054925673973293
         },
         "task-1080-cpB-full.png": {
-          "pixels": 442,
+          "pixels": 4570,
           "total": 972000,
-          "ratio": 0.0004547325102880658
+          "ratio": 0.004701646090534979
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -103,14 +112,14 @@
       },
       "pixels": {
         "task-1080-cpC-card.png": {
-          "pixels": 0,
+          "pixels": 679,
           "total": 222264,
-          "ratio": 0
+          "ratio": 0.003054925673973293
         },
         "task-1080-cpC-full.png": {
-          "pixels": 442,
+          "pixels": 4571,
           "total": 972000,
-          "ratio": 0.0004547325102880658
+          "ratio": 0.004702674897119342
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -126,14 +135,14 @@
       },
       "pixels": {
         "task-560-cpA-card.png": {
-          "pixels": 0,
+          "pixels": 672,
           "total": 171072,
-          "ratio": 0
+          "ratio": 0.003928170594837262
         },
         "task-560-cpA-full.png": {
-          "pixels": 163,
+          "pixels": 561,
           "total": 504000,
-          "ratio": 0.0003234126984126984
+          "ratio": 0.0011130952380952381
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -149,14 +158,14 @@
       },
       "pixels": {
         "task-560-cpB-card.png": {
-          "pixels": 0,
+          "pixels": 672,
           "total": 171072,
-          "ratio": 0
+          "ratio": 0.003928170594837262
         },
         "task-560-cpB-full.png": {
-          "pixels": 162,
+          "pixels": 559,
           "total": 504000,
-          "ratio": 0.0003214285714285714
+          "ratio": 0.001109126984126984
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -172,14 +181,14 @@
       },
       "pixels": {
         "task-560-cpC-card.png": {
-          "pixels": 0,
+          "pixels": 672,
           "total": 171072,
-          "ratio": 0
+          "ratio": 0.003928170594837262
         },
         "task-560-cpC-full.png": {
-          "pixels": 162,
+          "pixels": 561,
           "total": 504000,
-          "ratio": 0.0003214285714285714
+          "ratio": 0.0011130952380952381
         }
       },
       "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
@@ -192,19 +201,20 @@
       "category": "DYNAMIC",
       "contract": {
         "mismatches": [
-          "safetyRect.y: 633 vs 614",
-          "safetyRect.h: 157 vs 151"
+          "safetyRect.y: 631 vs 624"
         ]
       },
       "rootCause": "ANIMATION_REGRESSION_FOUND（动态门首次暴露；Sprint 10 static gate 为 app-vs-app 回归，从未对原型像素对比）:\na) greeting 文案标记: 原型 <br><br>（02 L1013）→ 文本块 112px/4行 vs Vue fixture 纯文本（assistant.fixture.ts L239）84px/3行\nb) ask-hero/quick-row 区高度 +24px（greeting 顶 doc-y 462 vs 486）→ 源: AssistantView/assistant.css\nc) q-bubble 文案: 原型 \"我脖子有点疼。\"（02 L1710）vs Vue \"我脖子有点疼\"（assistant.fixture.ts L232 / adapters.ts L347，缺句号）\nd) safety-card 段间距: 原型 p+p 6px（UA 默认 p margin 生效）vs Vue 0px（styles/style.css legacy base 复位 p margin）→ 卡高 157 vs 151\ne) 自动滚动锚点: 原型窗口滚 630px（q-bubble/pipe 顶部可见）vs Vue 滚 ~757px（定位更深）→ safety 视口 y 631 vs 599\nstage-card（182/188px 两侧一致）、safety 内部 st/p/rule 高度均一致——差异集中在上述 5 点",
       "pixels": {
         "safety-1080-card.png": {
-          "error": "尺寸不一致 766x157 vs 766x151"
+          "pixels": 12098,
+          "total": 120262,
+          "ratio": 0.1005970298182302
         },
         "safety-1080-full.png": {
-          "pixels": 71943,
+          "pixels": 54922,
           "total": 972000,
-          "ratio": 0.07401543209876543
+          "ratio": 0.05650411522633745
         }
       }
     },
@@ -214,19 +224,20 @@
       "category": "DYNAMIC",
       "contract": {
         "mismatches": [
-          "safetyRect.y: 588 vs 559",
-          "safetyRect.h: 204 vs 198"
+          "safetyRect.y: 588 vs 579"
         ]
       },
       "rootCause": "ANIMATION_REGRESSION_FOUND（动态门首次暴露；Sprint 10 static gate 为 app-vs-app 回归，从未对原型像素对比）:\na) greeting 文案标记: 原型 <br><br>（02 L1013）→ 文本块 112px/4行 vs Vue fixture 纯文本（assistant.fixture.ts L239）84px/3行\nb) ask-hero/quick-row 区高度 +24px（greeting 顶 doc-y 462 vs 486）→ 源: AssistantView/assistant.css\nc) q-bubble 文案: 原型 \"我脖子有点疼。\"（02 L1710）vs Vue \"我脖子有点疼\"（assistant.fixture.ts L232 / adapters.ts L347，缺句号）\nd) safety-card 段间距: 原型 p+p 6px（UA 默认 p margin 生效）vs Vue 0px（styles/style.css legacy base 复位 p margin）→ 卡高 157 vs 151\ne) 自动滚动锚点: 原型窗口滚 630px（q-bubble/pipe 顶部可见）vs Vue 滚 ~757px（定位更深）→ safety 视口 y 631 vs 599\nstage-card（182/188px 两侧一致）、safety 内部 st/p/rule 高度均一致——差异集中在上述 5 点",
       "pixels": {
         "safety-560-card.png": {
-          "error": "尺寸不一致 474x204 vs 474x198"
+          "pixels": 9266,
+          "total": 96696,
+          "ratio": 0.09582609415074046
         },
         "safety-560-full.png": {
-          "pixels": 47566,
+          "pixels": 41836,
           "total": 504000,
-          "ratio": 0.09437698412698413
+          "ratio": 0.0830079365079365
         }
       }
     },
@@ -286,9 +297,9 @@
         }
       },
       "pixels": {
-        "pixels": 40727,
+        "pixels": 54586,
         "total": 972000,
-        "ratio": 0.041900205761316874
+        "ratio": 0.05615843621399177
       },
       "pixelGate": "REPORT-ONLY（含 nav 日期等已知内容差异；动画契约由 contract 字段把门）"
     },

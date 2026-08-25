@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { adaptAgenticRecommendation } from './data/adapters'
+import { adaptAgenticRecommendation, createProductionAssistantContract } from './data/adapters'
+import { assistantFixture } from './data/fixtures/assistant.fixture'
 import { allowedRecommendation, nonAllowedRecommendation } from './test/recommendationFixtures'
 import type { AgenticRecommendationResponse } from './api/types'
 
@@ -13,6 +14,14 @@ function agentic(dto: typeof allowedRecommendation): AgenticRecommendationRespon
 }
 
 describe('Assistant DTO adapter boundary', () => {
+  it('keeps the safety quick prompt punctuation aligned in Demo and Production', () => {
+    const demoPrompt = assistantFixture.quickPrompts.find(prompt => prompt.id === 'neck')
+    const productionPrompt = createProductionAssistantContract().quickPrompts.find(prompt => prompt.id === 'neck')
+
+    expect(demoPrompt).toEqual({ id: 'neck', label: '我脖子有点疼', question: '我脖子有点疼。' })
+    expect(productionPrompt).toEqual(demoPrompt)
+  })
+
   it('maps final DTO fields and exposes unavailable production stages', () => {
     const reply = adaptAgenticRecommendation(agentic(allowedRecommendation))
 
@@ -66,5 +75,12 @@ describe('Assistant rendering safety boundary', () => {
       const source = readFileSync(path, 'utf8')
       expect(source).not.toMatch(/v-html|innerHTML/)
     }
+  })
+
+  it('keeps the safety paragraph gap scoped to the safety component', () => {
+    const source = readFileSync(join(srcDir, 'components', 'assistant', 'SafetyNotice.vue'), 'utf8')
+
+    expect(source).toContain('.safety-card p + p')
+    expect(source).toContain('margin-top: 6px')
   })
 })

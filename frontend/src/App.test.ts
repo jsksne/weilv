@@ -23,7 +23,7 @@ describe('App shell runtime (default)', () => {
     expect(wrapper.find('nav.navbar').exists()).toBe(true)
     expect(wrapper.get('[data-view="today"]').classes()).toContain('active')
     expect(wrapper.get('.hero').exists()).toBe(true)
-    expect(wrapper.get('.hero-tag').text()).toBe('✦ 春日极光 · 期中考试周 · 第 2 天')
+    expect(wrapper.get('.hero-tag').text()).toBe('✦ 健康微行动 · 期中考试周 · 第 2 天')
     expect(wrapper.findAll('.task-card')).toHaveLength(3)
   })
 

@@ -89,14 +89,14 @@ describe('Sprint 2R brand and icon shell', () => {
     const wrapper = mount(BrandLogo, {
       props: {
         displayName: shellFixture.displayName,
-        tagline: '春日极光 · 健康同伴',
+        tagline: '健康微行动 · 个性化建议',
       },
     })
 
     expect(wrapper.find('.logo-flower').exists()).toBe(true)
     expect(wrapper.findAll('.logo-flower path')).toHaveLength(5)
     expect(wrapper.text()).toContain('微律')
-    expect(wrapper.text()).toContain('春日极光 · 健康同伴')
+    expect(wrapper.text()).toContain('健康微行动 · 个性化建议')
 
     await wrapper.get('.logo').trigger('click')
     expect(wrapper.emitted('activate')).toHaveLength(1)

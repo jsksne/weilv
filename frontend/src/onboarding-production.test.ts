@@ -6,9 +6,11 @@ import { useOnboarding } from './composables/useOnboarding'
 import { ApiUiDataSource } from './data/apiUiDataSource'
 import { FixtureUiDataSource } from './data/fixtureUiDataSource'
 import { createProductionOnboardingContract } from './data/adapters'
+import { useToast } from './composables/useToast'
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  useToast().clear()
   vi.useRealTimers()
 })
 
@@ -220,6 +222,7 @@ describe('B6 OnboardingFlow production submission', () => {
 
     expect(submit).toHaveBeenCalledWith({ grade: 'junior_high', memoryEnabled: true })
     expect(wrapper.emitted('complete')).toEqual([['completed']])
+    expect(useToast().toasts.value.map(toast => toast.message)).toEqual(['欢迎使用微律'])
   })
 
   it('stays open and shows the message when submission fails (no completed emit)', async () => {
@@ -240,5 +243,6 @@ describe('B6 OnboardingFlow production submission', () => {
 
     expect(wrapper.get('[data-testid="onboarding-submit-message"]').text()).toContain('保存失败')
     expect(wrapper.emitted('complete')).toBeUndefined()
+    expect(useToast().toasts.value).toHaveLength(0)
   })
 })

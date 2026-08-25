@@ -45,7 +45,7 @@ defineExpose({ activeView, gliderStyle, recalculateGlider })
     <div class="nav-pill">
       <BrandLogo
         :display-name="displayName"
-        tagline="春日极光 · 健康同伴"
+        tagline="健康微行动 · 个性化建议"
         @activate="activateToday"
       />
       <div class="tabs">

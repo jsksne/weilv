@@ -43,7 +43,7 @@ describe('Sprint 4 TodayView: frozen structure', () => {
 
     const hero = wrapper.get('.hero')
     expect(hero.find('.hero-arc').exists()).toBe(true)
-    expect(hero.get('.hero-tag').text()).toBe('✦ 春日极光 · 期中考试周 · 第 2 天')
+    expect(hero.get('.hero-tag').text()).toBe('✦ 健康微行动 · 期中考试周 · 第 2 天')
     expect(hero.get('h1').text()).toBe('早上好，小满')
     expect(hero.get('h1 em').text()).toBe('小满')
     expect(hero.get('p b').text()).toBe('6 小时 50 分')

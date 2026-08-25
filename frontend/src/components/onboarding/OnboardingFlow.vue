@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useMotionPulse } from '@/composables/useMotionPulse'
 import { useOnboarding } from '@/composables/useOnboarding'
+import { useToast } from '@/composables/useToast'
 import type { OnboardingContract, OnboardingSubmitAnswers, OnboardingSubmitResult } from '@/contracts'
 
 import OnboardingProgress from './OnboardingProgress.vue'
@@ -26,6 +27,8 @@ const flow = useOnboarding(props.model, props.submit)
 const open = ref(props.open)
 const closing = ref(false)
 const { delay } = useMotionPulse()
+const { push } = useToast()
+const welcomeToast = '欢迎使用微律'
 
 const currentNumber = computed(() => flow.index.value + 1)
 const nextLabel = computed(() =>
@@ -48,8 +51,10 @@ async function finish(status: 'completed' | 'skipped'): Promise<void> {
       closing.value = false
       return
     }
+    push(welcomeToast)
   } else {
     flow.skip()
+    push(welcomeToast)
   }
   emit('complete', status)
   delay(850, () => {

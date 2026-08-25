@@ -229,7 +229,7 @@ export const assistantFixture: AssistantContract = {
   quickPrompts: [
     { id: 'exam', label: '考试周好累，只有 10 分钟', question: '考试周好累，只有 10 分钟' },
     { id: 'sleep', label: '最近睡不好', question: '最近睡不好' },
-    { id: 'neck', label: '我脖子有点疼', question: '我脖子有点疼' },
+    { id: 'neck', label: '我脖子有点疼', question: '我脖子有点疼。' },
   ],
   greeting: {
     face: '薇薇',

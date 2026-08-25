@@ -2,6 +2,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 
 import OnboardingFlow from './components/onboarding/OnboardingFlow.vue'
 import { onboardingFixture } from './data/fixtures/onboarding.fixture'
+import { useToast } from './composables/useToast'
 
 enableAutoUnmount(afterEach)
 
@@ -20,6 +21,7 @@ describe('Sprint 6 OnboardingFlow', () => {
   })
 
   afterEach(() => {
+    useToast().clear()
     vi.useRealTimers()
   })
 
@@ -47,6 +49,7 @@ describe('Sprint 6 OnboardingFlow', () => {
     expect(window.localStorage.getItem('wl_aurora_onboarded')).toBe('1')
     expect(window.localStorage.getItem('grade')).toBeNull()
     expect(fetchSpy).not.toHaveBeenCalled()
+    expect(useToast().toasts.value.map(toast => toast.message)).toEqual(['欢迎使用微律'])
   })
 
   it('completes all five steps, runs generation, and never submits answers', async () => {

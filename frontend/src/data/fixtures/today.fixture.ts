@@ -26,7 +26,7 @@ export const todayFixture = {
     restore: 'available',
   },
   unavailableFields: [],
-  heroTag: '✦ 春日极光 · 期中考试周 · 第 2 天',
+  heroTag: '✦ 健康微行动 · 期中考试周 · 第 2 天',
   greetingLead: '早上好，',
   greetingName: '小满',
   summaryLines: [

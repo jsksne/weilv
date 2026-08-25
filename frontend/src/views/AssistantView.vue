@@ -52,7 +52,6 @@ function rememberScrollPosition(): void {
 }
 
 function submit(question: string, scenario: AssistantScenario): void {
-  rememberScrollPosition()
   if (isDemo.value) demoFlow.submit(question, scenario)
   else void agenticFlow.submit(question)
 }
@@ -72,7 +71,9 @@ function retry(): void {
 watch(renderVersion, async () => {
   await nextTick()
   if (followLatest.value) {
-    log.value?.latestMessage?.scrollIntoView?.({ behavior: 'smooth', block: 'end' })
+    const root = log.value?.$el as HTMLElement | undefined
+    const target = root?.querySelector<HTMLElement>('[data-testid="agent-pipeline"]') ?? log.value?.latestMessage
+    target?.scrollIntoView?.({ behavior: 'smooth', block: 'end' })
   }
 })
 
@@ -112,5 +113,15 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
 <style scoped>
 .ask-wrap {
   overflow-x: clip;
+}
+
+.ask-wrap :deep(.stage-card),
+.ask-wrap :deep(.answer-card),
+.ask-wrap :deep(.ask-input) {
+  margin-top: 0;
+}
+
+.ask-wrap :deep(.ask-input input) {
+  margin-top: 0;
 }
 </style>

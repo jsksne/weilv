@@ -19,12 +19,16 @@ defineExpose({ latestMessage })
       <div class="answer-face"><span class="mini"></span>{{ greeting.face }}</div>
       <div class="answer-text">
         <template v-for="(segment, index) in greeting.segments" :key="index">
-          <br v-if="segment.breakBefore" /><template v-if="segment.emphasis"><b>{{ segment.text }}</b></template
-          ><template v-else>{{ segment.text }}</template>
+          <template v-if="segment.breakBefore">
+            <br />
+            <br />
+          </template>
+          <template v-if="segment.emphasis"><b>{{ segment.text }}</b></template>
+          <template v-else>{{ segment.text }}</template>
         </template>
       </div>
     </div>
     <slot />
-    <span ref="latestMessage" data-testid="latest-message" aria-hidden="true"></span>
+    <span ref="latestMessage" data-testid="latest-message" aria-hidden="true" style="display: none"></span>
   </div>
 </template>

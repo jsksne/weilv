@@ -13,3 +13,9 @@ defineProps<{
     <div class="rule">{{ notice.rule }}</div>
   </div>
 </template>
+
+<style scoped>
+.safety-card p + p {
+  margin-top: 6px;
+}
+</style>

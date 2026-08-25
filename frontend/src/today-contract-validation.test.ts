@@ -41,7 +41,7 @@ describe('Sprint 4 today contract validation', () => {
   })
 
   it('freezes the hero copy from the prototype', () => {
-    expect(todayFixture.heroTag).toBe('✦ 春日极光 · 期中考试周 · 第 2 天')
+    expect(todayFixture.heroTag).toBe('✦ 健康微行动 · 期中考试周 · 第 2 天')
     expect(todayFixture.greetingLead).toBe('早上好，')
     expect(todayFixture.greetingName).toBe('小满')
     /* 昨晚睡了 6 小时 50 分，比前天多 40 分钟——……<br>微律准备了 3 件微任务…… */

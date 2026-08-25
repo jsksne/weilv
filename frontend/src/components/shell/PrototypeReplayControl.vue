@@ -12,6 +12,6 @@ const emit = defineEmits<{
     title="点击重新体验首次引导"
     @click="emit('replay')"
   >
-    UI 原型 02 · 春日极光
+    重新体验首次引导
   </button>
 </template>

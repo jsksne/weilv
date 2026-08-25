@@ -72,6 +72,16 @@ describe('Assistant demo flow', () => {
     expect(wrapper.find('[data-testid="safety-notice"]').exists()).toBe(false)
   })
 
+  it('keeps the frozen greeting paragraph break and safety prompt punctuation', async () => {
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+
+    expect(wrapper.findAll('.greeting-card .answer-text br')).toHaveLength(2)
+
+    await wrapper.get('[data-prompt="neck"]').trigger('click')
+
+    expect(wrapper.get('[data-testid="user-message"]').text()).toBe('我脖子有点疼。')
+  })
+
   it('clears all demo timers when the view unmounts', async () => {
     const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
@@ -94,6 +104,8 @@ describe('Assistant demo flow', () => {
       configurable: true,
       value: scrollIntoView,
     })
+
+    window.dispatchEvent(new Event('scroll'))
 
     await wrapper.get('[data-prompt="exam"]').trigger('click')
     await nextTick()

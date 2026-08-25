@@ -1,7 +1,7 @@
 {
   "side": "candidate",
-  "capturedAt": "2026-08-25T04:54:06.959Z",
-  "source": "http://localhost:5174/",
+  "capturedAt": "2026-08-25T06:33:00.141Z",
+  "source": "http://127.0.0.1:5174",
   "taskCompletion": [
     {
       "viewport": "1080",
@@ -9,8 +9,8 @@
       "cpMs": 16,
       "reduced": false,
       "freezeInfo": {
-        "total": 112,
-        "paused": 112
+        "total": 113,
+        "paused": 113
       },
       "state": {
         "cardTransform": "scale(1.00001)",
@@ -24,7 +24,7 @@
         "orbState": null,
         "haloState": null,
         "fxParticleCount": 16,
-        "toastCount": 2,
+        "toastCount": 3,
         "cardRect": {
           "x": 22,
           "y": 60,
@@ -218,9 +218,9 @@
         ],
         "safetyRect": {
           "x": 157,
-          "y": 614,
+          "y": 624,
           "w": 766,
-          "h": 151
+          "h": 157
         }
       }
     },
@@ -245,9 +245,9 @@
         ],
         "safetyRect": {
           "x": 43,
-          "y": 559,
+          "y": 579,
           "w": 474,
-          "h": 198
+          "h": 204
         }
       }
     }
@@ -286,8 +286,8 @@
     "viewport": "1080",
     "cpMs": 350,
     "freezeInfo": {
-      "total": 102,
-      "paused": 102
+      "total": 103,
+      "paused": 103
     },
     "state": {
       "viewActive": true,
@@ -418,7 +418,7 @@
   "reducedMotion": {
     "viewport": "1080",
     "reduceProbe": {
-      "animationCount": 44,
+      "animationCount": 42,
       "maxAnimationDurationMs": 10,
       "matchMediaReduce": true
     },

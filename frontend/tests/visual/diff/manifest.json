@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-08-25T02:09:32.184Z",
+  "failed": 0,
+  "entries": [
+    {
+      "name": "assistant-1080.png",
+      "status": "pass",
+      "pixels": 5,
+      "total": 972000,
+      "ratio": 0.0000051440329218107
+    },
+    {
+      "name": "assistant-560.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 504000,
+      "ratio": 0
+    },
+    {
+      "name": "assistant-720.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 648000,
+      "ratio": 0
+    },
+    {
+      "name": "assistant-960.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 864000,
+      "ratio": 0
+    },
+    {
+      "name": "onboarding-step1-1080.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 972000,
+      "ratio": 0
+    },
+    {
+      "name": "onboarding-step1-560.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 504000,
+      "ratio": 0
+    },
+    {
+      "name": "onboarding-step1-720.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 648000,
+      "ratio": 0
+    },
+    {
+      "name": "onboarding-step1-960.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 864000,
+      "ratio": 0
+    },
+    {
+      "name": "profile-1080.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 972000,
+      "ratio": 0
+    },
+    {
+      "name": "profile-560.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 504000,
+      "ratio": 0
+    },
+    {
+      "name": "profile-720.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 648000,
+      "ratio": 0
+    },
+    {
+      "name": "profile-960.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 864000,
+      "ratio": 0
+    },
+    {
+      "name": "today-1080.png",
+      "status": "pass",
+      "pixels": 5,
+      "total": 972000,
+      "ratio": 0.0000051440329218107
+    },
+    {
+      "name": "today-560.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 504000,
+      "ratio": 0
+    },
+    {
+      "name": "today-720.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 648000,
+      "ratio": 0
+    },
+    {
+      "name": "today-960.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 864000,
+      "ratio": 0
+    },
+    {
+      "name": "weekly-1080.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 972000,
+      "ratio": 0
+    },
+    {
+      "name": "weekly-560.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 504000,
+      "ratio": 0
+    },
+    {
+      "name": "weekly-720.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 648000,
+      "ratio": 0
+    },
+    {
+      "name": "weekly-960.png",
+      "status": "pass",
+      "pixels": 0,
+      "total": 864000,
+      "ratio": 0
+    }
+  ]
+}

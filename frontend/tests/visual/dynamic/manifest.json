@@ -1,0 +1,363 @@
+{
+  "gate": "sprint-10.1-animation-regression",
+  "generatedAt": "2026-08-25T04:54:10.407Z",
+  "baselineSource": "ui-prototypes/02-sakura-spring.html",
+  "candidateSource": "http://localhost:5174/",
+  "determinism": {
+    "mechanism": "seeded PRNG + virtual clock (performance.now/rAF/setTimeout/setInterval) + CSS pause()/currentTime seek",
+    "frameStepMs": 16,
+    "checkpoints": [
+      {
+        "key": "cpA",
+        "ms": 16
+      },
+      {
+        "key": "cpB",
+        "ms": 1100
+      },
+      {
+        "key": "cpC",
+        "ms": 2200
+      }
+    ],
+    "preExistingPhaseMs": 2000,
+    "selfchecks": [
+      {
+        "side": "baseline",
+        "pass": true,
+        "pixels": 0,
+        "total": 972000,
+        "ratio": 0
+      },
+      {
+        "side": "candidate",
+        "pass": true,
+        "pixels": 0,
+        "total": 972000,
+        "ratio": 0
+      }
+    ]
+  },
+  "tolerance": {
+    "dynamicPixel": 0.005,
+    "staticPixel": 0.002,
+    "note": "STATIC gate（visual-regression.mjs）阈值不放宽；DYNAMIC 0.5% 仅覆盖动画中间态子像素抗锯齿"
+  },
+  "failed": 4,
+  "entries": [
+    {
+      "name": "task-completion/1080/cpA",
+      "status": "FAIL",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": [
+          "toastCount: 3 vs 2"
+        ]
+      },
+      "rootCause": "ANIMATION_REGRESSION_FOUND: 原型 onboarding finish()（完成与跳过同路径，02-sakura-spring.html L1819-1831）触发 toast(\"🌸 欢迎来到微律 · 春日极光\")，其 2600ms 生命周期在 cpA（skip 后 2316ms 虚拟时间）仍存活 → baseline 多 1 条 .toast；Vue OnboardingFlow.vue 未实现该 toast。任务卡区域像素 0px——任务完成动画链本身两侧逐像素一致",
+      "pixels": {
+        "task-1080-cpA-card.png": {
+          "pixels": 0,
+          "total": 222264,
+          "ratio": 0
+        },
+        "task-1080-cpA-full.png": {
+          "pixels": 1932,
+          "total": 972000,
+          "ratio": 0.001987654320987654
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 16
+    },
+    {
+      "name": "task-completion/1080/cpB",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": []
+      },
+      "pixels": {
+        "task-1080-cpB-card.png": {
+          "pixels": 0,
+          "total": 222264,
+          "ratio": 0
+        },
+        "task-1080-cpB-full.png": {
+          "pixels": 442,
+          "total": 972000,
+          "ratio": 0.0004547325102880658
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 1100
+    },
+    {
+      "name": "task-completion/1080/cpC",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": []
+      },
+      "pixels": {
+        "task-1080-cpC-card.png": {
+          "pixels": 0,
+          "total": 222264,
+          "ratio": 0
+        },
+        "task-1080-cpC-full.png": {
+          "pixels": 442,
+          "total": 972000,
+          "ratio": 0.0004547325102880658
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 2200
+    },
+    {
+      "name": "task-completion/560/cpA",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": []
+      },
+      "pixels": {
+        "task-560-cpA-card.png": {
+          "pixels": 0,
+          "total": 171072,
+          "ratio": 0
+        },
+        "task-560-cpA-full.png": {
+          "pixels": 163,
+          "total": 504000,
+          "ratio": 0.0003234126984126984
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 16
+    },
+    {
+      "name": "task-completion/560/cpB",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": []
+      },
+      "pixels": {
+        "task-560-cpB-card.png": {
+          "pixels": 0,
+          "total": 171072,
+          "ratio": 0
+        },
+        "task-560-cpB-full.png": {
+          "pixels": 162,
+          "total": 504000,
+          "ratio": 0.0003214285714285714
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 1100
+    },
+    {
+      "name": "task-completion/560/cpC",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": []
+      },
+      "pixels": {
+        "task-560-cpC-card.png": {
+          "pixels": 0,
+          "total": 171072,
+          "ratio": 0
+        },
+        "task-560-cpC-full.png": {
+          "pixels": 162,
+          "total": 504000,
+          "ratio": 0.0003214285714285714
+        }
+      },
+      "prototypeSelector": ".task-card.done .ck-ring/.ck-path/.task-badge/.done-note + fx(.fx-p/.fx-orb/.fx-halo)",
+      "vueSelector": "components/today/TaskCard.vue + effects/TaskCompletionFx.vue",
+      "cpMs": 2200
+    },
+    {
+      "name": "safety/1080",
+      "status": "FAIL",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": [
+          "safetyRect.y: 633 vs 614",
+          "safetyRect.h: 157 vs 151"
+        ]
+      },
+      "rootCause": "ANIMATION_REGRESSION_FOUND（动态门首次暴露；Sprint 10 static gate 为 app-vs-app 回归，从未对原型像素对比）:\na) greeting 文案标记: 原型 <br><br>（02 L1013）→ 文本块 112px/4行 vs Vue fixture 纯文本（assistant.fixture.ts L239）84px/3行\nb) ask-hero/quick-row 区高度 +24px（greeting 顶 doc-y 462 vs 486）→ 源: AssistantView/assistant.css\nc) q-bubble 文案: 原型 \"我脖子有点疼。\"（02 L1710）vs Vue \"我脖子有点疼\"（assistant.fixture.ts L232 / adapters.ts L347，缺句号）\nd) safety-card 段间距: 原型 p+p 6px（UA 默认 p margin 生效）vs Vue 0px（styles/style.css legacy base 复位 p margin）→ 卡高 157 vs 151\ne) 自动滚动锚点: 原型窗口滚 630px（q-bubble/pipe 顶部可见）vs Vue 滚 ~757px（定位更深）→ safety 视口 y 631 vs 599\nstage-card（182/188px 两侧一致）、safety 内部 st/p/rule 高度均一致——差异集中在上述 5 点",
+      "pixels": {
+        "safety-1080-card.png": {
+          "error": "尺寸不一致 766x157 vs 766x151"
+        },
+        "safety-1080-full.png": {
+          "pixels": 71943,
+          "total": 972000,
+          "ratio": 0.07401543209876543
+        }
+      }
+    },
+    {
+      "name": "safety/560",
+      "status": "FAIL",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": [
+          "safetyRect.y: 588 vs 559",
+          "safetyRect.h: 204 vs 198"
+        ]
+      },
+      "rootCause": "ANIMATION_REGRESSION_FOUND（动态门首次暴露；Sprint 10 static gate 为 app-vs-app 回归，从未对原型像素对比）:\na) greeting 文案标记: 原型 <br><br>（02 L1013）→ 文本块 112px/4行 vs Vue fixture 纯文本（assistant.fixture.ts L239）84px/3行\nb) ask-hero/quick-row 区高度 +24px（greeting 顶 doc-y 462 vs 486）→ 源: AssistantView/assistant.css\nc) q-bubble 文案: 原型 \"我脖子有点疼。\"（02 L1710）vs Vue \"我脖子有点疼\"（assistant.fixture.ts L232 / adapters.ts L347，缺句号）\nd) safety-card 段间距: 原型 p+p 6px（UA 默认 p margin 生效）vs Vue 0px（styles/style.css legacy base 复位 p margin）→ 卡高 157 vs 151\ne) 自动滚动锚点: 原型窗口滚 630px（q-bubble/pipe 顶部可见）vs Vue 滚 ~757px（定位更深）→ safety 视口 y 631 vs 599\nstage-card（182/188px 两侧一致）、safety 内部 st/p/rule 高度均一致——差异集中在上述 5 点",
+      "pixels": {
+        "safety-560-card.png": {
+          "error": "尺寸不一致 474x204 vs 474x198"
+        },
+        "safety-560-full.png": {
+          "pixels": 47566,
+          "total": 504000,
+          "ratio": 0.09437698412698413
+        }
+      }
+    },
+    {
+      "name": "memory-consent/1080",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "note": "prototype ABSENT: 02-sakura-spring.html onboarding 无 consent UI（Vue 端为生产 B6 需求新增，非视觉回归）",
+        "candidateOff": {
+          "consentPresent": true,
+          "checked": false,
+          "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+        },
+        "candidateOn": {
+          "consentPresent": true,
+          "checked": true,
+          "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+        },
+        "prototypeLastStepRecord": "memory-consent/consent-1080-off-full.png (baseline)"
+      }
+    },
+    {
+      "name": "memory-consent/560",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "note": "prototype ABSENT: 02-sakura-spring.html onboarding 无 consent UI（Vue 端为生产 B6 需求新增，非视觉回归）",
+        "candidateOff": {
+          "consentPresent": true,
+          "checked": false,
+          "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+        },
+        "candidateOn": {
+          "consentPresent": true,
+          "checked": true,
+          "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+        },
+        "prototypeLastStepRecord": "memory-consent/consent-560-off-full.png (baseline)"
+      }
+    },
+    {
+      "name": "view-transition/1080@350ms",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": [],
+        "baselineState": {
+          "viewActive": true,
+          "viewInAnimation": "viewIn",
+          "gliderTransform": "matrix(1, 0, 0, 1, 0, 0)"
+        },
+        "candidateState": {
+          "viewActive": true,
+          "viewInAnimation": "viewIn",
+          "gliderTransform": "matrix(1, 0, 0, 1, 0, 0)"
+        }
+      },
+      "pixels": {
+        "pixels": 40727,
+        "total": 972000,
+        "ratio": 0.041900205761316874
+      },
+      "pixelGate": "REPORT-ONLY（含 nav 日期等已知内容差异；动画契约由 contract 字段把门）"
+    },
+    {
+      "name": "motion-contract",
+      "status": "FAIL",
+      "category": "DYNAMIC",
+      "contract": {
+        "mismatches": [
+          "today.__cssAnimationCount: 104 vs 103"
+        ]
+      },
+      "rootCause": "计数差异分解（动画实例 multiset 探针证实）:\n+1 toastIn @ .toast —— 同 task-completion cpA 的 onboarding 欢迎.toast 缺失（ANIMATION_REGRESSION_FOUND，见上）\n+1 viewIn @ section.view.active —— 已知计划内工程化差异: fill-mode both→backwards（visual-system.test.ts L232-238 白名单），原型 finished-with-fill 实例保留、Vue 结束即移除。非回归\n全部具名装饰动画契约（aurora/petals/dust/pulse/orb/hero-arc/hl/dot/breath/grid）与 petals=26/dust=54/blobs=4 计数两侧一致",
+      "decorative": {
+        "aurora": "PASS",
+        "petals": "PASS",
+        "dust": "PASS",
+        "pulse": "PASS"
+      },
+      "method": "computed animation-name/duration/timing-function/iteration-count/direction + 元素计数（petals=26, dust=54）"
+    },
+    {
+      "name": "normal-motion/existence",
+      "status": "pass",
+      "category": "DYNAMIC",
+      "contract": {
+        "baselineMissing": [],
+        "candidateMissing": [],
+        "baselineCount": 104,
+        "candidateCount": 103
+      }
+    },
+    {
+      "name": "reduced-motion/task-final",
+      "status": "pass",
+      "category": "REDUCED_MOTION",
+      "contract": {
+        "baseline": {
+          "reduceEmulated": true,
+          "cssDurationsCollapsed": true,
+          "taskDoneReachable": true,
+          "badgeFinalVisible": true,
+          "noteFinalVisible": true
+        },
+        "candidate": {
+          "reduceEmulated": true,
+          "cssDurationsCollapsed": true,
+          "taskDoneReachable": true,
+          "badgeFinalVisible": true,
+          "noteFinalVisible": true
+        },
+        "baselineRaw": {
+          "doneClass": true,
+          "badgeVisible": "1",
+          "noteVisible": "1",
+          "fxOrbCount": 0,
+          "fxParticleCount": 0,
+          "pendingRafCount": 1
+        },
+        "candidateRaw": {
+          "doneClass": true,
+          "badgeVisible": "1",
+          "noteVisible": "1",
+          "fxOrbCount": 0,
+          "fxParticleCount": 0,
+          "pendingRafCount": 0
+        },
+        "knownDivergence": "原型仅 CSS 侧 reduce（JS petals/WL.play 仍运行）；Vue 端 JS 主动降级（fx 跳过、装饰循环不启动）——Sprint 2 无障碍增强，非回归"
+      }
+    }
+  ]
+}

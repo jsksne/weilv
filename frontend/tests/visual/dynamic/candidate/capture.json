@@ -1,0 +1,457 @@
+{
+  "side": "candidate",
+  "capturedAt": "2026-08-25T04:54:06.959Z",
+  "source": "http://localhost:5174/",
+  "taskCompletion": [
+    {
+      "viewport": "1080",
+      "checkpoint": "cpA",
+      "cpMs": 16,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "scale(1.00001)",
+        "ringDashoffset": "132px",
+        "pathDashoffset": "40px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "0",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 8)",
+        "noteOpacity": "0",
+        "progressFillWidth": 13.6,
+        "orbState": null,
+        "haloState": null,
+        "fxParticleCount": 16,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 22,
+          "y": 60,
+          "w": 686,
+          "h": 324
+        }
+      }
+    },
+    {
+      "viewport": "1080",
+      "checkpoint": "cpB",
+      "cpMs": 1100,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "",
+        "ringDashoffset": "3.72516px",
+        "pathDashoffset": "5.94824px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "0.34076",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 5.27392)",
+        "noteOpacity": "1",
+        "progressFillWidth": 126.7,
+        "orbState": {
+          "transform": "translate(-50%, -50%) scale(0.715224)",
+          "opacity": "0.300214"
+        },
+        "haloState": {
+          "transform": "translate(-50%, -50%) scale(1.33179)",
+          "opacity": "0.333684"
+        },
+        "fxParticleCount": 0,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 22,
+          "y": 60,
+          "w": 686,
+          "h": 324
+        }
+      }
+    },
+    {
+      "viewport": "1080",
+      "checkpoint": "cpC",
+      "cpMs": 2200,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "",
+        "ringDashoffset": "0px",
+        "pathDashoffset": "0px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "1",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 0)",
+        "noteOpacity": "1",
+        "progressFillWidth": 126.7,
+        "orbState": null,
+        "haloState": null,
+        "fxParticleCount": 0,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 22,
+          "y": 60,
+          "w": 686,
+          "h": 324
+        }
+      }
+    },
+    {
+      "viewport": "560",
+      "checkpoint": "cpA",
+      "cpMs": 16,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "scale(1.00001)",
+        "ringDashoffset": "132px",
+        "pathDashoffset": "40px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "0",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 8)",
+        "noteOpacity": "0",
+        "progressFillWidth": 7.9,
+        "orbState": null,
+        "haloState": null,
+        "fxParticleCount": 16,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 16,
+          "y": 60,
+          "w": 528,
+          "h": 324
+        }
+      }
+    },
+    {
+      "viewport": "560",
+      "checkpoint": "cpB",
+      "cpMs": 1100,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "",
+        "ringDashoffset": "3.72516px",
+        "pathDashoffset": "5.94824px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "0.34076",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 5.27392)",
+        "noteOpacity": "1",
+        "progressFillWidth": 73.9,
+        "orbState": {
+          "transform": "translate(-50%, -50%) scale(0.715224)",
+          "opacity": "0.300214"
+        },
+        "haloState": {
+          "transform": "translate(-50%, -50%) scale(1.33179)",
+          "opacity": "0.333684"
+        },
+        "fxParticleCount": 0,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 16,
+          "y": 60,
+          "w": 528,
+          "h": 324
+        }
+      }
+    },
+    {
+      "viewport": "560",
+      "checkpoint": "cpC",
+      "cpMs": 2200,
+      "reduced": false,
+      "freezeInfo": {
+        "total": 112,
+        "paused": 112
+      },
+      "state": {
+        "cardTransform": "",
+        "ringDashoffset": "0px",
+        "pathDashoffset": "0px",
+        "badgeDisplay": "inline-flex",
+        "badgeOpacity": "1",
+        "badgeTransform": "matrix(1, 0, 0, 1, 0, 0)",
+        "noteOpacity": "1",
+        "progressFillWidth": 73.9,
+        "orbState": null,
+        "haloState": null,
+        "fxParticleCount": 0,
+        "toastCount": 2,
+        "cardRect": {
+          "x": 16,
+          "y": 60,
+          "w": 528,
+          "h": 324
+        }
+      }
+    }
+  ],
+  "safety": [
+    {
+      "viewport": "1080",
+      "cpMs": 5000,
+      "freezeInfo": {
+        "total": 108,
+        "paused": 108
+      },
+      "state": {
+        "safetyPresent": true,
+        "safetyTitle": "⚠ 薇薇不看诊、不猜测",
+        "safetyRule": "已触发安全规则：输入风险分流 · 普通推荐已暂停 · 本次对话记入审计日志",
+        "relBarWidths": [
+          "98%"
+        ],
+        "pipelineNodes": [
+          "pnode done",
+          "pnode done",
+          "pnode done"
+        ],
+        "safetyRect": {
+          "x": 157,
+          "y": 614,
+          "w": 766,
+          "h": 151
+        }
+      }
+    },
+    {
+      "viewport": "560",
+      "cpMs": 5000,
+      "freezeInfo": {
+        "total": 108,
+        "paused": 108
+      },
+      "state": {
+        "safetyPresent": true,
+        "safetyTitle": "⚠ 薇薇不看诊、不猜测",
+        "safetyRule": "已触发安全规则：输入风险分流 · 普通推荐已暂停 · 本次对话记入审计日志",
+        "relBarWidths": [
+          "98%"
+        ],
+        "pipelineNodes": [
+          "pnode done",
+          "pnode done",
+          "pnode done"
+        ],
+        "safetyRect": {
+          "x": 43,
+          "y": 559,
+          "w": 474,
+          "h": 198
+        }
+      }
+    }
+  ],
+  "memoryConsent": [
+    {
+      "viewport": "1080",
+      "off": {
+        "consentPresent": true,
+        "checked": false,
+        "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+      },
+      "on": {
+        "consentPresent": true,
+        "checked": true,
+        "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+      },
+      "consentInPrototype": true
+    },
+    {
+      "viewport": "560",
+      "off": {
+        "consentPresent": true,
+        "checked": false,
+        "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+      },
+      "on": {
+        "consentPresent": true,
+        "checked": true,
+        "promptText": "允许微律使用记忆来调整后续建议（Demo 不保存）"
+      },
+      "consentInPrototype": true
+    }
+  ],
+  "viewTransition": {
+    "viewport": "1080",
+    "cpMs": 350,
+    "freezeInfo": {
+      "total": 102,
+      "paused": 102
+    },
+    "state": {
+      "viewActive": true,
+      "viewInAnimation": "viewIn",
+      "gliderTransform": "matrix(1, 0, 0, 1, 0, 0)"
+    }
+  },
+  "motionContract": {
+    "page": "today+assistant",
+    "today": {
+      "aurora-b1": {
+        "animationName": "blobIn, blobFloat",
+        "animationDuration": "2.6s, 24s",
+        "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+        "animationIterationCount": "1, infinite",
+        "animationDirection": "normal, alternate"
+      },
+      "aurora-b2": {
+        "animationName": "blobIn, blobFloat",
+        "animationDuration": "2.6s, 24s",
+        "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+        "animationIterationCount": "1, infinite",
+        "animationDirection": "normal, alternate"
+      },
+      "aurora-b3": {
+        "animationName": "blobIn, blobFloat",
+        "animationDuration": "2.6s, 24s",
+        "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+        "animationIterationCount": "1, infinite",
+        "animationDirection": "normal, alternate"
+      },
+      "aurora-b4": {
+        "animationName": "blobIn, blobFloat",
+        "animationDuration": "2.6s, 24s",
+        "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+        "animationIterationCount": "1, infinite",
+        "animationDirection": "normal, alternate"
+      },
+      "grid-pulse": {
+        "animationName": "gridPulse",
+        "animationDuration": "16s",
+        "animationTimingFunction": "ease-in-out",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "dust-first": {
+        "animationName": "dustTwinkle",
+        "animationDuration": "5.9s",
+        "animationTimingFunction": "ease-out",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "petal-spin-first": {
+        "animationName": "petalSpin",
+        "animationDuration": "9.1s",
+        "animationTimingFunction": "linear",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "breath-core": {
+        "animationName": "breathCycle",
+        "animationDuration": "9s",
+        "animationTimingFunction": "ease",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "breath-halo-2": {
+        "animationName": "breathCycle",
+        "animationDuration": "9s",
+        "animationTimingFunction": "ease",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "live-dot-pulse": {
+        "animationName": "dotPulse",
+        "animationDuration": "2.2s",
+        "animationTimingFunction": "ease",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "hero-arc-drift": {
+        "animationName": "heroArcDrift",
+        "animationDuration": "14s",
+        "animationTimingFunction": "ease-in-out",
+        "animationIterationCount": "infinite",
+        "animationDirection": "alternate"
+      },
+      "hl-pulse-pseudo": {
+        "animationName": "hlPulse",
+        "animationDuration": "3.4s",
+        "animationTimingFunction": "ease-in-out",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "__petalCount": 26,
+      "__dustCount": 54,
+      "__blobCount": 4,
+      "__cssAnimationCount": 103
+    },
+    "assistant": {
+      "orb-breath": {
+        "animationName": "orbBreath",
+        "animationDuration": "6s",
+        "animationTimingFunction": "ease",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "orb-spin-1": {
+        "animationName": "orbSpin",
+        "animationDuration": "14s",
+        "animationTimingFunction": "linear",
+        "animationIterationCount": "infinite",
+        "animationDirection": "normal"
+      },
+      "orb-spin-2": {
+        "animationName": "orbSpin",
+        "animationDuration": "22s",
+        "animationTimingFunction": "linear",
+        "animationIterationCount": "infinite",
+        "animationDirection": "reverse"
+      },
+      "__petalCount": 26,
+      "__dustCount": 54,
+      "__blobCount": 4,
+      "__cssAnimationCount": 102
+    }
+  },
+  "reducedMotion": {
+    "viewport": "1080",
+    "reduceProbe": {
+      "animationCount": 44,
+      "maxAnimationDurationMs": 10,
+      "matchMediaReduce": true
+    },
+    "taskFinal": {
+      "doneClass": true,
+      "badgeVisible": "1",
+      "noteVisible": "1",
+      "fxOrbCount": 0,
+      "fxParticleCount": 0,
+      "pendingRafCount": 0
+    }
+  },
+  "normalMotionProbe": {
+    "animationCount": 103,
+    "hasBreath": true,
+    "hasGridPulse": true,
+    "hasBlobFloat": true,
+    "hasDustTwinkle": true,
+    "hasHeroArc": true,
+    "hasHlPulse": true,
+    "hasDotPulse": true,
+    "sampleNames": [
+      "blobIn",
+      "blobFloat",
+      "gridPulse",
+      "petalSpin",
+      "dustTwinkle",
+      "flowerSway",
+      "heroArcDrift",
+      "viewIn",
+      "hlPulse",
+      "dotPulse",
+      "breathCycle"
+    ]
+  }
+}

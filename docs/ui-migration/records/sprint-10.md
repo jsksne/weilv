@@ -60,3 +60,59 @@
 
 - Demo：visual capture 脚本 + 浏览器实测 Today/Assistant/Profile/Weekly/Onboarding 均渲染（automated + runtime verified）。
 - Production：本地无 Elasticsearch / 后端 → `RUNTIME_PRODUCTION_BLOCKED_BY_ENVIRONMENT`；数据链由 sprint9-integration 自动测试覆盖。
+
+---
+
+# Sprint 10.1 — Animation & Dynamic-State Visual Regression Gate（追加，不改写上文）
+
+- **inherited:** `02ade27`（chore: complete weilv ui migration release）
+- **脚本:** `frontend/scripts/animation-regression.mjs`（STATIC gate `visual-regression.mjs` 原样保留，未替换）
+- **产物:** `frontend/tests/visual/dynamic/{baseline,candidate,diff,.selfcheck}` + `manifest.json`
+
+## 确定性动画机制（TEST-ONLY，经 evaluateOnNewDocument 注入，不进产品 bundle）
+
+1. 种子化 PRNG（0x9E3779B9）替换 `Math.random`——两侧 petals(26×11)/dust(54×6)/fx(16×3) 随机序列逐字对齐；
+2. 虚拟时钟接管 `performance.now / rAF / setTimeout / setInterval`，`__vl.advance(ms)` 以 16ms 帧步进泵送（含微任务排水，safety 3850ms 异步管线可完整推进）；
+3. CSS 动画/过渡：`document.getAnimations()` → `pause()` + `playbackRate=0` + `currentTime` 定点 seek；触发前已存在的动画打 `vl-pre-` 标签统一 seek 到 2000ms 相位（两端口径一致）。
+
+**Selfcheck（确定性证明）:** baseline 双跑 0px / 972000、candidate 双跑 0px / 972000。checkpoint 与机器速度无关。
+
+## Browser config
+
+- Normal motion: `prefers-reduced-motion: no-preference`（默认）；启动参数含 `--disable-lcd-text --disable-font-subpixel-positioning`（消除 headless 次像素光栅化噪声）
+- Reduced motion: CDP `Emulation.setEmulatedMedia` `prefers-reduced-motion: reduce`；因两侧 reduce CSS 只折叠 duration、不清零 `animation-delay`（badgeIn 1.05s 等），harness 在 reduce 场景真实等待 ≥ 最大 delay 后统一 freeze 终态（两侧同规则）
+
+## Checkpoint 定义（来自原型真实时长，非猜测）
+
+- 任务完成链: done-note(noteIn .15+.8s) / ck-ring(ringDraw .65+.9s) / ck-path(pathDraw .95+.55s) / badge(badgeIn 1.05+.8s，总 1.85s) / fx(particles ≤896ms, orb 620+1150, halo 780+950)
+- → **cpA=16ms**（触发后第一帧）**cpB=1100ms**（ring 50%/orb 中段）**cpC=2200ms**（全链完成）
+- Safety 管线: 700+650+850+850+800=3850ms → settle 5000ms；view transition: 350ms
+- Prototype selector: `.task-card [data-act] / #obSkip / [data-q="neck"] / nav .tab`；Vue selector: `TaskCard.vue / OnboardingFlow.vue [data-action=*] / AssistantView quick chip / AppNavigation.vue`
+- Viewport: DYNAMIC 1080 + 560（最低覆盖）；pixelmatch DYNAMIC 容差 0.5%（STATIC 0.2% 不变）
+
+## Pixel diff result（12 pass / 16，4 FAIL = 真实保真度差异，见 manifest rootCause）
+
+| 状态 | 结果 |
+|---|---|
+| task-completion 1080/560 × cpA/cpB/cpC | 任务卡区域 **6/6 全部 0px**；1080/cpA full 差 0.199%（toast 缺失所致） |
+| safety | FAIL（几何差 6px/段距/滚动锚点，见下） |
+| memory-consent | pass（prototype 无 consent UI——B6 生产新增，如实记录非发明） |
+| view-transition | pass（契约把门：viewIn 存在 + glider transform 一致） |
+| motion-contract | 装饰动画 aurora/petals/dust/pulse 全 PASS（name/duration/timing/iteration/direction + petals=26/dust=54 计数）；today 总数 104 vs 103 |
+| normal-motion / reduced-motion | 均 pass（reduce 下内容可见、任务可达、终态可见） |
+
+## ANIMATION_REGRESSION_FOUND（只报告，不自动修复）
+
+1. **onboarding 欢迎 toast 缺失**：原型 `finish()`（完成与跳过同路径，02 L1819-1831）→ `toast("🌸 欢迎来到微律 · 春日极光")` 2600ms；Vue `OnboardingFlow.vue` 未实现。影响 task-1080/cpA（full 0.199%）+ motion-contract 计数 −1。
+2. **safety 会话栈保真度**（动态门首次暴露；Sprint 10 static gate 为 app-vs-app 对比，从未对原型像素对比）：
+   - greeting 原型 `<br><br>`（02 L1013）112px/4行 vs Vue fixture 纯文本（assistant.fixture.ts L239）84px/3行
+   - ask-hero/quick-row 区高 +24px（AssistantView/assistant.css）
+   - q-bubble 原型「我脖子有点疼。」（02 L1710）vs Vue 缺句号（assistant.fixture.ts L232 / adapters.ts L347）
+   - safety-card `p+p` 间距 6px vs 0px（style.css legacy base 复位 p margin）→ 卡高 157 vs 151
+   - 自动滚动锚点：原型滚 630px vs Vue ~757px
+3. **viewIn 计数 −1**：fill-mode both→backwards（visual-system.test.ts L232-238 白名单的计划内工程化差异，非回归）。
+
+## 验证
+
+- `npm test` 235/235；`npm run lint` 0 error；`npm run build` 成功；backend/`src/weilv` diff = 0；STATIC gate 未触碰（本 sprint 零产品文件修改 → static 像素输出不变）。
+- 产品 Vue/CSS：**未修改**（工作区仅新增 scripts/tests/docs）。等待人工授权后才处理上述差异。

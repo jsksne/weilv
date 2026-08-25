@@ -78,3 +78,16 @@
 ## 集成 Gate 复核
 
 - B1 Top3、B2 events、B4 Memory、B5 Weekly、B6 Onboarding+consent：PASS（Sprint 9 集成 + 本 Sprint 回归测试维持）。
+
+## Sprint 10.1 Animation Regression Gate（追加）
+
+- 脚本: `frontend/scripts/animation-regression.mjs`（STATIC gate 原样保留）；产物 `frontend/tests/visual/dynamic/manifest.json`
+- 确定性: 种子化 PRNG + 虚拟时钟（16ms 帧步进）+ `getAnimations().pause()/currentTime` 定点 seek；selfcheck 双侧双跑 0px
+- Motion config: normal = no-preference；reduced = CDP reduce（reduce 场景真实等待 ≥ 最大 animation-delay 后 freeze 终态）
+- Checkpoint: cpA=16ms / cpB=1100ms / cpC=2200ms（原型真实时长推导）；safety settle 5000ms；view transition 350ms；viewport 1080+560；DYNAMIC 容差 0.5%
+- 结果: **12 pass / 4 FAIL** —— 4 FAIL 均为真实保真度差异（ANIMATION_REGRESSION_FOUND，仅报告未修复）:
+  1. onboarding 欢迎 toast（`toastIn @ .toast`）Vue 未实现（task-1080/cpA full 0.199%；任务卡区域 0px）
+  2. safety 会话栈: greeting `<br><br>` 文案标记、q-bubble 句号、safety-card `p+p` 6→0px、滚动锚点（safety/1080+560）
+  3. motion-contract today 计数 104 vs 103（= toast −1 + viewIn fill-mode 白名单 −1）
+- 验证: npm test 235/235、lint 0 error、build 成功、backend/src-weilv diff = 0、零产品文件修改（static gate 像素输出不变）
+- 详见 `docs/ui-migration/records/sprint-10.md` §Sprint 10.1

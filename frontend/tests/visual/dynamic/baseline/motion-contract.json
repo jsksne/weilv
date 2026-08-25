@@ -1,0 +1,120 @@
+{
+  "page": "today+assistant",
+  "today": {
+    "aurora-b1": {
+      "animationName": "blobIn, blobFloat",
+      "animationDuration": "2.6s, 24s",
+      "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+      "animationIterationCount": "1, infinite",
+      "animationDirection": "normal, alternate"
+    },
+    "aurora-b2": {
+      "animationName": "blobIn, blobFloat",
+      "animationDuration": "2.6s, 24s",
+      "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+      "animationIterationCount": "1, infinite",
+      "animationDirection": "normal, alternate"
+    },
+    "aurora-b3": {
+      "animationName": "blobIn, blobFloat",
+      "animationDuration": "2.6s, 24s",
+      "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+      "animationIterationCount": "1, infinite",
+      "animationDirection": "normal, alternate"
+    },
+    "aurora-b4": {
+      "animationName": "blobIn, blobFloat",
+      "animationDuration": "2.6s, 24s",
+      "animationTimingFunction": "cubic-bezier(0.16, 1, 0.3, 1), ease-in-out",
+      "animationIterationCount": "1, infinite",
+      "animationDirection": "normal, alternate"
+    },
+    "grid-pulse": {
+      "animationName": "gridPulse",
+      "animationDuration": "16s",
+      "animationTimingFunction": "ease-in-out",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "dust-first": {
+      "animationName": "dustTwinkle",
+      "animationDuration": "5.9s",
+      "animationTimingFunction": "ease-out",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "petal-spin-first": {
+      "animationName": "petalSpin",
+      "animationDuration": "9.1s",
+      "animationTimingFunction": "linear",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "breath-core": {
+      "animationName": "breathCycle",
+      "animationDuration": "9s",
+      "animationTimingFunction": "ease",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "breath-halo-2": {
+      "animationName": "breathCycle",
+      "animationDuration": "9s",
+      "animationTimingFunction": "ease",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "live-dot-pulse": {
+      "animationName": "dotPulse",
+      "animationDuration": "2.2s",
+      "animationTimingFunction": "ease",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "hero-arc-drift": {
+      "animationName": "heroArcDrift",
+      "animationDuration": "14s",
+      "animationTimingFunction": "ease-in-out",
+      "animationIterationCount": "infinite",
+      "animationDirection": "alternate"
+    },
+    "hl-pulse-pseudo": {
+      "animationName": "hlPulse",
+      "animationDuration": "3.4s",
+      "animationTimingFunction": "ease-in-out",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "__petalCount": 26,
+    "__dustCount": 54,
+    "__blobCount": 4,
+    "__cssAnimationCount": 104
+  },
+  "assistant": {
+    "orb-breath": {
+      "animationName": "orbBreath",
+      "animationDuration": "6s",
+      "animationTimingFunction": "ease",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "orb-spin-1": {
+      "animationName": "orbSpin",
+      "animationDuration": "14s",
+      "animationTimingFunction": "linear",
+      "animationIterationCount": "infinite",
+      "animationDirection": "normal"
+    },
+    "orb-spin-2": {
+      "animationName": "orbSpin",
+      "animationDuration": "22s",
+      "animationTimingFunction": "linear",
+      "animationIterationCount": "infinite",
+      "animationDirection": "reverse"
+    },
+    "__petalCount": 26,
+    "__dustCount": 54,
+    "__blobCount": 4,
+    "__cssAnimationCount": 102
+  }
+}

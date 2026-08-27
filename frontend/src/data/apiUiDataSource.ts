@@ -10,7 +10,7 @@ import {
   streamAgenticRecommendation,
   upsertUserProfile,
 } from '@/api/client'
-import type { RecommendationRequest, TargetStage } from '@/api/types'
+import type { RecommendationRequest, TargetStage, WeeklyResponse } from '@/api/types'
 import type {
   AssistantTraceEvent,
   OnboardingSubmitAnswers,
@@ -92,6 +92,7 @@ export class ApiUiDataSource implements UiDataSource {
   private readonly recommendationContext?: ApiUiDataSourceOptions['recommendationContext']
   private profileTargetStage?: TargetStage
   private profileLoaded = false
+  private weeklyInFlight?: Promise<WeeklyResponse>
 
   constructor(options: ApiUiDataSourceOptions = {}) {
     this.userId = options.userId
@@ -152,6 +153,21 @@ export class ApiUiDataSource implements UiDataSource {
       unstable_environment: false,
       sleep_being_crowded: false,
     }
+  }
+
+  /** B5 共享同一轮 in-flight GET；settle 后清空，后续 reload 会重新读取真实历史。 */
+  private loadWeeklyDto(): Promise<WeeklyResponse> {
+    if (!this.userId) throw new UiDataContextUnavailableError('缺少真实 userId，无法读取周度数据。')
+    if (!this.weeklyInFlight) {
+      const { start, end } = trailingWeekDates(new Date())
+      const inFlight = getWeekly(this.userId, start, end)
+      this.weeklyInFlight = inFlight
+      inFlight.then(
+        () => { if (this.weeklyInFlight === inFlight) this.weeklyInFlight = undefined },
+        () => { if (this.weeklyInFlight === inFlight) this.weeklyInFlight = undefined },
+      )
+    }
+    return this.weeklyInFlight
   }
 
   async getToday() {
@@ -221,13 +237,20 @@ export class ApiUiDataSource implements UiDataSource {
       this.profileTargetStage = profile.target_stage
       this.profileLoaded = true
       let memories: ProfileMemoryListContract | null = null
+      let weekly: WeeklyResponse | null = null
       try {
         memories = adaptMemoryListResponse(await getUserMemories(this.userId))
       } catch (cause) {
         // Memory list 失败不拖垮 Profile；保持 Memory 部分 unavailable。
         if (!(cause instanceof ApiError)) throw cause
       }
-      return adaptProfileResponse(profile, memories)
+      try {
+        weekly = await this.loadWeeklyDto()
+      } catch (cause) {
+        // Weekly 统计失败不拖垮 Profile；完成情况保持真实空态。
+        if (!(cause instanceof ApiError)) throw cause
+      }
+      return adaptProfileResponse(profile, memories, weekly)
     } catch (cause) {
       // 新用户尚无画像：保持 bundle 可加载，Profile 显示未建立状态。
       if (cause instanceof ApiError && cause.status === 404) {
@@ -303,10 +326,9 @@ export class ApiUiDataSource implements UiDataSource {
     if (!this.userId) {
       return createUnavailableWeeklyContract('Production Weekly unavailable：缺少真实 userId。')
     }
-    const { start, end } = trailingWeekDates(new Date())
-    const dto = await getWeekly(this.userId, start, end)
+    const dto = await this.loadWeeklyDto()
     return dto
       ? adaptWeeklyResponse(dto)
-      : createUnavailableWeeklyContract('Production Weekly 返回空数据，暂不可用。')
+      : createUnavailableWeeklyContract('周度数据暂时无法加载。')
   }
 }

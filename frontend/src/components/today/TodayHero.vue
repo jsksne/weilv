@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { TodayContract } from '@/contracts'
 
@@ -11,12 +11,16 @@ import type { TodayContract } from '@/contracts'
  * `.view.active .progress-row` 查询目标）。
  */
 
-defineProps<{
+const props = defineProps<{
   model: TodayContract
   completed: number
   total: number
   note: string
 }>()
+
+const hasCheckInputs = computed(
+  () => props.model.moods.length > 0 || props.model.timeOptions.length > 0,
+)
 
 const emit = defineEmits<{
   check: []
@@ -48,9 +52,11 @@ defineExpose({ progressRow })
     <div class="progress-note">{{ note }}</div>
     <div class="progress-cta">
       <button class="btn btn-primary btn-sm" type="button" @click="emit('check')">
-        ✦ 开始今日检查
+        {{ hasCheckInputs ? '✦ 开始今日检查' : '✦ 查看今日状态' }}
       </button>
-      <span class="hero-hint">约 30 秒 · 从此刻的心情开始</span>
+      <span class="hero-hint">
+        {{ hasCheckInputs ? '约 30 秒 · 从此刻的心情开始' : '只展示当前真实可用的信息' }}
+      </span>
     </div>
   </div>
 </template>

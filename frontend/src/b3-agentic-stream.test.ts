@@ -218,6 +218,11 @@ describe('B3 DataSource — Production uses the stream API', () => {
     expect(reply.answer[0].text).toContain('真实最终回答')
     expect(reply.pipeline.analysis.status).toBe('done')
     expect(reply.pipeline.retrieval.status).toBe('done')
+    expect(reply.pipeline.analysis.lead).toContain('需求理解')
+    expect(reply.pipeline.analysis.items).toEqual([])
+    expect(reply.pipeline.retrieval.chunks).toEqual([
+      expect.objectContaining({ id: 'KC-1', source: '健康知识库', text: null, relevance: null }),
+    ])
     expect(reply.sources[0].label).toBe('健康知识库')
   })
 })

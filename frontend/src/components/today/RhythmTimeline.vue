@@ -23,5 +23,8 @@ defineProps<{
       <span class="rhythm-dot"></span>
       <div class="rhythm-txt"><b>{{ item.title }}</b>{{ item.note }}</div>
     </div>
+    <p v-if="!rhythm.items.length" class="obs-sub" data-testid="rhythm-empty">
+      暂未形成可展示的今日节奏。
+    </p>
   </div>
 </template>

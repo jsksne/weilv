@@ -57,8 +57,10 @@ describe('Sprint 7 WeeklyView', () => {
 
     expect(production.state.mode).toBe('production')
     expect(production.dataAvailability).toBe('unavailable')
-    expect(production.state.message).toContain('B5')
-    expect(wrapper.get('[data-testid="weekly-unavailable"]').text()).toContain('B5 schema pending')
+    /* Sprint 10 B5 已接通；不可用文案不再携带「B5 schema pending」这种内部调试字眼。 */
+    expect(production.state.message).toContain('周度数据暂时无法加载')
+    expect(wrapper.get('[data-testid="weekly-unavailable"]').text()).toContain('周度数据暂时无法加载')
+    expect(wrapper.get('[data-testid="weekly-unavailable"]').text()).not.toContain('B5 schema pending')
     expect(wrapper.find('[data-testid="weekly-chart"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('3 分钟以内')
     expect(viewSource).not.toMatch(/data\/fixtures/)

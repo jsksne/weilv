@@ -3,6 +3,8 @@ import { flushPromises } from '@vue/test-utils'
 import type { AgenticRecommendationResponse } from './api/types'
 import {
   adaptAgenticRecommendation,
+  adaptMemoryListResponse,
+  adaptProfileResponse,
   adaptRecommendationResponse,
   createUnavailableTodayContract,
 } from './data/adapters'
@@ -25,7 +27,9 @@ describe('Sprint 8 DTO to Contract adapters', () => {
     })
     expect(today.availability.dailyTasks).toBe('available')
     expect(today.availability.sleepStats).toBe('unavailable')
-    expect(today.availability.progress).toBe('unavailable')
+    expect(today.availability.progress).toBe('available')
+    expect(today.availability.restore).toBe('available')
+    expect(today.availability.replace).toBe('unavailable')
     expect(today.replacePool).toEqual([])
     expect(today.tasks).not.toHaveLength(3)
   })
@@ -65,6 +69,51 @@ describe('Sprint 8 DTO to Contract adapters', () => {
     expect(serialized).not.toContain('KC-secret')
     expect(serialized).not.toContain('secret query')
     expect(serialized).not.toContain('SRC-007')
+  })
+
+  it('wires public evidence metadata into the real retrieval stage without exposing private reasoning', () => {
+    const reply = adaptAgenticRecommendation(allowedRecommendation, { traceIsReal: true })
+
+    expect(reply.pipeline.analysis.lead).toBeTruthy()
+    expect(reply.pipeline.analysis.items).toEqual([])
+    expect(reply.pipeline.retrieval.chunks[0]).toMatchObject({
+      text: null,
+      relevance: null,
+    })
+  })
+
+  it('uses B4 memory and B5 task history for truthful Profile slices', () => {
+    const memories = adaptMemoryListResponse({
+      user_id: 'u-1',
+      memory_enabled: true,
+      memories: [],
+    })
+    const profile = adaptProfileResponse(
+      {
+        user_id: 'u-1',
+        target_stage: 'senior_high',
+        memory_enabled: true,
+      },
+      memories,
+      {
+        user_id: 'u-1',
+        start_date: '2026-08-21',
+        end_date: '2026-08-27',
+        minutes_policy: 'official_estimated_minutes_only',
+        days: [],
+        totals: {
+          completed_minutes: 6,
+          action_counts: { completed: 2, partially_completed: 1, skipped: 1 },
+        },
+        events: [],
+        adjustments: [],
+      },
+    )
+
+    expect(profile.memory.status).toBe('available')
+    expect(profile.memory.notice).toContain('尚未形成')
+    expect(profile.completionPattern.percentage).toBe(75)
+    expect(profile.completionPattern.summaryLines[0]).toContain('完成 2 项')
   })
 })
 

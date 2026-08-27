@@ -166,7 +166,7 @@ describe('Sprint 9 production mode boundary', () => {
     const wrapper = mount(App)
     await flushPromises()
 
-    expect(wrapper.get('[data-testid="today-production-status"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="hero-progress"]').exists()).toBe(true)
     expect(wrapper.text()).not.toContain('demo-user-001')
     expect(wrapper.find('[data-testid="onboarding"]').exists()).toBe(false)
   })
@@ -197,7 +197,10 @@ describe('Sprint 9 new user → Onboarding', () => {
     const wrapper = mount(App)
     await flushPromises()
     expect(wrapper.get('[data-testid="onboarding"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="today-production-status"]').text()).toContain('今日数据不可用')
+    /* New user：production 仍渲染真实 Hero + Observation，不暴露「未提供」调试文案。 */
+    expect(wrapper.get('[data-testid="hero-progress"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('未提供：')
+    expect(wrapper.text()).not.toContain('今日数据不可用')
     wrapper.unmount()
 
     const existing = defaultRouterState()
@@ -257,7 +260,7 @@ describe('Sprint 9 B1 Top3 + B2 events through the App', () => {
     expect(recommendationCall).toBeDefined()
     const body = requestBody(recommendationCall!) as { target_stage: string }
     expect(body.target_stage).toBe('junior_high')
-    expect(wrapper.get('[data-testid="today-production-status"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="hero-progress"]').exists()).toBe(true)
   })
 })
 

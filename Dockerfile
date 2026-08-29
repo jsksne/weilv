@@ -12,7 +12,8 @@ ENV VITE_UI_MODE=production \
 RUN test -n "$VITE_USER_ID" && test -n "$VITE_API_BASE_URL"
 RUN npm run build
 
-FROM ghcr.io/astral-sh/uv:0.12.0 AS uv
+FROM python:3.12-slim AS uv
+RUN python -m pip install --no-cache-dir uv==0.12.0
 
 FROM python:3.12-slim AS runtime
 
@@ -22,7 +23,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH=/app/.venv/bin:$PATH \
     PYTHONPATH=/app/src
 WORKDIR /app
-COPY --from=uv /uv /uvx /bin/
+COPY --from=uv /usr/local/bin/uv /bin/uv
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
 COPY src/ ./src/

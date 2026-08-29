@@ -11,6 +11,7 @@ import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import { useUiDataSource } from '@/composables/useUiDataSource'
 import { createUiDataSource } from '@/data/createUiDataSource'
 import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
+import { getConfiguredApiBaseUrl } from '@/config/apiBaseUrl'
 import { getConfiguredRecommendationContext } from '@/config/recommendationContext'
 import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
@@ -36,8 +37,12 @@ try {
   const mode = getConfiguredUiMode()
   const options =
     mode === 'production'
-      ? { userId: getConfiguredUserId(), recommendationContext: getConfiguredRecommendationContext() }
+      ? {
+          userId: getConfiguredUserId(),
+          recommendationContext: getConfiguredRecommendationContext(),
+        }
       : {}
+  if (mode === 'production') getConfiguredApiBaseUrl()
   dataSource = createUiDataSource(mode, options)
 } catch (cause) {
   configurationError.value =

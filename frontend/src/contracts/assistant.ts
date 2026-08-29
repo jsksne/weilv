@@ -103,6 +103,8 @@ export interface AssistantReply {
   suggestedTask: AssistantSuggestedTask | null
   safety: AssistantSafetyNotice | null
   sources: readonly AssistantSource[]
+  /** Production Output Guard 使用固定安全兜底时的透明提示；Demo 可省略。 */
+  guardNotice?: string | null
   traceIsReal: boolean
   timing: AssistantTiming | null
 }

@@ -31,6 +31,7 @@ packages = ["src/weilv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = [
     "integration: requires a running local Elasticsearch instance",
     "live_model: requires a real DASHSCOPE_API_KEY and calls paid model APIs",

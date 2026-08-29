@@ -44,12 +44,34 @@ class SurfacedTask(BaseModel):
     sources: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class PublicRagFactor(BaseModel):
+    factor_id: str
+    subquery: str
+    evidence_need: str
+    domain_hint: str | None = None
+
+
+class PublicRagKnowledgeChunk(BaseModel):
+    factor_id: str
+    chunk_id: str
+    source_locator: str
+    source_url: str | None = None
+    excerpt: str
+
+
+class PublicRagTrace(BaseModel):
+    analysis_fallback: bool = False
+    factors: list[PublicRagFactor] = Field(default_factory=list)
+    knowledge_chunks: list[PublicRagKnowledgeChunk] = Field(default_factory=list)
+
+
 class RecommendationResponse(BaseModel):
     status: str
     selected_task: dict[str, Any] | None = None
     explanation: str | None = None
     sources: list[dict[str, Any]] = Field(default_factory=list)
     context_sources: list[dict[str, Any]] | None = None
+    public_rag: PublicRagTrace | None = None
     matched_rule_ids: list[str] = Field(default_factory=list)
     reason_codes: list[str] = Field(default_factory=list)
     explanation_guard: dict[str, Any] | None = None

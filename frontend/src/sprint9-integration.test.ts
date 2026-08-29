@@ -183,6 +183,20 @@ describe('Sprint 9 production mode boundary', () => {
     expect(wrapper.text()).toContain('VITE_USER_ID')
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('fails closed when VITE_API_BASE_URL is missing in production', async () => {
+    vi.stubEnv('VITE_UI_MODE', 'production')
+    vi.stubEnv('VITE_USER_ID', 'u-9')
+    vi.stubEnv('VITE_API_BASE_URL', undefined)
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const wrapper = mount(App)
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="ui-data-error"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('VITE_API_BASE_URL')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })
 
 describe('Sprint 9 new user → Onboarding', () => {

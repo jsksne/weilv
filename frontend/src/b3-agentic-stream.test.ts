@@ -14,6 +14,7 @@ import {
 } from './data/adapters'
 import { ApiUiDataSource } from './data/apiUiDataSource'
 import { assistantFixture } from './data/fixtures/assistant.fixture'
+import AnswerCard from './components/assistant/AnswerCard.vue'
 import AssistantView from './views/AssistantView.vue'
 import type { AssistantReply, AssistantTraceEvent, UiDataSource } from './contracts'
 
@@ -41,6 +42,25 @@ function allowedDto(): RecommendationResponse {
       },
     ],
     context_sources: [],
+    public_rag: {
+      factors: [
+        {
+          factor_id: 'F1',
+          subquery: '睡眠不足时适合什么低负担恢复方式',
+          evidence_need: '审核知识中的睡眠与轻恢复依据',
+          domain_hint: 'sleep',
+        },
+      ],
+      knowledge_chunks: [
+        {
+          factor_id: 'F1',
+          chunk_id: 'KC-CONTEXT-1',
+          source_locator: '审核知识库 · 睡眠章节',
+          source_url: 'https://example.org/context',
+          excerpt: '睡前应优先选择低刺激、低负担的恢复方式，并避免继续挤占睡眠。',
+        },
+      ],
+    },
     matched_rule_ids: [],
     reason_codes: [],
     explanation_guard: { passed: true, fallback_used: false, reason_codes: [] },
@@ -185,6 +205,64 @@ describe('B3 adapter — real trace pipeline', () => {
   })
 })
 
+describe('B3 Output Guard transparency', () => {
+  it('labels the safe fallback instead of making a generic answer look like normal generation', () => {
+    const dto = allowedDto()
+    dto.explanation_guard = { passed: false, fallback_used: true, reason_codes: ['citation_missing'] }
+    const reply = adaptAgenticRecommendation(dto, { traceIsReal: true })
+
+    expect(reply.guardNotice).toContain('安全兜底')
+    expect(reply.guardNotice).toContain('真实执行')
+  })
+
+  it('does not label a safety response as normal snippet generation', () => {
+    const dto = allowedDto()
+    dto.status = 'help_seeking'
+    dto.selected_task = null
+    dto.explanation = '这次需要先找一位大人聊聊。'
+    const wrapper = mount(AnswerCard, {
+      props: { reply: adaptAgenticRecommendation(dto, { traceIsReal: true }) },
+    })
+
+    expect(wrapper.get('.answer-face').text()).toContain('已完成安全分流')
+    expect(wrapper.get('.answer-face').text()).not.toContain('已基于片段生成')
+  })
+
+  it('does not render a decomposition fallback as a model factor', () => {
+    const dto = allowedDto()
+    dto.public_rag = {
+      analysis_fallback: true,
+      factors: [
+        {
+          factor_id: 'F1',
+          subquery: dto.explanation ?? '',
+          evidence_need: 'general',
+          domain_hint: null,
+        },
+      ],
+      knowledge_chunks: [],
+    }
+
+    const reply = adaptAgenticRecommendation(dto, { traceIsReal: true })
+
+    expect(reply.pipeline.analysis.lead).toContain('未返回结构化问题拆解')
+    expect(reply.pipeline.analysis.items).toEqual([])
+  })
+
+  it('does not mark analysis or retrieval complete after terminal safety', () => {
+    const dto = allowedDto()
+    dto.status = 'blocked'
+    dto.selected_task = null
+    dto.explanation = '当前请求需要先暂停普通推荐。'
+    dto.public_rag = null
+
+    const reply = adaptAgenticRecommendation(dto, { traceIsReal: true })
+
+    expect(reply.pipeline.analysis.status).toBe('unavailable')
+    expect(reply.pipeline.retrieval.status).toBe('unavailable')
+  })
+})
+
 describe('B3 DataSource — Production uses the stream API', () => {
   it('submits via /agentic/stream and maps sanitized events to UI contract', async () => {
     const fetchMock = vi.fn().mockResolvedValue(ndjsonResponse(completeStream))
@@ -218,10 +296,21 @@ describe('B3 DataSource — Production uses the stream API', () => {
     expect(reply.answer[0].text).toContain('真实最终回答')
     expect(reply.pipeline.analysis.status).toBe('done')
     expect(reply.pipeline.retrieval.status).toBe('done')
-    expect(reply.pipeline.analysis.lead).toContain('需求理解')
-    expect(reply.pipeline.analysis.items).toEqual([])
+    expect(reply.pipeline.analysis.lead).toContain('1 个')
+    expect(reply.pipeline.analysis.items).toEqual([
+      expect.objectContaining({
+        id: 'F1',
+        title: '睡眠不足时适合什么低负担恢复方式',
+        direction: '审核知识中的睡眠与轻恢复依据',
+      }),
+    ])
     expect(reply.pipeline.retrieval.chunks).toEqual([
-      expect.objectContaining({ id: 'KC-1', source: '健康知识库', text: null, relevance: null }),
+      expect.objectContaining({
+        id: 'F1-KC-CONTEXT-1',
+        source: '审核知识库 · 睡眠章节',
+        text: '睡前应优先选择低刺激、低负担的恢复方式，并避免继续挤占睡眠。',
+        relevance: null,
+      }),
     ])
     expect(reply.sources[0].label).toBe('健康知识库')
   })
@@ -277,6 +366,8 @@ describe('B3 AssistantView — real trace rendering', () => {
     expect(wrapper.get('[data-testid="answer-card"]').text()).toContain('真实最终回答')
     expect(wrapper.get('[data-testid="evidence-list"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="evidence-list"]').text()).toContain('健康知识库')
+    expect(wrapper.get('[data-stage-card="analysis"]').text()).toContain('睡眠不足时适合什么低负担恢复方式')
+    expect(wrapper.get('[data-stage-card="retrieval"]').text()).toContain('睡前应优先选择低刺激、低负担的恢复方式')
   })
 
   it('does not advance the pipeline when no trace event has arrived', async () => {

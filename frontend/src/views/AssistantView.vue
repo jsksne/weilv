@@ -110,7 +110,7 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
 </script>
 
 <template>
-  <div class="ask-wrap" :data-trace-real="model.traceIsReal">
+  <div class="ask-wrap" :data-trace-real="reply?.traceIsReal ?? model.traceIsReal">
     <div class="ask-bg" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
     <AssistantHero />
     <p

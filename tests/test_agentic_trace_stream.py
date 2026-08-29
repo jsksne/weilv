@@ -31,6 +31,29 @@ def _allowed_result():
         "explanation": "解释文本",
         "sources": [{"chunk_id": "KC-1"}],
         "context_sources": [{"chunk_id": "KC-2"}],
+        "public_rag": {
+            "analysis_fallback": False,
+            "factors": [
+                {
+                    "factor_id": "F1",
+                    "subquery": "连续学习后的短休息",
+                    "evidence_need": "学习间歇证据",
+                    "domain_hint": "study_break",
+                    "reasoning": "must-not-leak",
+                }
+            ],
+            "knowledge_chunks": [
+                {
+                    "factor_id": "F1",
+                    "chunk_id": "KC-2",
+                    "source_locator": "审核知识库 · 第1节",
+                    "source_url": "https://example.test/knowledge",
+                    "excerpt": "公开知识片段：连续学习后可以安排短暂休息。",
+                    "score": 0.99,
+                    "embedding": [0.1, 0.2],
+                }
+            ],
+        },
         "matched_rule_ids": [],
         "reason_codes": [],
         "explanation_guard": {"passed": True, "fallback_used": False, "reason_codes": []},
@@ -142,6 +165,11 @@ def test_final_answer_matches_single_execution_result(monkeypatch):
     assert result["explanation"] == "解释文本"
     assert result["selected_task"]["task_id"] == "MT-SED-001"
     assert result["sources"] == [{"chunk_id": "KC-1"}]
+    assert result["public_rag"]["factors"][0]["subquery"] == "连续学习后的短休息"
+    assert result["public_rag"]["analysis_fallback"] is False
+    assert result["public_rag"]["knowledge_chunks"][0]["excerpt"].startswith("公开知识片段")
+    assert "score" not in json.dumps(result["public_rag"], ensure_ascii=False)
+    assert "embedding" not in json.dumps(result["public_rag"], ensure_ascii=False)
     assert result["recommendation_id"]
     assert result["feedback_available"] is True
 
@@ -256,8 +284,10 @@ def test_public_event_payload_secret_boundary(monkeypatch):
         "knowledge_trace_by_factor",
     ):
         assert forbidden not in text, f"forbidden token leaked: {forbidden}"
-    # 内部 result 中的解释可展示，但检索原文 / 分数 / 诊断一律不出现在 stream
+    # 解释与 allowlist 审核知识 excerpt 可展示；分数/诊断/内部字段不可展示。
     assert "解释文本" in text
+    assert "公开知识片段" in text
+    assert "must-not-leak" not in text
 
 
 def test_old_agentic_endpoint_remains_compatible(monkeypatch):

@@ -199,7 +199,9 @@ export class ApiUiDataSource implements UiDataSource {
         'Production Assistant context unavailable：缺少真实 Profile。',
       )
     }
-    return getAgenticRecommendation(request).then(adaptAgenticRecommendation)
+    return getAgenticRecommendation(request).then(dto =>
+      adaptAgenticRecommendation(dto, { traceIsReal: true }),
+    )
   }
 
   /**

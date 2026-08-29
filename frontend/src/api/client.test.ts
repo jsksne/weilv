@@ -88,6 +88,19 @@ describe('API client', () => {
     await expect(result).rejects.not.toMatchObject({ detail: expect.stringContaining('socket') })
   })
 
+  it('fails closed before fetch when the API base URL is missing', async () => {
+    const fetchMock = vi.fn()
+    vi.stubEnv('VITE_API_BASE_URL', '')
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(healthCheck()).rejects.toMatchObject({
+      status: 0,
+      code: 'api_base_url_missing',
+      detail: '生产 API 地址未配置',
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('postTaskEvent sends only the action to the recommendation events endpoint', async () => {
     const fetchMock = vi
       .fn()

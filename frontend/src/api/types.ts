@@ -44,6 +44,27 @@ export interface EvidenceSource {
   source_url: string
 }
 
+export interface PublicRagFactor {
+  factor_id: string
+  subquery: string
+  evidence_need: string
+  domain_hint: string | null
+}
+
+export interface PublicRagKnowledgeChunk {
+  factor_id: string
+  chunk_id: string
+  source_locator: string
+  source_url: string | null
+  excerpt: string
+}
+
+export interface PublicRagTrace {
+  analysis_fallback?: boolean
+  factors: PublicRagFactor[]
+  knowledge_chunks: PublicRagKnowledgeChunk[]
+}
+
 export interface ExplanationGuard {
   passed: boolean
   fallback_used: boolean
@@ -65,6 +86,7 @@ export interface RecommendationResponse {
   explanation: string | null
   sources: EvidenceSource[]
   context_sources: EvidenceSource[] | null
+  public_rag?: PublicRagTrace | null
   matched_rule_ids: string[]
   reason_codes: string[]
   explanation_guard: ExplanationGuard | null

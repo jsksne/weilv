@@ -12,7 +12,8 @@ from uuid import uuid4
 from elasticsearch import ApiError, Elasticsearch
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from weilv.agentic_rag import run_agentic_rag
 from weilv.api.agentic_trace import (
@@ -61,7 +62,7 @@ from weilv.questionnaire import (
     save_questionnaire,
     skip_questionnaire,
 )
-from weilv.retrieval_slice import _env_value, load_api_key
+from weilv.retrieval_slice import create_elasticsearch_client, load_api_key
 from weilv.user_memory import (
     UserMemoryCandidate,
     UserProfile,
@@ -74,13 +75,16 @@ from weilv.user_memory import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     env_file = PROJECT_ROOT / ".env"
-    es_url = _env_value("ELASTICSEARCH_URL", env_file) or "http://127.0.0.1:9200"
-    application.state.es_client = Elasticsearch(es_url, request_timeout=30)
+    application.state.es_client = create_elasticsearch_client(
+        env_file,
+        client_factory=Elasticsearch,
+    )
     try:
         ensure_stage_one_indices(application.state.es_client)
         ensure_user_memory_indices(application.state.es_client)
@@ -296,6 +300,7 @@ async def agentic_recommendation_stream(payload: RecommendationRequest, request:
     return StreamingResponse(
         _agentic_stream_generator(payload, client, api_key),
         media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
@@ -584,3 +589,18 @@ def read_user_weekly(
         raise
     except Exception as error:
         raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+
+
+if FRONTEND_DIST.is_dir():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def serve_frontend(path: str):
+        if path == "api" or path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="not_found")
+        requested = FRONTEND_DIST / path
+        if path and requested.is_file():
+            return FileResponse(requested)
+        return FileResponse(FRONTEND_DIST / "index.html")

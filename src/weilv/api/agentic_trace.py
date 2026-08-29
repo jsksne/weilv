@@ -4,8 +4,9 @@ Single-execution observability for the Agentic pipeline.
 
 The compiled LangGraph is run once via ``astream_events``; node *start*
 events are translated into coarse, sanitized public trace events.  Nothing
-internal (prompts, reasoning, retrieval payloads, scores, embeddings,
-diagnostics, secrets) ever leaves the backend.  The final response is
+internal (prompts, reasoning, raw retrieval candidates, scores, embeddings,
+diagnostics, secrets) ever leaves the backend. Reviewed knowledge excerpts may
+leave only through the explicit ``public_rag`` allowlist. The final response is
 allowlist-sanitized before being attached to the completed event.
 """
 
@@ -54,6 +55,7 @@ RESULT_ALLOWLIST = (
     "explanation",
     "sources",
     "context_sources",
+    "public_rag",
     "matched_rule_ids",
     "reason_codes",
     "explanation_guard",
@@ -62,9 +64,42 @@ RESULT_ALLOWLIST = (
 )
 
 
+PUBLIC_RAG_FACTOR_FIELDS = frozenset({"factor_id", "subquery", "evidence_need", "domain_hint"})
+PUBLIC_RAG_CHUNK_FIELDS = frozenset({"factor_id", "chunk_id", "source_locator", "source_url", "excerpt"})
+
+
+def _project_mapping(value: Any, fields: frozenset[str]) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return {key: value[key] for key in fields if key in value}
+
+
+def _sanitize_public_rag(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {"analysis_fallback": False, "factors": [], "knowledge_chunks": []}
+    factors = [
+        projected
+        for item in value.get("factors", [])
+        if (projected := _project_mapping(item, PUBLIC_RAG_FACTOR_FIELDS)) is not None
+    ]
+    chunks = [
+        projected
+        for item in value.get("knowledge_chunks", [])
+        if (projected := _project_mapping(item, PUBLIC_RAG_CHUNK_FIELDS)) is not None
+    ]
+    return {
+        "analysis_fallback": bool(value.get("analysis_fallback", False)),
+        "factors": factors,
+        "knowledge_chunks": chunks,
+    }
+
+
 def sanitize_final_response(result: Mapping[str, Any]) -> dict[str, Any]:
     """Allowlist-filter the final agentic result for public transport."""
-    return {key: value for key, value in result.items() if key in RESULT_ALLOWLIST}
+    public = {key: value for key, value in result.items() if key in RESULT_ALLOWLIST}
+    if "public_rag" in public:
+        public["public_rag"] = _sanitize_public_rag(public["public_rag"])
+    return public
 
 
 def translate_graph_event(event: dict[str, Any]) -> dict[str, Any] | None:

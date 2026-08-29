@@ -83,4 +83,11 @@ describe('Assistant rendering safety boundary', () => {
     expect(source).toContain('.safety-card p + p')
     expect(source).toContain('margin-top: 6px')
   })
+
+  it('describes only public processing status, never private chain-of-thought', () => {
+    const source = readFileSync(join(srcDir, 'components', 'assistant', 'AssistantHero.vue'), 'utf8')
+
+    expect(source).toContain('公开的处理状态')
+    expect(source).not.toContain('怎么想')
+  })
 })

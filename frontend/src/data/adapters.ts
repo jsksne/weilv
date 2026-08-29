@@ -4,6 +4,7 @@ import type {
   MemoryListResponse,
   QuestionnaireSchema,
   QuestionnaireState,
+  PublicRagTrace,
   RecommendationResponse,
   SelectedTask,
   SurfacedTask,
@@ -301,7 +302,8 @@ function toSafety(dto: RecommendationResponse): AssistantSafetyNotice | null {
   }
 }
 
-function tracedAnalysis(): AssistantAnalysisStage {
+function tracedAnalysis(publicRag: PublicRagTrace | null | undefined): AssistantAnalysisStage {
+  const factors = publicRag?.factors ?? []
   return {
     id: 'analysis',
     title: '问题拆解',
@@ -309,12 +311,22 @@ function tracedAnalysis(): AssistantAnalysisStage {
     statusLabel: '已完成分析',
     statusLabels: { done: '已完成分析' },
     visible: true,
-    lead: '已完成需求理解；接下来会检索相关知识并核对建议。',
-    items: [],
+    lead: publicRag?.analysis_fallback
+      ? '本次未返回结构化问题拆解；已使用原问题继续真实检索。'
+      : factors.length
+        ? `已将问题整理为 ${factors.length} 个可公开、可核验的方向。`
+        : '已完成需求理解；本次执行没有返回可公开的结构化拆解。',
+    items: publicRag?.analysis_fallback
+      ? []
+      : factors.map(factor => ({
+          id: factor.factor_id,
+          title: factor.subquery,
+          direction: factor.evidence_need || (factor.domain_hint ? `关注领域：${factor.domain_hint}` : '检索相关审核知识'),
+      })),
   }
 }
 
-function toKnowledgeChunk(source: EvidenceSource) {
+function toEvidenceOnlyChunk(source: EvidenceSource) {
   return {
     id: source.chunk_id,
     source: source.source_locator || source.source_url || '参考来源',
@@ -323,16 +335,29 @@ function toKnowledgeChunk(source: EvidenceSource) {
   }
 }
 
-function tracedRetrieval(allowed: boolean, evidence: readonly EvidenceSource[]): AssistantRetrievalStage {
+function tracedRetrieval(
+  allowed: boolean,
+  publicRag: PublicRagTrace | null | undefined,
+  evidence: readonly EvidenceSource[],
+): AssistantRetrievalStage {
+  const publicChunks = publicRag?.knowledge_chunks ?? []
+  const chunks = publicChunks.length
+    ? publicChunks.map(chunk => ({
+        id: `${chunk.factor_id}-${chunk.chunk_id}`,
+        source: chunk.source_locator || chunk.source_url || '审核知识库',
+        text: chunk.excerpt,
+        relevance: null,
+      }))
+    : evidence.map(toEvidenceOnlyChunk)
   return allowed
     ? {
         id: 'retrieval',
         title: '知识检索',
         status: 'done',
-        statusLabel: '已完成检索',
+        statusLabel: publicChunks.length ? `命中 ${publicChunks.length} 个公开片段` : '已完成检索',
         statusLabels: { done: '已完成检索' },
         visible: true,
-        chunks: evidence.map(toKnowledgeChunk),
+        chunks,
       }
     : {
         id: 'retrieval',
@@ -353,8 +378,10 @@ export function adaptAgenticRecommendation(
   const allowed = dto.status === 'allowed'
   const evidence = [...dto.sources, ...(dto.context_sources ?? [])]
   const sources = evidence.map(toSource)
-  const analysis = traced ? tracedAnalysis() : unavailableAnalysis()
-  const retrieval = traced ? tracedRetrieval(allowed, evidence) : unavailableRetrieval()
+  const analysis = traced && allowed ? tracedAnalysis(dto.public_rag) : unavailableAnalysis()
+  const retrieval = traced && allowed
+    ? tracedRetrieval(allowed, dto.public_rag, evidence)
+    : unavailableRetrieval()
   const answer = availableAnswer()
   const pipeline: AssistantPipeline = { analysis, retrieval, answer }
   const text = dto.explanation ? [{ text: dto.explanation }] : []
@@ -367,6 +394,9 @@ export function adaptAgenticRecommendation(
     suggestedTask: dto.status === 'allowed' ? toSuggestedTask(dto.selected_task) : null,
     safety: toSafety(dto),
     sources,
+    guardNotice: dto.explanation_guard?.fallback_used
+      ? '本次生成回答未通过输出校验，已切换为安全兜底说明；检索与来源仍来自本次真实执行。'
+      : null,
     traceIsReal: traced,
     timing: null,
   }

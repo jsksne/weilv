@@ -148,6 +148,46 @@ def test_invalid_problem_decomposition_uses_one_deterministic_factor(monkeypatch
     assert update["diagnostics"]["model_calls"]["decomposition"] == 1
 
 
+def test_public_rag_marks_decomposition_fallback_without_exposing_template_factor(monkeypatch):
+    import weilv.agentic_rag as agentic
+
+    task = _task()
+    evidence = [_knowledge(task["evidence_chunk_ids"][0])]
+    knowledge = _knowledge("KC-PUBLIC-1")
+    monkeypatch.setattr(
+        agentic,
+        "validate_explanation_output",
+        lambda *_args, **_kwargs: {"passed": True, "reason_codes": []},
+    )
+    monkeypatch.setattr(agentic, "load_formal_task_identities", lambda *_args, **_kwargs: [task])
+    state = {
+        "selected_task": task,
+        "task_evidence": evidence,
+        "response_text": "基于证据的回答 [E1]",
+        "safety_status": "allowed",
+        "safety_reason_codes": [],
+        "safety_matched_rule_ids": [],
+        "analysis_fallback": True,
+        "factors": [
+            {
+                "factor_id": "F1",
+                "domain_hint": None,
+                "subquery": "原问题",
+                "evidence_need": "general",
+            }
+        ],
+        "knowledge_by_factor": {"F1": [knowledge]},
+        "knowledge_contexts": [knowledge],
+        "diagnostics": agentic.initial_diagnostics(),
+    }
+
+    public = _runtime().output_guard(state)["result"]["public_rag"]
+
+    assert public["analysis_fallback"] is True
+    assert public["factors"] == []
+    assert public["knowledge_chunks"][0]["chunk_id"] == "KC-PUBLIC-1"
+
+
 def test_each_factor_runs_frozen_knowledge_retrieval_and_global_contexts_dedupe(monkeypatch):
     import weilv.agentic_rag as agentic
 
@@ -331,6 +371,66 @@ def test_output_guard_rejection_uses_existing_safe_fallback(monkeypatch):
     assert update["guard_status"] == "rejected"
     assert update["result"]["explanation_guard"]["fallback_used"] is True
     assert update["result"]["explanation"] == agentic.SAFE_EXPLANATION_FALLBACK
+
+
+def test_public_rag_projection_exposes_reviewed_excerpts_without_internal_ranking(monkeypatch):
+    import weilv.agentic_rag as agentic
+
+    task = _task()
+    evidence = [_knowledge(task["evidence_chunk_ids"][0])]
+    knowledge = {
+        **_knowledge("KC-PUBLIC-1"),
+        "rerank_rank": 1,
+        "rerank_score": 0.999,
+        "embedding": [0.1, 0.2],
+    }
+    monkeypatch.setattr(
+        agentic,
+        "validate_explanation_output",
+        lambda *_args, **_kwargs: {"passed": True, "reason_codes": []},
+    )
+    monkeypatch.setattr(agentic, "load_formal_task_identities", lambda *_args, **_kwargs: [task])
+    state = {
+        "selected_task": task,
+        "task_evidence": evidence,
+        "response_text": "基于证据的回答 [E1]",
+        "safety_status": "allowed",
+        "safety_reason_codes": [],
+        "safety_matched_rule_ids": [],
+        "factors": [
+            {
+                "factor_id": "F1",
+                "domain_hint": "study_break",
+                "subquery": "连续学习后的短休息",
+                "evidence_need": "学习间歇证据",
+            }
+        ],
+        "knowledge_by_factor": {"F1": [knowledge]},
+        "knowledge_contexts": [knowledge],
+        "diagnostics": agentic.initial_diagnostics(),
+    }
+
+    result = _runtime().output_guard(state)["result"]
+    public = result["public_rag"]
+    assert public["factors"] == [
+        {
+            "factor_id": "F1",
+            "subquery": "连续学习后的短休息",
+            "evidence_need": "学习间歇证据",
+            "domain_hint": "study_break",
+        }
+    ]
+    assert public["knowledge_chunks"][0] == {
+        "factor_id": "F1",
+        "chunk_id": "KC-PUBLIC-1",
+        "source_locator": "第1节",
+        "source_url": "https://example.test/doc",
+        "excerpt": "连续学习后可以安排短暂休息。",
+    }
+    serialized = json.dumps(public, ensure_ascii=False)
+    assert "rerank" not in serialized
+    assert "score" not in serialized
+    assert "embedding" not in serialized
 
 
 def test_langgraph_is_real_compiled_fixed_graph():

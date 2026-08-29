@@ -18,13 +18,17 @@ defineProps<{
     <span>{{ model.tasksSectionNote }}</span>
   </div>
   <div class="task-list">
+    <div v-if="!controller.entries.value.length" class="card task-card" data-testid="today-task-empty">
+      <h3 class="task-name">今天暂时没有可展示的安全任务</h3>
+      <p class="task-desc">{{ model.state.message || '稍后可以重试；这里不会用演示任务填充。' }}</p>
+    </div>
     <TaskCard
       v-for="entry in controller.entries.value"
       :key="entry.slotId"
       :entry="entry"
       :controller="controller"
       :copy="model.feedbackCopy"
-      :can-replace="model.state.mode === 'demo'"
+      :can-replace="model.availability.replace === 'available' && model.replacePool.length > 0"
     />
   </div>
 </template>

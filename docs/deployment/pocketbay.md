@@ -1,32 +1,68 @@
-# PocketBay competition deployment
+# PocketBay Production Deployment
 
-Release commit: `37ed2af5a7f9496adf2350e7406ca91b326e48b8`
+The supported production shape is one Docker Web Service. The image builds the
+Vue bundle with `VITE_UI_MODE=production`, then FastAPI serves that bundle and
+the `/api/*` routes from the same HTTPS origin. This keeps the browser API base
+URL as `/` and avoids a development server or fixture data in the deployed app.
 
-The PocketBay deployment is one Docker-backed Web Service: the image builds the Vue production bundle, FastAPI serves it at the same HTTPS origin, and `/api/*` remains handled by FastAPI. The app binds to the platform-provided `PORT`; it does not run a Vite development server in production.
+## Build settings
 
-## Required PocketBay runtime secrets
+Set these non-secret Docker build arguments in the existing PocketBay project:
 
-- `DASHSCOPE_API_KEY`
-- `ELASTICSEARCH_URL` (an externally managed Elasticsearch 8.x endpoint)
-- One Elasticsearch authentication method: `ELASTICSEARCH_API_KEY`, or both `ELASTICSEARCH_USERNAME` and `ELASTICSEARCH_PASSWORD`
-- `WEILV_ELASTICSEARCH_SERVERLESS=1` when the selected Elastic Cloud deployment is Serverless
+```text
+VITE_USER_ID=<controlled-production-user-id>
+VITE_API_BASE_URL=/
+```
 
-TLS certificate verification stays enabled by default. Set `ELASTICSEARCH_CA_CERTS` only when the managed service requires a custom CA file; do not disable verification in production. Do not put secret values in source, Docker build arguments, or the Vue bundle.
+`VITE_UI_MODE` is fixed to `production` by the Dockerfile. The user id is the
+current identity integration seam, not an authentication system; use the
+existing controlled production identity for this project.
 
-PocketBay does not provide Elasticsearch. Use an externally managed Elasticsearch 8.x-compatible service with private credentials and outbound access from PocketBay. The source data is external/unmanaged, so this release can run normally but is not configured as a platform-licensed copy.
+## Runtime settings
 
-## Initial deployment and bootstrap
+Set these as PocketBay runtime secrets/environment variables. Do not put them
+in Docker build arguments or the Vue bundle:
 
-Build arguments are intentionally non-secret: `VITE_UI_MODE=production`, `VITE_USER_ID=competition-demo-user`, and `VITE_API_BASE_URL=/`.
+```text
+DASHSCOPE_API_KEY=<secret>
+ELASTICSEARCH_URL=https://<managed-elasticsearch-host>
+ELASTICSEARCH_API_KEY=<secret>
+```
 
-For the initial release only, set `WEILV_BOOTSTRAP_ON_START=1`. The image then runs the committed `bootstrap_micro_tasks.py` and `bootstrap_health_knowledge.py` before Uvicorn starts, creating the seven indices and loading 23 micro tasks plus 29 reviewed knowledge chunks. Disable this flag after bootstrap to avoid re-embedding data on later restarts or redeployments.
+Use `ELASTICSEARCH_USERNAME` and `ELASTICSEARCH_PASSWORD` instead of the API
+key when that is the selected authentication method. Keep certificate
+verification enabled; set `ELASTICSEARCH_CA_CERTS` only when the service needs
+a custom CA. Set `WEILV_ELASTICSEARCH_SERVERLESS=1` for Elastic Serverless.
 
-Before deploying to Elastic Cloud Serverless, set `WEILV_ELASTICSEARCH_SERVERLESS=1` and run `python scripts/probe_elasticsearch_serverless.py` with the same runtime environment. The probe creates, maps, indexes, gets, and deletes one timestamped temporary index; it does not bootstrap production data.
+For a separately hosted frontend, set the backend process environment
+`WEILV_CORS_ORIGINS=https://<frontend-origin>` and build the frontend with
+`VITE_API_BASE_URL=https://<backend-origin>`. Never use `localhost` in a
+browser build that users will access remotely.
 
-Use `/health` for the PocketBay health check. It is a local FastAPI response and does not call DashScope. Dynamic services may cold-start after PocketBay idle sleep; before a demo, visit `/health` and then open the homepage.
+## First data bootstrap
 
-## Validation
+For the first deployment only, set `WEILV_BOOTSTRAP_ON_START=1`. The entrypoint
+uses the same configured Elasticsearch authentication as the API and loads the
+reviewed `micro_tasks_v1` and `health_knowledge_v1` data using real DashScope
+embeddings. Turn the variable off after the indices contain the data so a
+restart does not repeat paid embedding calls.
 
-After PocketBay reports `running`, verify HTTPS, production mode, fixture fallback `0`, onboarding with Memory off, B1/B2/B4/B5/B6, the NDJSON B3 stream, assistant sources, and safety behavior. `USER_IDENTITY_SEAM` is intentionally a controlled competition identity, not an authentication system. Weekly aggregation uses the existing UTC day boundary.
+The existing project previously used a bootstrap-on runtime setting. After the
+existing indices are confirmed populated, save `WEILV_BOOTSTRAP_ON_START=0`
+before or during this redeploy.
 
-The raw third-party source document for SRC-001 is not redistributed. The release includes its provenance metadata; full source-line verification remains optional through `WEILV_SOURCE_DOCUMENTS_DIR` in a lawful local environment.
+## Verification
+
+The service health check is `GET /health`. The Agentic assistant endpoint used
+by the production UI is `POST /api/v1/recommend/agentic/stream`; its completed
+event carries the final answer from that same run and only the allowlisted
+public RAG factors/excerpts. Internal diagnostics, prompts, scores, embeddings,
+and memory contents are not sent in the stream.
+
+After PocketBay reports `running`, verify the HTTPS homepage, the Today Hero,
+progress row, and Observation card; then submit a non-template question in
+“问问薇薇” and confirm the returned sources are from the real knowledge index.
+The page must not show a Demo badge.
+
+No new PocketBay project or service is required; redeploy the existing
+`weilv-competition` project.

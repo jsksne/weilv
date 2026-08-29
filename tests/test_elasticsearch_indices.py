@@ -156,6 +156,19 @@ def test_named_health_knowledge_index_reuses_the_frozen_mapping():
     }
 
 
+def test_serverless_index_creation_omits_shard_settings(monkeypatch):
+    from weilv.elasticsearch_indices import get_index_definitions, index_create_kwargs
+
+    definition = get_index_definitions()["health_knowledge_v1"]
+
+    assert index_create_kwargs("health_knowledge_v1", definition, serverless=True) == {
+        "index": "health_knowledge_v1",
+        "mappings": definition["mappings"],
+    }
+    monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "true")
+    assert "settings" not in index_create_kwargs("health_knowledge_v1", definition)
+
+
 def test_user_memory_indices_have_the_frozen_stage_four_contract():
     from weilv.elasticsearch_indices import get_user_memory_index_definitions
 

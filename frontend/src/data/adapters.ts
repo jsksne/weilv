@@ -4,6 +4,7 @@ import type {
   MemoryListResponse,
   QuestionnaireSchema,
   QuestionnaireState,
+  PublicRagTrace,
   RecommendationResponse,
   SelectedTask,
   SurfacedTask,
@@ -49,7 +50,7 @@ export function createProductionShellContract(): ShellContract {
     ],
     displayName: '微律',
     dateLabel: '今日',
-    progress: { completed: 0, total: 0, note: '今日进度不可用。' },
+    progress: { completed: 0, total: 0, note: '今天从一件小事开始。' },
     toastExample: { id: 'production-shell', message: '' },
   }
 }
@@ -67,7 +68,7 @@ const unavailableTodayAvailability: TodayDataAvailability = {
 }
 
 export function createUnavailableTodayContract(
-  message = 'Production Today 仅显示后端已提供的数据。',
+  message = '当前还没有可展示的真实今日数据。',
 ): TodayContract {
   return {
     state: { status: 'ready', mode: 'production', message },
@@ -75,15 +76,15 @@ export function createUnavailableTodayContract(
     recommendationStatus: 'unavailable',
     availability: unavailableTodayAvailability,
     unavailableFields: Object.keys(unavailableTodayAvailability),
-    heroTag: 'Production · 今日任务',
+    heroTag: '✦ 今日 · 真实推荐',
     greetingLead: '你好，',
     greetingName: '微律用户',
     summaryLines: [],
     observation: {
-      mainLead: '今日状态',
-      mainEmphasis: 'unavailable',
-      mainTail: '',
-      summary: '',
+      mainLead: '今天还没有足够的',
+      mainEmphasis: '状态数据',
+      mainTail: '。',
+      summary: '有真实记录后，微律会在这里整理观察；没有数据时不会推断睡眠、用眼或情绪。',
       stats: [],
       suggestions: [],
     },
@@ -93,33 +94,36 @@ export function createUnavailableTodayContract(
     defaultTimeMinutes: 0,
     moodNoteLead: '',
     moodNoteLines: [],
-    tasksSectionTitle: '今日可用任务',
-    tasksSectionNote: '仅显示后端真实返回的任务',
+    tasksSectionTitle: '今日微任务',
+    tasksSectionNote: '来自审核白名单 · 仅展示真实推荐',
     tasks: [],
     replacePool: [],
     lowMoodSwap: { taskId: '', name: '', description: '', why: '' },
-    rhythm: { title: '今日节奏', sub: '', items: [] },
-    breath: { title: '呼吸', sub: '', tip: '' },
+    rhythm: { title: '今天的节奏', sub: '有真实节奏数据后会显示在这里', items: [] },
+    breath: {
+      title: '此刻 · 跟随呼吸',
+      sub: '微律 AI 节律 · 9 秒一循环',
+      tip: '这是微律的呼吸节律：吸气 20% · 呼气 80%。',
+    },
     progressNotes: {
-      hero: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
-      docked: ['当前进度不可用', '当前进度不可用', '当前进度不可用', '当前进度不可用'],
+      hero: ['今天从一件小事开始', '已经完成一件 ✦', '慢慢来，快收尾了', '今天有交代了 ✦'],
+      docked: ['今天从一件小事开始', '已经完成一件', '快收尾了', '今天完成啦 ✦'],
     },
     feedbackCopy: {
-      start: '',
-      done: '',
-      partial: '',
-      skip: '',
+      start: '⏱ 开始啦 · 不着急',
+      done: '✦ 当前进度 +1',
+      partial: '🌱 部分完成也算数 · 当前进度已更新',
+      skip: '🕊 跳过也没关系',
       restore: '',
       replace: '',
       lowMood: '',
-      check: '',
+      check: '✦ 查看此刻的真实状态',
     },
   }
 }
 
-/* B5 schema pending: Weekly has no approved Backend DTO or Production adapter. */
 export function createUnavailableWeeklyContract(
-  message = 'Production Weekly 数据暂不可用：B5 schema pending。',
+  message = '周度数据暂时无法加载。',
 ): WeeklyContract {
   return {
     state: { status: 'unavailable', mode: 'production', message },
@@ -298,7 +302,8 @@ function toSafety(dto: RecommendationResponse): AssistantSafetyNotice | null {
   }
 }
 
-function tracedAnalysis(): AssistantAnalysisStage {
+function tracedAnalysis(publicRag: PublicRagTrace | null | undefined): AssistantAnalysisStage {
+  const factors = publicRag?.factors ?? []
   return {
     id: 'analysis',
     title: '问题拆解',
@@ -306,21 +311,53 @@ function tracedAnalysis(): AssistantAnalysisStage {
     statusLabel: '已完成分析',
     statusLabels: { done: '已完成分析' },
     visible: true,
-    lead: null,
-    items: [],
+    lead: publicRag?.analysis_fallback
+      ? '本次未返回结构化问题拆解；已使用原问题继续真实检索。'
+      : factors.length
+        ? `已将问题整理为 ${factors.length} 个可公开、可核验的方向。`
+        : '已完成需求理解；本次执行没有返回可公开的结构化拆解。',
+    items: publicRag?.analysis_fallback
+      ? []
+      : factors.map(factor => ({
+          id: factor.factor_id,
+          title: factor.subquery,
+          direction: factor.evidence_need || (factor.domain_hint ? `关注领域：${factor.domain_hint}` : '检索相关审核知识'),
+      })),
   }
 }
 
-function tracedRetrieval(allowed: boolean): AssistantRetrievalStage {
+function toEvidenceOnlyChunk(source: EvidenceSource) {
+  return {
+    id: source.chunk_id,
+    source: source.source_locator || source.source_url || '参考来源',
+    text: null,
+    relevance: null,
+  }
+}
+
+function tracedRetrieval(
+  allowed: boolean,
+  publicRag: PublicRagTrace | null | undefined,
+  evidence: readonly EvidenceSource[],
+): AssistantRetrievalStage {
+  const publicChunks = publicRag?.knowledge_chunks ?? []
+  const chunks = publicChunks.length
+    ? publicChunks.map(chunk => ({
+        id: `${chunk.factor_id}-${chunk.chunk_id}`,
+        source: chunk.source_locator || chunk.source_url || '审核知识库',
+        text: chunk.excerpt,
+        relevance: null,
+      }))
+    : evidence.map(toEvidenceOnlyChunk)
   return allowed
     ? {
         id: 'retrieval',
         title: '知识检索',
         status: 'done',
-        statusLabel: '已完成检索',
+        statusLabel: publicChunks.length ? `命中 ${publicChunks.length} 个公开片段` : '已完成检索',
         statusLabels: { done: '已完成检索' },
         visible: true,
-        chunks: [],
+        chunks,
       }
     : {
         id: 'retrieval',
@@ -339,9 +376,12 @@ export function adaptAgenticRecommendation(
 ): AssistantReply {
   const traced = options.traceIsReal === true
   const allowed = dto.status === 'allowed'
-  const sources = [...dto.sources, ...(dto.context_sources ?? [])].map(toSource)
-  const analysis = traced ? tracedAnalysis() : unavailableAnalysis()
-  const retrieval = traced ? tracedRetrieval(allowed) : unavailableRetrieval()
+  const evidence = [...dto.sources, ...(dto.context_sources ?? [])]
+  const sources = evidence.map(toSource)
+  const analysis = traced && allowed ? tracedAnalysis(dto.public_rag) : unavailableAnalysis()
+  const retrieval = traced && allowed
+    ? tracedRetrieval(allowed, dto.public_rag, evidence)
+    : unavailableRetrieval()
   const answer = availableAnswer()
   const pipeline: AssistantPipeline = { analysis, retrieval, answer }
   const text = dto.explanation ? [{ text: dto.explanation }] : []
@@ -354,6 +394,9 @@ export function adaptAgenticRecommendation(
     suggestedTask: dto.status === 'allowed' ? toSuggestedTask(dto.selected_task) : null,
     safety: toSafety(dto),
     sources,
+    guardNotice: dto.explanation_guard?.fallback_used
+      ? '本次生成回答未通过输出校验，已切换为安全兜底说明；检索与来源仍来自本次真实执行。'
+      : null,
     traceIsReal: traced,
     timing: null,
   }
@@ -518,6 +561,8 @@ export function adaptRecommendationResponse(dto: RecommendationResponse): TodayC
     ...unavailableTodayAvailability,
     selectedTask: tasks.length > 0 ? 'available' : 'unavailable',
     dailyTasks: tasks.length > 0 ? 'available' : 'unavailable',
+    progress: tasks.length > 0 ? 'available' : 'unavailable',
+    restore: tasks.length > 0 ? 'available' : 'unavailable',
   }
   const unavailableFields = Object.entries(availability)
     .filter(([, status]) => status === 'unavailable')
@@ -536,14 +581,16 @@ export function adaptRecommendationResponse(dto: RecommendationResponse): TodayC
     availability,
     unavailableFields,
     summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],
+    tasksSectionTitle: '今日微任务',
+    tasksSectionNote: '来自审核白名单 · 仅展示真实推荐',
     tasks,
   }
 }
 
 /**
- * Sprint 6 的 Profile/Questionnaire 适配器只消费 DTO 已有字段。
- * 真实 DTO 没有偏好统计、完成率或 Memory list/delete，因此这些字段
- * 明确保持 unavailable；这里不导入任何 fixture，也不触发网络请求。
+ * Profile/Questionnaire 适配器只消费真实 DTO。
+ * 偏好统计没有正式数据源时保留真实空态；Memory 与近 7 天完成情况
+ * 分别由 B4/B5 DTO 接线，不导入 fixture，也不触发第二套 LLM。
  */
 export type MockProfileResponse = UserProfile | (Partial<UserProfile> & { user_id: string })
 export type MockQuestionnaireResponse = QuestionnaireState
@@ -581,7 +628,7 @@ export function createUnavailableProfileContract(message = 'Production Profile �
       items: [],
       canDelete: false,
       notice: '没有明确 consent 时，Memory 保持关闭。',
-      unavailableMessage: 'Production Memory list/delete API 暂不可用。',
+      unavailableMessage: '记忆暂时无法加载，请稍后重试。',
     },
   }
 }
@@ -599,14 +646,57 @@ export function adaptMemoryListResponse(dto: MemoryListResponse): ProfileMemoryL
     enabled,
     consent: enabled ? 'granted' : 'disabled',
     items,
-    canDelete: enabled,
-    notice: enabled ? '已开启记忆；可删除任意一条（真实删除由后端完成）。' : 'Memory 保持关闭。',
+    canDelete: enabled && items.length > 0,
+    notice: enabled
+      ? items.length > 0
+        ? '这些是当前已形成的记忆；你可以随时删除。'
+        : '记忆已开启；尚未形成可展示的记忆。'
+      : 'Memory 保持关闭。',
+  }
+}
+
+function completionPatternFromWeekly(dto: WeeklyResponse | null): ProfileContract['completionPattern'] {
+  if (!dto) {
+    return {
+      status: 'unavailable',
+      icon: 'target',
+      title: '近 7 天完成情况',
+      percentage: null,
+      summaryLines: [],
+      unavailableMessage: '近 7 天任务记录暂时无法加载。',
+    }
+  }
+  const counts = dto.totals?.action_counts ?? {}
+  const completed = counts.completed ?? 0
+  const partial = counts.partially_completed ?? 0
+  const skipped = counts.skipped ?? 0
+  const outcomes = completed + partial + skipped
+  if (outcomes === 0) {
+    return {
+      status: 'available',
+      icon: 'target',
+      title: '近 7 天完成情况',
+      percentage: null,
+      summaryLines: [],
+      unavailableMessage: '近 7 天还没有足够的任务结果；有记录后会在这里形成统计。',
+    }
+  }
+  return {
+    status: 'available',
+    icon: 'target',
+    title: '近 7 天完成情况',
+    percentage: Math.round(((completed + partial) / outcomes) * 100),
+    summaryLines: [
+      `完成 ${completed} 项 · 部分完成 ${partial} 项 · 跳过 ${skipped} 项。`,
+      '比例只根据已有任务结果计算，不推断未记录的行为。',
+    ],
   }
 }
 
 export function adaptProfileResponse(
   dto: MockProfileResponse,
   memories: ProfileMemoryListContract | null = null,
+  weekly: WeeklyResponse | null = null,
 ): ProfileContract {
   const memoryEnabled = dto.memory_enabled === true
   const consent: MemoryConsentState = memoryEnabled
@@ -614,7 +704,7 @@ export function adaptProfileResponse(
     : dto.memory_enabled === false
       ? 'disabled'
       : 'missing'
-  const unavailableMessage = 'Production 没有偏好统计、完成率和 Memory list/delete 接口。'
+  const preferenceEmptyMessage = '还没有形成可展示的偏好统计。'
   const memory = memories
     ? { status: 'available' as const, ...memories }
     : {
@@ -624,9 +714,9 @@ export function adaptProfileResponse(
         items: [],
         canDelete: false,
         notice: memoryEnabled
-          ? 'Memory consent 已明确，但 Production Memory list/delete API 暂不可用。'
+          ? '记忆已开启，但暂时无法加载。'
           : '没有明确 consent 时，Memory 保持关闭。',
-        unavailableMessage: 'Production Memory list/delete API 暂不可用。',
+        unavailableMessage: '记忆暂时无法加载，请稍后重试。',
       }
 
   return {
@@ -635,18 +725,11 @@ export function adaptProfileResponse(
     memoryEnabled,
     header: {
       title: '我的画像',
-      description: '当前只展示真实 Profile 状态；后端尚未提供的画像数据不会用演示数据填充。',
+      description: '这里只展示真实 Profile、任务记录和已授权记忆；没有数据时不会用演示内容填充。',
     },
-    timePreference: unavailablePreference('time', 'clock', '时间偏好', unavailableMessage),
-    taskPreference: unavailablePreference('task', 'leaf', '任务偏好', unavailableMessage),
-    completionPattern: {
-      status: 'unavailable',
-      icon: 'target',
-      title: '历史规律',
-      percentage: null,
-      summaryLines: [],
-      unavailableMessage,
-    },
+    timePreference: unavailablePreference('time', 'clock', '时间偏好', preferenceEmptyMessage),
+    taskPreference: unavailablePreference('task', 'leaf', '任务偏好', preferenceEmptyMessage),
+    completionPattern: completionPatternFromWeekly(weekly),
     memory,
   }
 }

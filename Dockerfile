@@ -4,12 +4,12 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-ARG VITE_UI_MODE=production
-ARG VITE_USER_ID=competition-demo-user
+ARG VITE_USER_ID
 ARG VITE_API_BASE_URL=/
-ENV VITE_UI_MODE=${VITE_UI_MODE} \
+ENV VITE_UI_MODE=production \
     VITE_USER_ID=${VITE_USER_ID} \
     VITE_API_BASE_URL=${VITE_API_BASE_URL}
+RUN test -n "$VITE_USER_ID" && test -n "$VITE_API_BASE_URL"
 RUN npm run build
 
 FROM ghcr.io/astral-sh/uv:0.12.0 AS uv

@@ -18,6 +18,9 @@ defineProps<{
     </span>
     <template v-else>
       <KnowledgeChunk v-for="chunk in stage.chunks" :key="chunk.id" :chunk="chunk" />
+      <p v-if="!stage.chunks.length" class="stage-lead">
+        已完成检索；本次回答没有可公开的来源条目。
+      </p>
     </template>
   </PipelineStage>
 </template>

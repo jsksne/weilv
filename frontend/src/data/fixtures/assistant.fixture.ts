@@ -225,7 +225,7 @@ export const assistantFixture: AssistantContract = {
   state: { status: 'ready', mode: 'demo' },
   isDemo: true,
   traceIsReal: false,
-  demoLabel: '演示模式 · 非真实 Agent trace',
+  demoLabel: '演示模式 · 固定模板，不会请求真实 Agentic RAG',
   quickPrompts: [
     { id: 'exam', label: '考试周好累，只有 10 分钟', question: '考试周好累，只有 10 分钟' },
     { id: 'sleep', label: '最近睡不好', question: '最近睡不好' },

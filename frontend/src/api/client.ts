@@ -17,8 +17,10 @@ import type {
   UserProfileUpsertRequest,
   WeeklyResponse,
 } from './types'
-
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+import {
+  ApiBaseUrlConfigurationError,
+  getConfiguredApiBaseUrl,
+} from '@/config/apiBaseUrl'
 
 export class ApiError extends Error {
   constructor(
@@ -28,6 +30,18 @@ export class ApiError extends Error {
   ) {
     super(detail)
     this.name = 'ApiError'
+  }
+}
+
+function apiUrl(path: string): string {
+  try {
+    const baseUrl = getConfiguredApiBaseUrl()
+    return baseUrl === '/' ? path : `${baseUrl}${path}`
+  } catch (cause) {
+    if (cause instanceof ApiBaseUrlConfigurationError) {
+      throw new ApiError(0, '生产 API 地址未配置', 'api_base_url_missing')
+    }
+    throw cause
   }
 }
 
@@ -47,9 +61,10 @@ function errorFromResponse(status: number, body: unknown): ApiError {
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
+  const url = apiUrl(path)
   let response: Response
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, init)
+    response = await fetch(url, init)
   } catch {
     throw new ApiError(0, '无法连接服务', 'network_error')
   }
@@ -110,9 +125,10 @@ export async function streamAgenticRecommendation(
   body: RecommendationRequest,
   onEvent: (event: AgentTraceEventDto) => void,
 ): Promise<RecommendationResponse> {
+  const url = apiUrl('/api/v1/recommend/agentic/stream')
   let response: Response
   try {
-    response = await fetch(`${apiBaseUrl}/api/v1/recommend/agentic/stream`, jsonRequest('POST', body))
+    response = await fetch(url, jsonRequest('POST', body))
   } catch {
     throw new ApiError(0, '无法连接服务', 'network_error')
   }

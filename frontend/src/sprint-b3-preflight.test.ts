@@ -73,22 +73,28 @@ describe('Preflight — App onboarding submit binding', () => {
   })
 })
 
-describe('Preflight — TodayView production status label', () => {
+describe('Preflight — TodayView production rendering', () => {
   function mountToday(dataAvailability: 'available' | 'partial' | 'unavailable') {
     const model = todayModel(dataAvailability)
     const daily = useDailyTasks(model)
     return mount(TodayView, { props: { model, daily } })
   }
 
-  it('shows 今日可用任务 when dataAvailability is available', () => {
-    expect(mountToday('available').get('[data-testid="today-production-status"] strong').text()).toBe('今日可用任务')
+  it('renders the production Hero card when dataAvailability is available', () => {
+    const wrapper = mountToday('available')
+    expect(wrapper.find('[data-testid="hero-progress"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('未提供：')
   })
 
-  it('shows 今日可用任务 when dataAvailability is partial', () => {
-    expect(mountToday('partial').get('[data-testid="today-production-status"] strong').text()).toBe('今日可用任务')
+  it('renders the production Hero card when dataAvailability is partial', () => {
+    const wrapper = mountToday('partial')
+    expect(wrapper.find('[data-testid="hero-progress"]').exists()).toBe(true)
   })
 
-  it('shows 今日数据不可用 when dataAvailability is unavailable', () => {
-    expect(mountToday('unavailable').get('[data-testid="today-production-status"] strong').text()).toBe('今日数据不可用')
+  it('still renders the production layout without internal "未提供" debug copy when dataAvailability is unavailable', () => {
+    const wrapper = mountToday('unavailable')
+    expect(wrapper.find('[data-testid="hero-progress"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('未提供：')
+    expect(wrapper.text()).not.toContain('今日数据不可用')
   })
 })

@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-python -m weilv.runtime_config
+: "${DASHSCOPE_API_KEY:?DASHSCOPE_API_KEY must be configured}"
+: "${ELASTICSEARCH_URL:?ELASTICSEARCH_URL must be configured}"
 
 if [ "${WEILV_BOOTSTRAP_ON_START:-0}" = "1" ]; then
   python scripts/bootstrap_micro_tasks.py

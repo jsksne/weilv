@@ -150,7 +150,13 @@ function skip(): void {
       >
         跳过，先随便看看
       </button>
-      <p class="ob-skip" data-testid="questionnaire-contract-status">{{ mismatchMessage }}</p>
+      <p
+        v-if="model.state.mode === 'demo' && mismatchMessage"
+        class="ob-skip"
+        data-testid="questionnaire-contract-status"
+      >
+        {{ mismatchMessage }}
+      </p>
     </div>
   </div>
 </template>

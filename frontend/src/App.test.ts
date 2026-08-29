@@ -32,7 +32,7 @@ describe('App shell runtime (default)', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-view="assistant"] .ask-wrap').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('非真实 Agent trace')
+    expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('演示模式 · 固定模板，不会请求真实 Agentic RAG')
     expect(wrapper.get('[data-view="profile"] [data-testid="profile-view"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-view="profile"] [data-profile-section]')).toHaveLength(4)
   })

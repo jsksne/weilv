@@ -19,8 +19,7 @@ const props = defineProps<{
       <CompletionRing :percentage="model.percentage" :replay-key="props.replayKey" />
       <div class="stat-txt">
         <template v-for="(line, index) in model.summaryLines" :key="line">
-          <template v-if="index === 0"><b>3 分钟以内</b>的小任务完成率最高。</template>
-          <template v-else>{{ line }}</template>
+          {{ line }}
           <br v-if="index < model.summaryLines.length - 1" />
         </template>
       </div>

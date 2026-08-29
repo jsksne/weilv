@@ -16,8 +16,10 @@ defineProps<{
       <i></i><i></i><i></i>
     </span>
     <template v-else>
-      <p class="stage-lead">{{ stage.lead }}</p>
-      <div class="dirs">
+      <p class="stage-lead">
+        {{ stage.lead || '已完成需求理解；这里只展示可公开的工作流信息，不展示模型内部推理。' }}
+      </p>
+      <div v-if="stage.items.length" class="dirs">
         <div v-for="(item, index) in stage.items" :key="item.id" class="dir-row">
           <span class="dir-no">Q{{ index + 1 }}</span>
           <div>

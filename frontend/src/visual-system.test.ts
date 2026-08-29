@@ -227,6 +227,7 @@ describe('visual system: tokens and fidelity', () => {
       '.tl-body{min-width:0',
       '.tl-body{overflow-wrap:anywhere',
       '@media(max-width:560px)',
+      '.answer-guard-note{',
     ]
 
     /* 计划内工程化差异（精确白名单，仅此一对）：`.view.active` 的 viewIn

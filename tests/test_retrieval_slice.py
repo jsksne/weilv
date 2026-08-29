@@ -73,6 +73,43 @@ def test_load_api_key_fails_clearly_when_not_configured(tmp_path, monkeypatch):
         load_api_key(tmp_path / ".env")
 
 
+def test_managed_elasticsearch_client_uses_documented_authentication(tmp_path, monkeypatch):
+    from weilv.retrieval_slice import create_elasticsearch_client
+
+    for name in (
+        "ELASTICSEARCH_URL",
+        "ELASTICSEARCH_API_KEY",
+        "ELASTICSEARCH_USERNAME",
+        "ELASTICSEARCH_PASSWORD",
+        "ELASTICSEARCH_CA_CERTS",
+        "ELASTICSEARCH_VERIFY_CERTS",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "ELASTICSEARCH_URL=https://elastic.example.test:9243\n"
+        "ELASTICSEARCH_API_KEY=test-api-key\n"
+        "ELASTICSEARCH_CA_CERTS=/run/secrets/elastic-ca.pem\n"
+        "ELASTICSEARCH_VERIFY_CERTS=true\n",
+        encoding="utf-8",
+    )
+
+    class ClientFactory:
+        def __init__(self, url, **options):
+            self.url = url
+            self.options = options
+
+    client = create_elasticsearch_client(env_file, client_factory=ClientFactory)
+
+    assert client.url == "https://elastic.example.test:9243"
+    assert client.options == {
+        "request_timeout": 30,
+        "api_key": "test-api-key",
+        "ca_certs": "/run/secrets/elastic-ca.pem",
+        "verify_certs": True,
+    }
+
+
 def test_formal_index_rejects_chunks_without_content_review():
     from weilv.retrieval_slice import validate_index_target
 

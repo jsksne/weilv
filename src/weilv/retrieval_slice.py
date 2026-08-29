@@ -60,7 +60,7 @@ def create_elasticsearch_client(
     *,
     client_factory=Elasticsearch,
 ):
-    """Create the local or managed Elasticsearch client from documented environment values."""
+    """Create a local or managed Elasticsearch client from environment values."""
     es_url = _env_value("ELASTICSEARCH_URL", env_file) or "http://127.0.0.1:9200"
     options: dict[str, object] = {"request_timeout": 30}
     if api_key := _env_value("ELASTICSEARCH_API_KEY", env_file):

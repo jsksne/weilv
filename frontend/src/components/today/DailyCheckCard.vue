@@ -52,13 +52,25 @@ defineExpose({ focusCheck })
     <span>心情会轻轻影响推荐</span>
   </div>
   <div ref="card" class="card mood-card" :class="{ 'check-focus': focusing }">
-    <MoodSelector :moods="model.moods" :selected="mood" @select="emit('select-mood', $event)" />
+    <MoodSelector
+      v-if="model.moods.length"
+      :moods="model.moods"
+      :selected="mood"
+      @select="emit('select-mood', $event)"
+    />
+    <div v-else class="mood-note" data-testid="mood-empty">
+      暂时没有可用于推荐的心情信息；微律不会自行推断你的情绪。
+    </div>
     <AvailableTimeSelector
+      v-if="model.timeOptions.length"
       :options="model.timeOptions"
       :selected-minutes="availableMinutes"
       @select="emit('select-time', $event)"
     />
-    <div class="mood-note">
+    <div v-else class="mood-note" data-testid="available-time-empty">
+      可用时间尚未提供；只有你明确提供后才会用于推荐。
+    </div>
+    <div v-if="model.moodNoteLead || model.moodNoteLines.length" class="mood-note">
       <b>{{ model.moodNoteLead }}</b>{{ model.moodNoteLines[0] }}<br />{{ model.moodNoteLines[1] }}
     </div>
   </div>

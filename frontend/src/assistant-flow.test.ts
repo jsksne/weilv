@@ -18,7 +18,7 @@ describe('Assistant demo flow', () => {
   it('runs the fixture pipeline in order and keeps the demo flag visible', async () => {
     const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
 
-    expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('非真实 Agent trace')
+    expect(wrapper.get('[data-testid="demo-badge"]').text()).toContain('演示模式 · 固定模板，不会请求真实 Agentic RAG')
     expect(wrapper.attributes('data-trace-real')).toBe('false')
 
     await wrapper.get('[data-prompt="exam"]').trigger('click')

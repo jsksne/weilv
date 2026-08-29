@@ -81,7 +81,10 @@ FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     env_file = PROJECT_ROOT / ".env"
-    application.state.es_client = create_elasticsearch_client(env_file, client_factory=Elasticsearch)
+    application.state.es_client = create_elasticsearch_client(
+        env_file,
+        client_factory=Elasticsearch,
+    )
     try:
         ensure_stage_one_indices(application.state.es_client)
         ensure_user_memory_indices(application.state.es_client)

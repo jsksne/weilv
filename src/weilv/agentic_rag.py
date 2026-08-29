@@ -133,6 +133,65 @@ def _fallback_factor(query: str) -> list[dict[str, Any]]:
     ]
 
 
+PUBLIC_RAG_EXCERPT_CHARS = 420
+PUBLIC_RAG_CHUNKS_PER_FACTOR = 2
+
+
+def _public_excerpt(value: Any) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= PUBLIC_RAG_EXCERPT_CHARS:
+        return text
+    return text[: PUBLIC_RAG_EXCERPT_CHARS - 1].rstrip() + "…"
+
+
+def _public_rag_trace(state: AgenticState) -> dict[str, Any]:
+    # Display-only projection. Never expose scores/ranks/embeddings/prompts/Memory.
+    analysis_fallback = bool(state.get("analysis_fallback"))
+    factors: list[dict[str, Any]] = []
+    chunks: list[dict[str, Any]] = []
+    knowledge_by_factor = state.get("knowledge_by_factor") or {}
+
+    for factor in state.get("factors") or []:
+        factor_id = str(factor.get("factor_id") or "")
+        if not factor_id:
+            continue
+        if not analysis_fallback:
+            factors.append(
+                {
+                    "factor_id": factor_id,
+                    "subquery": str(factor.get("subquery") or ""),
+                    "evidence_need": str(factor.get("evidence_need") or ""),
+                    "domain_hint": factor.get("domain_hint"),
+                }
+            )
+        visible_count = 0
+        for item in knowledge_by_factor.get(factor_id, []):
+            if visible_count >= PUBLIC_RAG_CHUNKS_PER_FACTOR:
+                break
+            if item.get("review_status") != "content_reviewed":
+                continue
+            excerpt = _public_excerpt(item.get("content"))
+            chunk_id = str(item.get("chunk_id") or "")
+            if not chunk_id or not excerpt:
+                continue
+            chunks.append(
+                {
+                    "factor_id": factor_id,
+                    "chunk_id": chunk_id,
+                    "source_locator": str(item.get("source_locator") or "审核知识库"),
+                    "source_url": item.get("source_url") or None,
+                    "excerpt": excerpt,
+                }
+            )
+            visible_count += 1
+
+    return {
+        "analysis_fallback": analysis_fallback,
+        "factors": factors,
+        "knowledge_chunks": chunks,
+    }
+
+
 class AgenticRagRuntime:
     def __init__(
         self,
@@ -477,6 +536,7 @@ class AgenticRagRuntime:
             "explanation": explanation,
             "sources": _sources(state["task_evidence"]),
             "context_sources": _sources(state.get("knowledge_contexts", [])),
+            "public_rag": _public_rag_trace(state),
             "matched_rule_ids": state.get("safety_matched_rule_ids", []),
             "reason_codes": state.get("safety_reason_codes", []),
             "explanation_guard": {

@@ -11,6 +11,7 @@ import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import { useUiDataSource } from '@/composables/useUiDataSource'
 import { createUiDataSource } from '@/data/createUiDataSource'
 import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
+import { getConfiguredApiBaseUrl } from '@/config/apiBaseUrl'
 import { getConfiguredRecommendationContext } from '@/config/recommendationContext'
 import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
@@ -36,8 +37,12 @@ try {
   const mode = getConfiguredUiMode()
   const options =
     mode === 'production'
-      ? { userId: getConfiguredUserId(), recommendationContext: getConfiguredRecommendationContext() }
+      ? {
+          userId: getConfiguredUserId(),
+          recommendationContext: getConfiguredRecommendationContext(),
+        }
       : {}
+  if (mode === 'production') getConfiguredApiBaseUrl()
   dataSource = createUiDataSource(mode, options)
 } catch (cause) {
   configurationError.value =
@@ -93,25 +98,28 @@ watch(
   { immediate: true },
 )
 
-/* 原型 navDate：冻结「4 月 22 日」+ 按当前日期计算星期 */
+/* Demo 保留冻结日期；Production 使用当前真实日期。 */
 const frozenDateLabel = (): string => {
   const weekday = ['日', '一', '二', '三', '四', '五', '六'][new Date().getDay()]
   return `4 月 22 日 · 星期${weekday}`
+}
+
+const currentDateLabel = (): string => {
+  const now = new Date()
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()]
+  return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${weekday}`
 }
 
 const shell = computed<ShellContract>(() => {
   const base = bundle.value?.shell ?? createProductionShellContract()
   return {
     ...base,
-    dateLabel: base.state.mode === 'demo' ? frozenDateLabel() : base.dateLabel,
-    progress:
-      base.state.mode === 'demo'
-        ? {
-            completed: daily.completed.value,
-            total: daily.total.value,
-            note: daily.dockedProgressNote.value,
-          }
-        : base.progress,
+    dateLabel: base.state.mode === 'demo' ? frozenDateLabel() : currentDateLabel(),
+    progress: {
+      completed: daily.completed.value,
+      total: daily.total.value,
+      note: daily.dockedProgressNote.value,
+    },
   }
 })
 

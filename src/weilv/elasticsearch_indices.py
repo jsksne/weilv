@@ -7,8 +7,7 @@ _STANDARD_INDEX_SETTINGS = {"number_of_shards": 1, "number_of_replicas": 0}
 
 
 def elasticsearch_serverless_enabled(environ: dict[str, str] | None = None) -> bool:
-    """Return whether index creation must target Elastic Serverless."""
-
+    """Return whether index creation targets Elastic Serverless."""
     values = os.environ if environ is None else environ
     return values.get("WEILV_ELASTICSEARCH_SERVERLESS", "").strip().lower() in _SERVERLESS_TRUE_VALUES
 
@@ -19,8 +18,7 @@ def index_create_kwargs(
     *,
     serverless: bool | None = None,
 ) -> dict:
-    """Build create-index arguments without sending unsupported Serverless settings."""
-
+    """Build create-index arguments for standard or Serverless Elasticsearch."""
     if serverless is None:
         serverless = elasticsearch_serverless_enabled()
 

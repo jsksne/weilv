@@ -4,7 +4,7 @@ import type { AssistantTraceEvent } from './assistant'
 import type { OnboardingContract, OnboardingSubmitAnswers, OnboardingSubmitResult } from './onboarding'
 import type { ProfileContract, ProfileMemoryListContract } from './profile'
 import type { ShellContract } from './shell'
-import type { TodayContract, TodayTaskAction } from './today'
+import type { TodayContextSelection, TodayContract, TodayTaskAction } from './today'
 import type { WeeklyContract } from './weekly'
 
 export interface UiDataBundle {
@@ -24,6 +24,8 @@ export interface UiDataSource {
   getWeekly(): Promise<WeeklyContract>
   getOnboarding(): Promise<OnboardingContract>
   getToday(): Promise<TodayContract>
+  /** Today 的用户选择作为下一次真实 RecommendationRequest 的上下文。 */
+  setTodayContext?(context: TodayContextSelection): void
   askAssistant(question: string): Promise<AssistantReply>
   /**
    * B3：流式 Agentic 提交。每次调用 = 一次真实 backend Agentic 执行；

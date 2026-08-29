@@ -459,14 +459,36 @@ export function applyAgentTraceEvent(
   }
   if (event.status === 'error') return next
   if (ANALYSIS_TRACE_STAGES.has(event.stage)) {
-    next.analysis.status = 'active'
-    next.analysis.statusLabel = event.label
-    next.analysis.statusLabels = { ...next.analysis.statusLabels, active: event.label }
+    if (event.status === 'complete') {
+      next.analysis.status = 'done'
+      next.analysis.statusLabel = event.label
+      next.analysis.statusLabels = { ...next.analysis.statusLabels, done: event.label }
+      next.analysis.visible = true
+      if (event.stageResult?.analysis) {
+        next.analysis.lead = event.stageResult.analysis.lead
+        next.analysis.items = [...event.stageResult.analysis.items]
+      }
+    } else {
+      next.analysis.status = 'active'
+      next.analysis.statusLabel = event.label
+      next.analysis.statusLabels = { ...next.analysis.statusLabels, active: event.label }
+    }
   } else if (RETRIEVAL_TRACE_STAGES.has(event.stage)) {
-    if (next.analysis.status === 'active') next.analysis.status = 'done'
-    next.retrieval.status = 'active'
-    next.retrieval.statusLabel = event.label
-    next.retrieval.statusLabels = { ...next.retrieval.statusLabels, active: event.label }
+    if (event.status === 'complete') {
+      if (next.analysis.status === 'active') next.analysis.status = 'done'
+      next.retrieval.status = 'done'
+      next.retrieval.statusLabel = event.label
+      next.retrieval.statusLabels = { ...next.retrieval.statusLabels, done: event.label }
+      next.retrieval.visible = true
+      if (event.stageResult?.retrieval) {
+        next.retrieval.chunks = [...event.stageResult.retrieval.chunks]
+      }
+    } else {
+      if (next.analysis.status === 'active') next.analysis.status = 'done'
+      next.retrieval.status = 'active'
+      next.retrieval.statusLabel = event.label
+      next.retrieval.statusLabels = { ...next.retrieval.statusLabels, active: event.label }
+    }
   } else if (event.stage === 'generation') {
     if (next.analysis.status === 'active') next.analysis.status = 'done'
     if (next.retrieval.status === 'active') next.retrieval.status = 'done'

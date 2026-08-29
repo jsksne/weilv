@@ -16,7 +16,7 @@ import { getConfiguredRecommendationContext } from '@/config/recommendationConte
 import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
-import type { ShellContract, UiDataSource } from '@/contracts'
+import type { ShellContract, TodayContextSelection, UiDataSource } from '@/contracts'
 import type {
   OnboardingSubmitAnswers,
   OnboardingSubmitResult,
@@ -70,6 +70,10 @@ const today = computed(() => bundle.value?.today ?? createUnavailableTodayContra
 function onTaskAction(task: TodayTaskView, action: TodayTaskAction): void {
   if (!task.recommendationId) return
   if (dataSource?.submitTaskAction) void dataSource.submitTaskAction(task.recommendationId, action)
+}
+
+function onTodayContextChange(context: TodayContextSelection): void {
+  dataSource?.setTodayContext?.(context)
 }
 
 /* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从 DataSource Contract 取数 */
@@ -158,7 +162,7 @@ async function refreshProfile(): Promise<void> {
 <template>
   <AppShell v-if="status === 'ready' && bundle" :shell="shell" @replay="openOnboarding">
     <template #today>
-      <TodayView :model="bundle.today" :daily="daily" />
+      <TodayView :model="bundle.today" :daily="daily" @context-change="onTodayContextChange" />
     </template>
     <template #assistant>
       <AssistantView :model="bundle.assistant" :data-source="dataSource ?? undefined" />

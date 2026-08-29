@@ -370,6 +370,54 @@ describe('B3 AssistantView — real trace rendering', () => {
     expect(wrapper.get('[data-stage-card="retrieval"]').text()).toContain('睡前应优先选择低刺激、低负担的恢复方式')
   })
 
+  it('renders each completed stage details before the later stages finish', async () => {
+    let emitEvent: ((event: AssistantTraceEvent) => void) | null = null
+    let resolveReply: ((reply: AssistantReply) => void) | null = null
+    const source = mockSource((_question, onEvent) => {
+      emitEvent = onEvent
+      onEvent({ stage: 'accepted', status: 'active', label: '正在理解你的需求' })
+      return new Promise<AssistantReply>(resolve => {
+        resolveReply = resolve
+      })
+    })
+    const wrapper = mount(AssistantView, { props: { model: productionModel(), dataSource: source } })
+
+    await wrapper.get('[data-prompt="sleep"]').trigger('click')
+    emitEvent?.({
+      stage: 'analysis',
+      status: 'complete',
+      label: '已完成分析',
+      stageResult: {
+        analysis: {
+          lead: '已拆解 1 个方向',
+          items: [{ id: 'F1', title: '睡眠不足后的短休息', direction: '审核知识依据' }],
+        },
+      },
+    })
+    await nextTick()
+
+    expect(wrapper.get('[data-stage-card="analysis"]').text()).toContain('睡眠不足后的短休息')
+    expect(wrapper.get('[data-stage-card="retrieval"]').text()).toContain('等待开始')
+
+    emitEvent?.({
+      stage: 'retrieval',
+      status: 'complete',
+      label: '已完成检索',
+      stageResult: {
+        retrieval: {
+          chunks: [{ id: 'F1-KC-1', source: '审核知识库', text: '公开检索片段', relevance: null }],
+        },
+      },
+    })
+    await nextTick()
+
+    expect(wrapper.get('[data-stage-card="retrieval"]').text()).toContain('公开检索片段')
+    expect(wrapper.find('[data-testid="answer-card"]').exists()).toBe(false)
+
+    resolveReply?.(adaptAgenticRecommendation(allowedDto(), { traceIsReal: true }))
+    await flushPromises()
+  })
+
   it('does not advance the pipeline when no trace event has arrived', async () => {
     let resolveReply: ((reply: AssistantReply) => void) | null = null
     const source = mockSource(

@@ -2,6 +2,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 
 import TodayView from './views/TodayView.vue'
 import { todayFixture } from './data/fixtures/today.fixture'
+import { createUnavailableTodayContract } from './data/adapters'
 import { useDailyTasks } from './composables/useDailyTasks'
 import { useToast } from './composables/useToast'
 
@@ -228,6 +229,25 @@ describe('Sprint 4 TodayView: mood, time and check CTA', () => {
 
     expect(chips[0]!.classes()).toContain('on')
     expect(chips[1]!.classes()).not.toContain('on')
+  })
+
+  it('keeps mood and time choices available when Production Today context is missing', async () => {
+    const model = createUnavailableTodayContract('missing current context')
+    const daily = useDailyTasks(model)
+    const wrapper = mount(TodayView, { props: { model, daily } })
+
+    expect(wrapper.findAll('.mood')).toHaveLength(4)
+    expect(wrapper.findAll('.chip')).toHaveLength(3)
+
+    await wrapper.findAll('.mood')[2]!.trigger('click')
+    await wrapper.findAll('.chip')[0]!.trigger('click')
+
+    expect(daily.mood.value).toBe('tired')
+    expect(daily.availableMinutes.value).toBe(10)
+    expect(wrapper.emitted('context-change')?.at(-1)?.[0]).toEqual({
+      mood: 'tired',
+      availableMinutes: 10,
+    })
   })
 
   it('check CTA focuses the mood card and toasts the frozen copy', async () => {

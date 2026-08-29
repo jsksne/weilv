@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { TodayContract } from '@/contracts'
+import type { TodayContextSelection, TodayContract } from '@/contracts'
 import type { DailyTasksController } from '@/composables/useDailyTasks'
 import { useToast } from '@/composables/useToast'
 import DockedTaskProgress from '@/components/shell/DockedTaskProgress.vue'
@@ -26,6 +26,10 @@ const props = defineProps<{
   daily: DailyTasksController
 }>()
 
+const emit = defineEmits<{
+  'context-change': [context: TodayContextSelection]
+}>()
+
 const { push } = useToast()
 
 const hero = ref<InstanceType<typeof TodayHero> | null>(null)
@@ -48,6 +52,18 @@ function onCheck(): void {
 function onSelectMood(value: string): void {
   props.daily.applyMood(value)
   if (value === 'low') push(props.model.feedbackCopy.lowMood)
+  emit('context-change', {
+    mood: value,
+    availableMinutes: props.daily.availableMinutes.value,
+  })
+}
+
+function onSelectTime(minutes: number): void {
+  props.daily.selectTime(minutes)
+  emit('context-change', {
+    mood: props.daily.mood.value,
+    availableMinutes: minutes,
+  })
 }
 </script>
 
@@ -75,7 +91,7 @@ function onSelectMood(value: string): void {
         :mood="daily.mood.value"
         :available-minutes="daily.availableMinutes.value"
         @select-mood="onSelectMood"
-        @select-time="daily.selectTime"
+        @select-time="onSelectTime"
       />
       <TaskList :model="model" :controller="daily" />
       <p v-if="daily.pendingFeedback.value.length" data-testid="pending-feedback" role="status">

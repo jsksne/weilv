@@ -14,7 +14,7 @@ from collections.abc import AsyncIterator, Mapping
 from typing import Any
 
 from weilv.agent_graph import build_agent_graph
-from weilv.agentic_rag import AgenticRagRuntime, initial_diagnostics
+from weilv.agentic_rag import AgenticRagRuntime, _public_rag_trace, initial_diagnostics
 from weilv.basic_rag import BasicRagRequest
 
 # Real LangGraph node name -> coarse public stage (fixed pipeline order).
@@ -116,6 +116,21 @@ def translate_graph_event(event: dict[str, Any]) -> dict[str, Any] | None:
     if stage is None:
         return None
     return {"stage": stage, "status": "active", "label": STAGE_LABELS[stage]}
+
+
+def public_stage_result(stage: str, state: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Return only the reviewed public content produced by a completed stage."""
+    public = _public_rag_trace(state)
+    if stage == "analysis":
+        return {
+            "analysis": {
+                "analysis_fallback": public["analysis_fallback"],
+                "factors": public["factors"],
+            }
+        }
+    if stage == "retrieval":
+        return {"retrieval": {"knowledge_chunks": public["knowledge_chunks"]}}
+    return None
 
 
 async def iter_agentic_graph_events(

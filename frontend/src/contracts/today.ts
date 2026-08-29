@@ -85,6 +85,11 @@ export interface TodayTimeOption {
   label: string
 }
 
+export interface TodayContextSelection {
+  mood: string
+  availableMinutes: number
+}
+
 /** 选择「有点低落」时对第二张任务卡的内容替换（仅 pending 可用） */
 export interface TodayLowMoodSwap {
   taskId: string

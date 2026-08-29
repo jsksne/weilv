@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onUnmounted, ref } from 'vue'
 
-import type { TodayContract } from '@/contracts'
+import type { TodayContract, TodayMoodOption, TodayTimeOption } from '@/contracts'
 import { useMotionPulse } from '@/composables/useMotionPulse'
 import AvailableTimeSelector from './AvailableTimeSelector.vue'
 import MoodSelector from './MoodSelector.vue'
@@ -15,11 +15,26 @@ import MoodSelector from './MoodSelector.vue'
  * scrollIntoView(center) + check-focus 1.6s 光晕（1700ms 后移除；
  * 先移除类再于 nextTick 加回，等价原型 remove→reflow→add 的动画重播）。
  */
-defineProps<{
+const fallbackMoods: readonly TodayMoodOption[] = [
+  { value: 'happy', face: '◕‿◕', label: '还不错' },
+  { value: 'calm', face: '˘‿˘', label: '平静' },
+  { value: 'tired', face: '>﹏<', label: '有点累' },
+  { value: 'low', face: '·︿·', label: '有点低落' },
+]
+const fallbackTimeOptions: readonly TodayTimeOption[] = [
+  { minutes: 10, label: '10 分钟' },
+  { minutes: 25, label: '25 分钟' },
+  { minutes: 40, label: '40 分钟' },
+]
+
+const props = defineProps<{
   model: TodayContract
   mood: string
   availableMinutes: number
 }>()
+
+const moods = computed(() => props.model.moods.length ? props.model.moods : fallbackMoods)
+const timeOptions = computed(() => props.model.timeOptions.length ? props.model.timeOptions : fallbackTimeOptions)
 
 const emit = defineEmits<{
   'select-mood': [value: string]
@@ -53,8 +68,8 @@ defineExpose({ focusCheck })
   </div>
   <div ref="card" class="card mood-card" :class="{ 'check-focus': focusing }">
     <MoodSelector
-      v-if="model.moods.length"
-      :moods="model.moods"
+      v-if="moods.length"
+      :moods="moods"
       :selected="mood"
       @select="emit('select-mood', $event)"
     />
@@ -62,8 +77,8 @@ defineExpose({ focusCheck })
       暂时没有可用于推荐的心情信息；微律不会自行推断你的情绪。
     </div>
     <AvailableTimeSelector
-      v-if="model.timeOptions.length"
-      :options="model.timeOptions"
+      v-if="timeOptions.length"
+      :options="timeOptions"
       :selected-minutes="availableMinutes"
       @select="emit('select-time', $event)"
     />

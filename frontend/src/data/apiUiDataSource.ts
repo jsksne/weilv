@@ -10,8 +10,14 @@ import {
   streamAgenticRecommendation,
   upsertUserProfile,
 } from '@/api/client'
-import type { RecommendationRequest, TargetStage, WeeklyResponse } from '@/api/types'
 import type {
+  AgentTraceStageResult,
+  RecommendationRequest,
+  TargetStage,
+  WeeklyResponse,
+} from '@/api/types'
+import type {
+  AssistantTraceStageResult,
   AssistantTraceEvent,
   OnboardingSubmitAnswers,
   OnboardingSubmitResult,
@@ -33,6 +39,13 @@ import {
   createUnavailableWeeklyContract,
   PRODUCTION_TARGET_STAGES,
 } from './adapters'
+
+const TODAY_MOOD_LABELS: Record<string, string> = {
+  happy: '还不错',
+  calm: '平静',
+  tired: '有点累',
+  low: '有点低落',
+}
 
 export interface ApiUiDataSourceOptions {
   userId?: string
@@ -68,6 +81,42 @@ function hasCompleteRecommendationRequest(
   )
 }
 
+function mapStageResult(
+  raw: AgentTraceStageResult | null | undefined,
+): AssistantTraceStageResult | undefined {
+  if (!raw) return undefined
+  const analysis = raw.analysis
+    ? {
+        lead: raw.analysis.analysis_fallback
+          ? '本次未返回结构化问题拆解；已使用原问题继续真实检索。'
+          : raw.analysis.factors.length
+            ? `已将问题整理为 ${raw.analysis.factors.length} 个可公开、可核验的方向。`
+            : '已完成需求理解；本次执行没有返回可公开的结构化拆解。',
+        items: raw.analysis.analysis_fallback
+          ? []
+          : raw.analysis.factors.map(factor => ({
+              id: factor.factor_id,
+              title: factor.subquery,
+              direction:
+                factor.evidence_need ||
+                (factor.domain_hint ? `关注领域：${factor.domain_hint}` : '检索相关审核知识'),
+            })),
+      }
+    : undefined
+  const retrieval = raw.retrieval
+    ? {
+        chunks: raw.retrieval.knowledge_chunks.map(chunk => ({
+          id: `${chunk.factor_id}-${chunk.chunk_id}`,
+          source: chunk.source_locator || chunk.source_url || '审核知识库',
+          text: chunk.excerpt,
+          relevance: null,
+        })),
+      }
+    : undefined
+  if (!analysis && !retrieval) return undefined
+  return { analysis, retrieval }
+}
+
 export class UiDataContextUnavailableError extends Error {
   readonly code = 'ui_context_unavailable'
 
@@ -93,11 +142,16 @@ export class ApiUiDataSource implements UiDataSource {
   private profileTargetStage?: TargetStage
   private profileLoaded = false
   private weeklyInFlight?: Promise<WeeklyResponse>
+  private todayContext = { mood: '', availableMinutes: 0 }
 
   constructor(options: ApiUiDataSourceOptions = {}) {
     this.userId = options.userId
     this.recommendationRequest = options.recommendationRequest
     this.recommendationContext = options.recommendationContext
+  }
+
+  setTodayContext(context: { mood: string; availableMinutes: number }): void {
+    this.todayContext = { ...context }
   }
 
   getShell() {
@@ -129,9 +183,10 @@ export class ApiUiDataSource implements UiDataSource {
   ): Promise<RecommendationRequest | null> {
     if (!this.userId) return null
     if (hasCompleteRecommendationRequest(this.recommendationRequest)) {
-      return queryOverride
+      const request = queryOverride
         ? { ...this.recommendationRequest, query: queryOverride }
-        : this.recommendationRequest
+        : { ...this.recommendationRequest }
+      return this.applyTodayContext(request)
     }
     const { targetStage } = await this.ensureProfile()
     if (!targetStage) return null
@@ -140,7 +195,7 @@ export class ApiUiDataSource implements UiDataSource {
       current_context: 'unknown' as const,
       activity_context: 'unknown' as const,
     }
-    return {
+    return this.applyTodayContext({
       user_id: this.userId,
       query: queryOverride ?? context.query,
       target_stage: targetStage,
@@ -152,7 +207,17 @@ export class ApiUiDataSource implements UiDataSource {
       cannot_move: false,
       unstable_environment: false,
       sleep_being_crowded: false,
+    })
+  }
+
+  private applyTodayContext(request: RecommendationRequest): RecommendationRequest {
+    const next = { ...request }
+    if (this.todayContext.availableMinutes > 0) {
+      next.available_minutes = this.todayContext.availableMinutes
     }
+    const moodLabel = TODAY_MOOD_LABELS[this.todayContext.mood] ?? this.todayContext.mood
+    if (moodLabel) next.query = `${next.query}\n当前心情：${moodLabel}`
+    return next
   }
 
   /** B5 共享同一轮 in-flight GET；settle 后清空，后续 reload 会重新读取真实历史。 */
@@ -224,7 +289,12 @@ export class ApiUiDataSource implements UiDataSource {
       )
     }
     const dto = await streamAgenticRecommendation(request, raw => {
-      onEvent({ stage: raw.stage, status: raw.status, label: raw.label })
+      onEvent({
+        stage: raw.stage,
+        status: raw.status,
+        label: raw.label,
+        stageResult: mapStageResult(raw.stage_result),
+      })
     })
     return adaptAgenticRecommendation(dto, { traceIsReal: true })
   }

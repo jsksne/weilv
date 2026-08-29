@@ -101,6 +101,24 @@ describe('Sprint 8.1 Production data boundary', () => {
     })
   })
 
+  it('sends the selected Today mood and available time through the next real recommendation request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(allowedRecommendation))
+    vi.stubGlobal('fetch', fetchMock)
+    const source = new ApiUiDataSource({
+      userId: 'real-profile-user',
+      recommendationRequest: explicitRecommendationRequest,
+    })
+
+    source.setTodayContext({ mood: 'tired', availableMinutes: 10 })
+    await source.getToday()
+
+    const body = requestBody(fetchMock.mock.calls[0]!)
+    const { query, ...bodyWithoutQuery } = body
+    const { query: _configuredQuery, ...configuredWithoutQuery } = explicitRecommendationRequest
+    expect(bodyWithoutQuery).toEqual({ ...configuredWithoutQuery, available_minutes: 10 })
+    expect(query).toContain('有点累')
+  })
+
   it('does not turn an incomplete request into health defaults', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

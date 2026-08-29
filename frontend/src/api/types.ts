@@ -205,6 +205,16 @@ export type AgentTraceStage =
 
 export type AgentTraceStatus = 'active' | 'complete' | 'error'
 
+export interface AgentTraceStageResult {
+  analysis?: {
+    analysis_fallback: boolean
+    factors: PublicRagFactor[]
+  }
+  retrieval?: {
+    knowledge_chunks: PublicRagKnowledgeChunk[]
+  }
+}
+
 /** B3：一次 sanitized 公共 trace 事件（NDJSON 流中的一行）。 */
 export interface AgentTraceEventDto {
   stage: AgentTraceStage
@@ -212,6 +222,8 @@ export interface AgentTraceEventDto {
   label: string
   sequence?: number
   timestamp_ms?: number
+  /** analysis/retrieval 完成时携带的 sanitized 阶段内容。 */
+  stage_result?: AgentTraceStageResult | null
   /** 仅 completed 事件携带：同一次执行产生的最终 sanitized 回答（无内部 diagnostics）。 */
   result?: RecommendationResponse | null
 }

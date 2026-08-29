@@ -17,8 +17,10 @@ from fastapi.staticfiles import StaticFiles
 
 from weilv.agentic_rag import run_agentic_rag
 from weilv.api.agentic_trace import (
+    NODE_STAGE,
     STAGE_LABELS,
     iter_agentic_graph_events,
+    public_stage_result,
     sanitize_final_response,
     translate_graph_event,
 )
@@ -224,23 +226,33 @@ async def _agentic_stream_generator(
     start = time.monotonic()
     sequence = 0
 
-    def event_payload(stage: str, status: str, result: dict | None = None) -> dict:
+    def event_payload(
+        stage: str,
+        status: str,
+        result: dict | None = None,
+        stage_result: dict | None = None,
+        label: str | None = None,
+    ) -> dict:
         nonlocal sequence
         sequence += 1
         event: dict = {
             "stage": stage,
             "status": status,
-            "label": STAGE_LABELS[stage],
+            "label": label or STAGE_LABELS[stage],
             "sequence": sequence,
             "timestamp_ms": int((time.monotonic() - start) * 1000),
         }
         if result is not None:
             event["result"] = result
+        if stage_result is not None:
+            event["stage_result"] = stage_result
         return event
 
     yield _ndjson_line(event_payload("accepted", "active"))
     result = None
-    seen_nodes: set[str] = set()
+    started_nodes: set[str] = set()
+    completed_nodes: set[str] = set()
+    graph_state: dict = {}
     try:
         async for event in iter_agentic_graph_events(
             BasicRagRequest(**payload.model_dump(exclude={"user_id"})),
@@ -249,20 +261,43 @@ async def _agentic_stream_generator(
             api_key,
         ):
             node = (event.get("metadata") or {}).get("langgraph_node")
-            if node:
+            event_name = event.get("event")
+            if event_name == "on_chain_end":
+                output = (event.get("data") or {}).get("output") or {}
+                if isinstance(output, dict):
+                    if output.get("result") is not None:
+                        result = output["result"]
+                    if node and node not in completed_nodes:
+                        completed_nodes.add(node)
+                        graph_state.update(output)
+                        stage = NODE_STAGE.get(node)
+                        if stage in {"analysis", "retrieval"}:
+                            stage_result = public_stage_result(stage, graph_state)
+                            if stage_result is not None:
+                                done_label = {
+                                    "analysis": "已完成分析",
+                                    "retrieval": "已完成检索",
+                                }[stage]
+                                yield _ndjson_line(
+                                    event_payload(
+                                        stage,
+                                        "complete",
+                                        stage_result=stage_result,
+                                        label=done_label,
+                                    )
+                                )
+                continue
+            if node and event_name == "on_chain_start":
                 # astream_events 会对同一节点重复发出 on_chain_start；
                 # 粗粒度 trace 每个阶段只出现一次。
-                if node in seen_nodes:
+                if node in started_nodes:
                     continue
-                seen_nodes.add(node)
+                started_nodes.add(node)
                 public = translate_graph_event(event)
                 if public:
                     yield _ndjson_line(
                         event_payload(public["stage"], public["status"])
                     )
-            elif event.get("event") == "on_chain_end":
-                output = (event.get("data") or {}).get("output") or {}
-                result = output.get("result")
     except Exception:
         yield _ndjson_line(event_payload("error", "error"))
         return

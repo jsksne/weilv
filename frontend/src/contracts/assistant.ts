@@ -125,11 +125,22 @@ export type AssistantTraceStage =
 
 export type AssistantTraceStatus = 'active' | 'complete' | 'error'
 
+export interface AssistantTraceStageResult {
+  analysis?: {
+    lead: string | null
+    items: readonly AssistantAnalysisItem[]
+  }
+  retrieval?: {
+    chunks: readonly AssistantKnowledgeChunk[]
+  }
+}
+
 /** B3：一次 UI 级 trace 事件（由 DataSource 从 sanitized DTO 映射而来）。 */
 export interface AssistantTraceEvent {
   stage: AssistantTraceStage
   status: AssistantTraceStatus
   label: string
+  stageResult?: AssistantTraceStageResult
 }
 
 export interface AssistantContract {

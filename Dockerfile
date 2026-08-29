@@ -4,7 +4,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-ARG VITE_USER_ID
+ARG VITE_USER_ID=weilv-production-user
 ARG VITE_API_BASE_URL=/
 ENV VITE_UI_MODE=production \
     VITE_USER_ID=${VITE_USER_ID} \

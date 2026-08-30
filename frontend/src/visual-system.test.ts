@@ -44,6 +44,7 @@ const STYLE_FILES = [
   'profile',
   'weekly',
   'onboarding',
+  'tour',
   'accessibility',
 ] as const
 
@@ -161,6 +162,7 @@ describe('visual system: css entrypoint', () => {
       'profile',
       'weekly',
       'onboarding',
+      'tour',
       'accessibility',
     ] as const
     const imports = [...entry.matchAll(/@import '\.\/([a-z-]+)\.css'/g)].map(m => m[1])
@@ -243,6 +245,34 @@ describe('visual system: tokens and fidelity', () => {
        article{margin-top:2rem} 命中冻结页的 main.shell / section.view /
        article.task-card，需 class 级显式复位（layout.css / today.css），
        legacy 流程不受影响。原因记录于 sprint-04-fidelity.md「QA 发现并已修复的差异」。 */
+    /* Sprint 11 QA 增补（无原型对应声明）：onboarding 工程化修正与新手教程。
+       .ob-skip 复位 UA 默认按钮框；.ob-consent 移到卡片底部并弱化字号；
+       .ob-anim 每步渐入重放；.tour-* 为新手教程聚光引导组件。 */
+    const qaExtras = [
+      '.ob-anim{',
+      '.ob-consent{',
+      '.ob-consent-row{',
+      '.ob-consent-rowinput{',
+      '.ob-consent-note{',
+      '.ob-skip{border:none',
+      '.ob-skip{background:transparent',
+      '.ob-skip{padding:0',
+      '.proto-tag-tour{',
+      '.tour-overlay{',
+      '.tour-spot{',
+      '.tour-card{',
+      '.tour-cardh3{',
+      '.tour-cardp{',
+      '.tour-step-no{',
+      '.tour-actions{',
+      '.tour-skip{margin-left:auto',
+      '.tour-actions.btn{white-space:nowrap',
+      '.tour-actions.btn{padding:0.5rem0.9rem',
+      '@media(prefers-reduced-motion:reduce).ob-anim{animation:none',
+      '@media(prefers-reduced-motion:reduce).tour-spot{transition:none',
+      '@media(prefers-reduced-motion:reduce).tour-card{animation:none',
+    ]
+
     const legacyLeakOverrides = [
       '.shell{width:auto',
       '.view{margin-top:0',
@@ -263,6 +293,7 @@ describe('visual system: tokens and fidelity', () => {
       if (key === viewFillMigrated) continue
       if (legacyLeakOverrides.includes(key)) continue
       if (weeklySprintExtras.some(prefix => key.startsWith(prefix))) continue
+      if (qaExtras.some(prefix => key.startsWith(prefix))) continue
       if ((prototypeCounts.get(key) ?? 0) < count) extra.push(key)
     }
 
@@ -272,7 +303,8 @@ describe('visual system: tokens and fidelity', () => {
 
   it('keeps every backdrop-filter declaration (with its -webkit- prefix where the prototype had one)', () => {
     const migrated = STYLE_FILES.map(readStyle).join('\n')
-    expect(migrated.match(/[^-]backdrop-filter:/g)).toHaveLength(4)
+    /* tour-card 的毛玻璃卡片加入后为 5 处（原型 4 处 + Sprint 11 教程 1 处）。 */
+    expect(migrated.match(/[^-]backdrop-filter:/g)).toHaveLength(5)
     expect(migrated.match(/-webkit-backdrop-filter:/g)).toHaveLength(3)
   })
 

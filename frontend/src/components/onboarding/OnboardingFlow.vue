@@ -85,30 +85,19 @@ function skip(): void {
     <div class="ob-card">
       <OnboardingProgress :current="currentNumber" :total="flow.total.value" />
 
-      <OnboardingStep
-        v-if="flow.currentStep.value?.kind !== 'generation' && flow.currentStep.value"
-        :step="flow.currentStep.value"
-        :answers="flow.answers"
-        @update-answer="flow.setAnswer"
-      />
-      <ProfileGenerationStage
-        v-else-if="flow.currentStep.value"
-        :active="flow.currentStep.value.kind === 'generation'"
-        :summary="model.summary"
-      />
-
-      <div v-if="flow.isLast && model.consent.prompt" class="ob-consent" data-testid="onboarding-consent">
-        <label class="ob-consent-row">
-          <input
-            type="checkbox"
-            data-action="onboarding-consent"
-            :checked="flow.consent.value"
-            :disabled="submitting"
-            @change="flow.setConsent(($event.target as HTMLInputElement).checked)"
-          />
-          <span>{{ model.consent.prompt }}</span>
-        </label>
-        <p class="ob-consent-note">{{ model.consent.note }}</p>
+      <!-- 每步渐入：key 变化重放 obStepIn（与原型 .ob-step.active 一致） -->
+      <div :key="flow.index.value" class="ob-anim">
+        <OnboardingStep
+          v-if="flow.currentStep.value?.kind !== 'generation' && flow.currentStep.value"
+          :step="flow.currentStep.value"
+          :answers="flow.answers"
+          @update-answer="flow.setAnswer"
+        />
+        <ProfileGenerationStage
+          v-else-if="flow.currentStep.value"
+          :active="flow.currentStep.value.kind === 'generation'"
+          :summary="model.summary"
+        />
       </div>
 
       <p
@@ -157,6 +146,20 @@ function skip(): void {
       >
         {{ mismatchMessage }}
       </p>
+
+      <div v-if="flow.isLast && model.consent.prompt" class="ob-consent" data-testid="onboarding-consent">
+        <label class="ob-consent-row">
+          <input
+            type="checkbox"
+            data-action="onboarding-consent"
+            :checked="flow.consent.value"
+            :disabled="submitting"
+            @change="flow.setConsent(($event.target as HTMLInputElement).checked)"
+          />
+          <span>{{ model.consent.prompt }}</span>
+        </label>
+        <p class="ob-consent-note">{{ model.consent.note }}</p>
+      </div>
     </div>
   </div>
 </template>

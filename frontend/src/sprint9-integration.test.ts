@@ -19,6 +19,7 @@ enableAutoUnmount(afterEach)
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  window.localStorage.clear()
 })
 
 /* ------------------------------------------------------------------ */
@@ -163,6 +164,8 @@ describe('Sprint 9 production mode boundary', () => {
     vi.stubEnv('VITE_USER_ID', 'u-9')
     const state = defaultRouterState()
     createProductionFetchRouter(state)
+    /* 生产引导改为浏览器本地首次标记：已见过的浏览器不再弹。 */
+    window.localStorage.setItem('weilv-prod-onboarding-seen', '1')
     const wrapper = mount(App)
     await flushPromises()
 
@@ -200,7 +203,7 @@ describe('Sprint 9 production mode boundary', () => {
 })
 
 describe('Sprint 9 new user → Onboarding', () => {
-  it('shows onboarding for a 404 new user and not for an existing profile', async () => {
+  it('shows onboarding on first visit; hides it after the local seen mark', async () => {
     vi.stubEnv('VITE_UI_MODE', 'production')
     vi.stubEnv('VITE_USER_ID', 'u-9')
 
@@ -217,12 +220,19 @@ describe('Sprint 9 new user → Onboarding', () => {
     expect(wrapper.text()).not.toContain('今日数据不可用')
     wrapper.unmount()
 
+    /* 已有 Profile 的浏览器同样按"本地首次"展示引导；写入 seen 标记后不再弹出。 */
     const existing = defaultRouterState()
     createProductionFetchRouter(existing)
     const existingWrapper = mount(App)
     await flushPromises()
-    expect(existingWrapper.find('[data-testid="onboarding"]').exists()).toBe(false)
-    expect(existingWrapper.findAll('.task-card')).toHaveLength(3)
+    expect(existingWrapper.find('[data-testid="onboarding"]').exists()).toBe(true)
+    existingWrapper.unmount()
+
+    window.localStorage.setItem('weilv-prod-onboarding-seen', '1')
+    const seenWrapper = mount(App)
+    await flushPromises()
+    expect(seenWrapper.find('[data-testid="onboarding"]').exists()).toBe(false)
+    expect(seenWrapper.findAll('.task-card')).toHaveLength(3)
   })
 
   it('treats a server 500 as an error, never as a new user', async () => {

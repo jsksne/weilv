@@ -17,7 +17,8 @@ import { getConfiguredRecommendationContext } from '@/config/recommendationConte
 import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
-import type { ShellContract, TodayContextSelection, UiDataSource } from '@/contracts'
+import FeatureTour from '@/components/tour/FeatureTour.vue'
+import type { ShellContract, TodayContextSelection, UiDataSource, ViewId } from '@/contracts'
 import type {
   OnboardingSubmitAnswers,
   OnboardingSubmitResult,
@@ -111,23 +112,38 @@ const onboardingVisible = ref(false)
 /** 本次会话内用户已主动关闭引导（跳过/完成）后，不再因数据重载重新弹出。 */
 const onboardingDismissed = ref(false)
 const onboarding = computed(() => bundle.value?.onboarding ?? null)
-const productionNewUser = computed(
-  () =>
-    bundle.value?.profile.state.mode === 'production' &&
-    bundle.value.profile.state.status === 'unavailable' &&
-    bundle.value.profile.targetStage === 'unavailable',
-)
+
+/*
+ * Production 的 userId 是共享的 controlled identity（非认证系统），
+ * 服务端 Profile 一旦存在就不再区分"新访客"。引导可见性改用浏览器本地
+ * 首次标记：每个新浏览器/新访客都会看到一次引导，跳过或完成后不再打扰。
+ */
+const PROD_ONBOARDING_SEEN_KEY = 'weilv-prod-onboarding-seen'
+function hasProdOnboardingSeen(): boolean {
+  try {
+    return window.localStorage.getItem(PROD_ONBOARDING_SEEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+function markProdOnboardingSeen(): void {
+  try {
+    window.localStorage.setItem(PROD_ONBOARDING_SEEN_KEY, '1')
+  } catch {
+    /* storage 不可用：仅影响下次是否再次展示 */
+  }
+}
 
 watch(
-  [() => ui.status.value, onboarding, productionNewUser],
-  ([status, model, newUser]) => {
+  [() => ui.status.value, onboarding],
+  ([status, model]) => {
     if (onboardingDismissed.value) return
     if (status !== 'ready' || !model) return
     const isDemo = model.state.mode === 'demo'
-    if (
-      (isDemo && !hasDemoOnboardingCompleted(model.storageKey)) ||
-      (!isDemo && newUser)
-    ) {
+    const firstVisit = isDemo
+      ? !hasDemoOnboardingCompleted(model.storageKey)
+      : !hasProdOnboardingSeen()
+    if (firstVisit) {
       onboardingVisible.value = true
     }
   },
@@ -180,22 +196,65 @@ function submitOnboarding(
 /**
  * Production 引导完成：重新加载 bundle（真实 Profile 已写入），
  * 由真实 Profile 状态驱动进入 Today。失败/跳过不假装完成。
- * 跳过与完成都视为已处理：ui.load() 后 productionNewUser 仍为 true，
- * 不能让 watch 又把引导弹回来（否则跳过永远无效）。
+ * 跳过与完成都写入本地"已见引导"标记；教程必须等 ui.load() 完成、
+ * FeatureTour 重新挂载后再启动（load 期间 ref 为 null，不能直接调度）。
  */
 function onOnboardingComplete(): void {
   onboardingDismissed.value = true
+  markProdOnboardingSeen()
   closeOnboarding()
-  if (bundle.value?.onboarding.state.mode === 'production') void ui.load()
+  if (bundle.value?.onboarding.state.mode === 'production') {
+    void ui.load().then(() => startTourIfFirstVisit(900))
+  } else {
+    startTourIfFirstVisit(900)
+  }
 }
 
 async function refreshProfile(): Promise<void> {
   if (dataSource && bundle.value?.profile.state.mode === 'production') await ui.load()
 }
+
+/* ---------- 新手教程 ---------- */
+const shellRef = ref<InstanceType<typeof AppShell> | null>(null)
+const tourRef = ref<InstanceType<typeof FeatureTour> | null>(null)
+
+function navigateForTour(view: ViewId): void {
+  shellRef.value?.switchView(view)
+}
+
+function startTour(): void {
+  if (tourRef.value) {
+    tourRef.value.start()
+    return
+  }
+  /* load 期间组件短暂卸载：单次重试覆盖该竞态。 */
+  delay(400, () => tourRef.value?.start())
+}
+
+/** 引导结束后自动运行一次新手教程；之后只能从左下角按钮唤起。 */
+function startTourIfFirstVisit(delayMs: number): void {
+  if (!tourRef.value?.hasStorage() || tourRef.value.isTourDone()) return
+  delay(delayMs, startTour)
+}
+
+/* 存量用户（本地已见过引导）首次加载新版时，也自动看一次教程。 */
+watch(
+  [() => ui.status.value, onboardingVisible],
+  ([status, visible]) => {
+    if (status === 'ready' && !visible) startTourIfFirstVisit(1200)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <AppShell v-if="status === 'ready' && bundle" :shell="shell" @replay="openOnboarding">
+  <AppShell
+    v-if="status === 'ready' && bundle"
+    ref="shellRef"
+    :shell="shell"
+    @replay="openOnboarding"
+    @tour="startTour"
+  >
     <template #today>
       <TodayView :model="bundle.today" :daily="daily" @context-change="onTodayContextChange" />
     </template>
@@ -226,4 +285,5 @@ async function refreshProfile(): Promise<void> {
     :submit="submitOnboarding"
     @complete="onOnboardingComplete"
   />
+  <FeatureTour v-if="status === 'ready' && bundle" ref="tourRef" :navigate="navigateForTour" />
 </template>

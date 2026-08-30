@@ -31,8 +31,20 @@
 .ob-q:first-of-type { margin-top: 4px; }
 .ob-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
 .ob-actions { display: flex; justify-content: center; gap: 12px; margin-top: 26px; min-height: 44px; align-items: center; }
-.ob-skip { margin-top: 12px; font-size: 11.5px; color: var(--ink-3); letter-spacing: 1px; cursor: pointer; transition: color 0.4s; }
+/* 每步内容渐入（模板用 :key 重放），reduced-motion 下直接显示 */
+.ob-anim { animation: obStepIn 0.6s var(--ease-decay) both; }
+@media (prefers-reduced-motion: reduce) { .ob-anim { animation: none; } }
+/* 覆盖全局 button 的 UA 默认边框/底色：跳过是纯文字链接，不带黑框 */
+.ob-skip {
+  margin-top: 12px; font-size: 11.5px; color: var(--ink-3); letter-spacing: 1px; cursor: pointer;
+  border: none; background: transparent; padding: 0; transition: color 0.4s;
+}
 .ob-skip:hover { color: var(--pink-deep); }
+/* 记忆授权：放白框最底部，弱化字号 */
+.ob-consent { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,183,197,0.45); text-align: center; }
+.ob-consent-row { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-3); cursor: pointer; }
+.ob-consent-row input { accent-color: #f78fb0; }
+.ob-consent-note { margin-top: 4px; font-size: 10.5px; color: var(--ink-3); opacity: 0.85; line-height: 1.7; }
 /* Step5 生成画像动画 */
 .gen-stage { position: relative; width: 150px; height: 150px; margin: 8px auto 14px; display: grid; place-items: center; }
 .gen-ring {
@@ -67,6 +79,8 @@
   cursor: pointer; transition: color 0.4s, border-color 0.4s;
 }
 .proto-tag:hover { color: var(--pink-deep); border-color: var(--pink-deep); }
+/* 新手教程按钮：叠在「重新体验首次引导」上方 */
+.proto-tag-tour { bottom: 56px; }
 
 /* ---------- 响应式（引导相关，自原型尾部媒体查询拆出） ---------- */
 @media (max-width: 560px) {

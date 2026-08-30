@@ -4,12 +4,14 @@ import { computed, ref, useSlots } from 'vue'
 import AppNavigation from '@/components/shell/AppNavigation.vue'
 import IconSprite from '@/components/shell/IconSprite.vue'
 import PrototypeReplayControl from '@/components/shell/PrototypeReplayControl.vue'
+import TourReplayControl from '@/components/shell/TourReplayControl.vue'
 import ToastHost from '@/components/shell/ToastHost.vue'
 import AuroraBackground from '@/components/effects/AuroraBackground.vue'
 import type { ShellContract, ViewId } from '@/contracts'
 
 const emit = defineEmits<{
   replay: []
+  tour: []
 }>()
 
 const unavailableShell: ShellContract = {
@@ -93,6 +95,7 @@ defineExpose({ activeView, shell: props.shell, switchView })
         </section>
       </main>
       <ToastHost />
+      <TourReplayControl @tour="emit('tour')" />
       <PrototypeReplayControl @replay="emit('replay')" />
     </template>
     <!-- legacy 内容为静态流式布局；包装层保证其位于 .bg（z-index 0）之上，

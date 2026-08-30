@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>微律</title>
+  <rect width="32" height="32" rx="9" fill="#fff4f7"/>
+  <g fill="none">
+    <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5"/>
+    <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(72 16 16)"/>
+    <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffb7c5" transform="rotate(144 16 16)"/>
+    <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#e6c9f7" transform="rotate(216 16 16)"/>
+    <path d="M16 4 C19 8 19 12 16 15 C13 12 13 8 16 4 Z" fill="#ffd9e2" transform="rotate(288 16 16)"/>
+    <circle cx="16" cy="16" r="3" fill="#f78fb0"/>
+  </g>
+</svg>

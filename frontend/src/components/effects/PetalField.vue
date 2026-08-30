@@ -21,8 +21,8 @@ import { useDecorativeField } from '@/composables/useDecorativeField'
  *     卸载自动停止；prefers-reduced-motion 时不启动循环（JS 侧降级）。
  */
 
-/* 原型常量 */
-const PETAL_COUNT = 26
+/* 原型常量；移动端保留完整动效，但减少同时参与布局的粒子数量。 */
+const PETAL_COUNT = typeof window !== 'undefined' && window.innerWidth <= 768 ? 18 : 26
 const PETAL_COLORS: ReadonlyArray<readonly [string, string]> = [
   ['#ffd9e2', '#ffb7c5'],
   ['#fff0f4', '#ffd9e2'],
@@ -80,6 +80,9 @@ const uid = useId()
 /* 原型在脚本加载时生成整片花瓣；对应组件 setup 期生成，首帧渲染即完整 */
 const petals = shallowRef<Petal[]>(Array.from({ length: PETAL_COUNT }, createPetal))
 const petalEls: HTMLElement[] = []
+const compactMotion = typeof window !== 'undefined' && window.innerWidth <= 768
+let lastCompactPaint = -Infinity
+let compactDeltaSeconds = 0
 
 let stopLoop: () => void = () => {}
 
@@ -107,9 +110,15 @@ onMounted(() => {
   paint(performance.now() / 1000)
   if (!reducedMotion.value) {
     stopLoop = startLoop((deltaSeconds, elapsedSeconds) => {
+      /* 移动端仍由 RAF 驱动，但把 DOM 写入控制在约 30fps，避免牺牲动效换取流畅度。 */
+      compactDeltaSeconds += deltaSeconds
+      if (compactMotion && elapsedSeconds - lastCompactPaint < 1 / 30) return
+      lastCompactPaint = elapsedSeconds
+      const movementDelta = compactMotion ? compactDeltaSeconds : deltaSeconds
+      compactDeltaSeconds = 0
       for (const petal of petals.value) {
-        petal.y += petal.vy * deltaSeconds
-        petal.rot += petal.vr * deltaSeconds
+        petal.y += petal.vy * movementDelta
+        petal.rot += petal.vr * movementDelta
         if (petal.y > window.innerHeight + 60) {
           petal.y = -60
           petal.x = Math.random() * window.innerWidth

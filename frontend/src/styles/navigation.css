@@ -4,6 +4,9 @@
    backdrop-filter / -webkit-backdrop-filter 玻璃声明原样保留。
    @keyframes flowerSway 见 animations.css。
    ========================================================== */
+/* 固定态隐藏 topbar 的离场动画仍可超出 body，裁剪只作用于横向滚动槽，
+   不影响它回到视口内的 docked 动画。 */
+html { overflow-x: clip; }
 /* ---------- 顶部进度条（仅吸附态显示；初始进度移至今日页 Hero 内） ---------- */
 .topbar-wrap { position: relative; z-index: 55; max-width: 1080px; margin: 0 auto; height: 0; padding: 0; }
 .topbar {
@@ -81,3 +84,21 @@ body.tb-dock .navbar { top: 54px; }
   .tabs { order: 3; width: 100%; justify-content: space-between; }
 }
 @media (max-width: 720px) { .tb-note { display: none; } }
+
+/* 窄屏：隐藏态 topbar 只向上离场，避免 translateX(160%) 撑宽文档；
+   导航固定为可触控的两层紧凑布局，标签不再逐字换行。 */
+@media (max-width: 560px) {
+  .topbar { transform: translate(-50%, -140%); }
+  .nav-pill {
+    gap: 6px; padding: 8px 10px 10px; border-radius: 22px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .logo { min-width: 0; gap: 7px; }
+  .logo-flower { width: 27px; height: 27px; }
+  .logo b { font-size: 18px; letter-spacing: 1px; }
+  .logo span, .nav-date { display: none; }
+  .avatar { width: 30px; height: 30px; }
+  .nav-right { gap: 0; }
+  .tabs { order: 3; width: 100%; min-width: 0; gap: 2px; margin-left: 0; padding: 3px; }
+  .tab { flex: 1; min-width: 0; min-height: 40px; padding: 8px 2px; font-size: 11px; white-space: nowrap; }
+}

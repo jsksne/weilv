@@ -14,8 +14,8 @@ import { shallowRef, type CSSProperties } from 'vue'
  * accessibility.css 全局冻结，组件侧无泄漏来源。
  */
 
-/* 原型常量 */
-const DUST_COUNT = 54
+/* 原型常量；移动端降低密度，保留闪烁层和色彩。 */
+const DUST_COUNT = typeof window !== 'undefined' && window.innerWidth <= 768 ? 32 : 54
 const DUST_COLORS = ['#ffd9e2', '#e6d5f9', '#cdeee6', '#ffe9db', '#ffffff'] as const
 
 interface DustSpec {

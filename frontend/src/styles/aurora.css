@@ -40,3 +40,8 @@
   position: absolute; inset: 0; opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
+
+@media (max-width: 768px) {
+  /* 保留极光层，只收窄大面积模糊的合成成本。 */
+  .blob { filter: blur(72px); }
+}

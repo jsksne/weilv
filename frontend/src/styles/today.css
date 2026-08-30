@@ -184,4 +184,9 @@
 }
 @media (max-width: 560px) {
   .obs-stats { grid-template-columns: 1fr; }
+  .moods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .mood { min-width: 0; padding: 10px 2px 8px; border-radius: 14px; }
+  .mood .face, .mood span { white-space: nowrap; }
+  .mood .face { font-size: 20px; }
+  .mood span { font-size: 10.5px; }
 }

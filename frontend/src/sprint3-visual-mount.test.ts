@@ -120,15 +120,15 @@ describe('Sprint 3 FUTURE-S3-01: TaskCompletionFx resets mid-flight on reduced m
 
     wrapper.vm.play(2000, 160)
     await new Promise(resolve => setTimeout(resolve, 5))
-    expect(wrapper.findAll('.fx-p')).toHaveLength(16)
+    expect(document.body.querySelectorAll('.fx-p')).toHaveLength(16)
     expect(rafSpy.mock.calls.length).toBeGreaterThan(0)
 
     /* 播放途中系统切到 prefers-reduced-motion：取消动画、清空瞬态 FX、复位 running */
     mql.dispatchChange(true)
     await nextTick()
-    expect(wrapper.findAll('.fx-p')).toHaveLength(0)
-    expect(wrapper.find('.fx-orb').exists()).toBe(false)
-    expect(wrapper.find('.fx-halo').exists()).toBe(false)
+    expect(document.body.querySelectorAll('.fx-p')).toHaveLength(0)
+    expect(document.body.querySelector('.fx-orb')).toBeNull()
+    expect(document.body.querySelector('.fx-halo')).toBeNull()
     const rafAtReset = rafSpy.mock.calls.length
     await new Promise(resolve => setTimeout(resolve, 40))
     expect(rafSpy.mock.calls.length).toBe(rafAtReset)
@@ -138,8 +138,33 @@ describe('Sprint 3 FUTURE-S3-01: TaskCompletionFx resets mid-flight on reduced m
     await nextTick()
     wrapper.vm.play(2000, 160)
     await new Promise(resolve => setTimeout(resolve, 5))
-    expect(wrapper.findAll('.fx-p')).toHaveLength(16)
+    expect(document.body.querySelectorAll('.fx-p')).toHaveLength(16)
     expect(rafSpy.mock.calls.length).toBeGreaterThan(rafAtReset)
+  })
+
+  it('teleports all transient layers to body and anchors particles to the supplied center', async () => {
+    const wrapper = mount(TaskCompletionFx)
+
+    wrapper.vm.play(200, 160)
+    await nextTick()
+
+    const particles = [...document.body.querySelectorAll<HTMLElement>('.fx-p')]
+    expect(particles).toHaveLength(16)
+    expect(particles.every(particle => particle.parentElement === document.body)).toBe(true)
+
+    const first = particles[0]!
+    const left = Number.parseFloat(first.style.left)
+    const top = Number.parseFloat(first.style.top)
+    const width = Number.parseFloat(first.style.width)
+    const height = Number.parseFloat(first.style.height)
+    expect(left + width / 2).toBeCloseTo(200, 4)
+    expect(top + height / 2).toBeCloseTo(160, 4)
+
+    await new Promise(resolve => setTimeout(resolve, 800))
+    expect(document.body.querySelector('.fx-orb')?.parentElement).toBe(document.body)
+    expect(document.body.querySelector('.fx-halo')?.parentElement).toBe(document.body)
+
+    wrapper.unmount()
   })
 })
 

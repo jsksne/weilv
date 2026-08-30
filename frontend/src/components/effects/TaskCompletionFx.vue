@@ -16,7 +16,7 @@ import { useMotionPulse, type MotionPulse } from '@/composables/useMotionPulse'
  *
  * 工程化差异（仅实现方式，非视觉差异）：
  *   - 原型把 fx 元素 append 到 document.body 并手动 remove；
- *     本组件以 fixed 定位的响应式元素渲染（CSS 见 styles/effects.css，
+ *     本组件通过 Teleport 渲染到 document.body（CSS 见 styles/effects.css，
  *     z-index 95/96/97 与原型一致），状态由 ref 驱动；
  *   - 所有 RAF / timeout 经 useMotionPulse 登记，组件卸载自动清理；
  *   - prefers-reduced-motion 时 play() 直接跳过（JS 侧主动降级）；
@@ -188,32 +188,34 @@ defineExpose({ play: playCompletion, reset })
 </script>
 
 <template>
-  <span
-    v-for="particle in particles"
-    :key="particle.id"
-    class="fx-p"
-    aria-hidden="true"
-    :style="{
-      left: `${particle.left}px`,
-      top: `${particle.top}px`,
-      width: `${particle.size}px`,
-      height: `${particle.size}px`,
-      background: particle.color,
-      boxShadow: particle.boxShadow,
-      transform: particle.transform,
-      opacity: particle.opacity,
-    }"
-  ></span>
-  <span
-    v-if="orb.visible"
-    class="fx-orb"
-    aria-hidden="true"
-    :style="{ left: `${orb.left}px`, top: `${orb.top}px`, transform: orb.transform, opacity: orb.opacity }"
-  ></span>
-  <span
-    v-if="halo.visible"
-    class="fx-halo"
-    aria-hidden="true"
-    :style="{ left: `${halo.left}px`, top: `${halo.top}px`, transform: halo.transform, opacity: halo.opacity }"
-  ></span>
+  <Teleport to="body">
+    <span
+      v-for="particle in particles"
+      :key="particle.id"
+      class="fx-p"
+      aria-hidden="true"
+      :style="{
+        left: `${particle.left}px`,
+        top: `${particle.top}px`,
+        width: `${particle.size}px`,
+        height: `${particle.size}px`,
+        background: particle.color,
+        boxShadow: particle.boxShadow,
+        transform: particle.transform,
+        opacity: particle.opacity,
+      }"
+    ></span>
+    <span
+      v-if="orb.visible"
+      class="fx-orb"
+      aria-hidden="true"
+      :style="{ left: `${orb.left}px`, top: `${orb.top}px`, transform: orb.transform, opacity: orb.opacity }"
+    ></span>
+    <span
+      v-if="halo.visible"
+      class="fx-halo"
+      aria-hidden="true"
+      :style="{ left: `${halo.left}px`, top: `${halo.top}px`, transform: halo.transform, opacity: halo.opacity }"
+    ></span>
+  </Teleport>
 </template>

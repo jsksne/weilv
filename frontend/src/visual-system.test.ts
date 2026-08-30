@@ -495,7 +495,7 @@ describe('visual system: lifecycle cleanup', () => {
     wrapper.vm.play(200, 160)
     await new Promise(resolve => setTimeout(resolve, 5))
 
-    expect(wrapper.findAll('.fx-p')).toHaveLength(16)
+    expect(document.body.querySelectorAll('.fx-p')).toHaveLength(16)
     const rafScheduled = rafSpy.mock.calls.length
     expect(rafScheduled).toBeGreaterThan(0)
 

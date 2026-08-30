@@ -34,6 +34,7 @@
 
 /* 问答流（页面级滚动，无内滚动条） */
 .ask-log { display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; min-height: 120px; }
+.latest-message-anchor { display: block; width: 1px; height: 1px; flex: none; pointer-events: none; }
 /* 用户问题气泡 */
 .q-bubble {
   align-self: flex-end; max-width: 78%;
@@ -108,6 +109,10 @@
 .chunk-badge { display: inline-block; font-size: 10.5px; letter-spacing: 1.5px; padding: 3px 10px; border-radius: 99px; margin-bottom: 7px; font-weight: 500; color: var(--teal-ink); background: var(--teal-soft); border: 1px solid rgba(124,198,183,0.45); }
 .chunk p { font-size: 12.5px; color: var(--ink-2); line-height: 1.8; }
 .chunk p b { color: var(--ink); font-weight: 500; }
+.retrieval-evidence summary,
+.cites summary { cursor: pointer; list-style-position: outside; }
+.retrieval-evidence summary { color: var(--ink-2); font-size: 12.5px; font-weight: 600; }
+.retrieval-evidence-body { margin-top: 12px; }
 /* 相关度条 */
 .rel { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
 .rel-bar { flex: 1; max-width: 200px; height: 4px; border-radius: 99px; background: rgba(147,113,138,0.1); overflow: hidden; }
@@ -152,6 +157,7 @@
 /* 引用来源 */
 .cites { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,183,197,0.55); }
 .cites .ct { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-bottom: 7px; }
+.cites-body { margin-top: 0; }
 .cite { font-size: 12px; color: var(--ink-2); display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
 .cite::before { content: '❀'; color: var(--pink); font-size: 10px; }
 /* 输入区（玻璃卡 + 呼吸光点） */

@@ -94,9 +94,9 @@ describe('Assistant demo flow', () => {
 
   it('does not yank the page when the user has scrolled up', async () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 720 })
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
     Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2000 })
     Object.defineProperty(document.body, 'scrollHeight', { configurable: true, value: 2000 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1300 })
 
     const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
     const scrollIntoView = vi.fn()
@@ -105,11 +105,73 @@ describe('Assistant demo flow', () => {
       value: scrollIntoView,
     })
 
+    await wrapper.get('[data-prompt="exam"]').trigger('click')
+    await nextTick()
+    scrollIntoView.mockClear()
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
     window.dispatchEvent(new Event('scroll'))
+    await advance(700)
+
+    expect(scrollIntoView).not.toHaveBeenCalled()
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1300 })
+    window.dispatchEvent(new Event('scroll'))
+    await advance(750)
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
+  })
+
+  it('follows the real bottom anchor immediately while a response grows', async () => {
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(wrapper.get('[data-testid="latest-message"]').element, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
 
     await wrapper.get('[data-prompt="exam"]').trigger('click')
     await nextTick()
 
-    expect(scrollIntoView).not.toHaveBeenCalled()
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
+  })
+
+  it('starts following again for a new question after scroll-up opt-out', async () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 720 })
+    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2000 })
+    Object.defineProperty(document.body, 'scrollHeight', { configurable: true, value: 2000 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1300 })
+
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(wrapper.get('[data-testid="latest-message"]').element, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+
+    await wrapper.get('[data-prompt="exam"]').trigger('click')
+    await nextTick()
+    scrollIntoView.mockClear()
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
+    window.dispatchEvent(new Event('scroll'))
+    await advance(700 + 750 + 850 + 850 + 900)
+
+    await wrapper.get('[data-prompt="sleep"]').trigger('click')
+    await nextTick()
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
+  })
+
+  it('shows retrieval evidence collapsed until the reader asks for details', async () => {
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+
+    await wrapper.get('[data-prompt="exam"]').trigger('click')
+    await advance(700 + 750 + 850 + 850)
+
+    const evidence = wrapper.get('[data-testid="retrieval-evidence"]')
+    expect(evidence.element.tagName).toBe('DETAILS')
+    expect(evidence.attributes('open')).toBeUndefined()
+    expect(evidence.get('summary').text()).toContain('找到 2 条审核依据')
+    expect(evidence.findAll('.chunk')).toHaveLength(2)
   })
 })

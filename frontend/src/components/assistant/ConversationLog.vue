@@ -29,6 +29,11 @@ defineExpose({ latestMessage })
       </div>
     </div>
     <slot />
-    <span ref="latestMessage" data-testid="latest-message" aria-hidden="true" style="display: none"></span>
+    <span
+      ref="latestMessage"
+      data-testid="latest-message"
+      aria-hidden="true"
+      style="display: block; width: 1px; height: 1px; flex: none; pointer-events: none"
+    ></span>
   </div>
 </template>

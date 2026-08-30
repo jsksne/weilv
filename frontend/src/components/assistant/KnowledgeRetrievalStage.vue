@@ -17,7 +17,12 @@ defineProps<{
       <i></i><i></i><i></i>
     </span>
     <template v-else>
-      <KnowledgeChunk v-for="chunk in stage.chunks" :key="chunk.id" :chunk="chunk" />
+      <details v-if="stage.chunks.length" class="retrieval-evidence" data-testid="retrieval-evidence">
+        <summary class="stage-lead">找到 {{ stage.chunks.length }} 条审核依据</summary>
+        <div>
+          <KnowledgeChunk v-for="chunk in stage.chunks" :key="chunk.id" :chunk="chunk" />
+        </div>
+      </details>
       <p v-if="!stage.chunks.length" class="stage-lead">
         已完成检索；本次回答没有可公开的来源条目。
       </p>

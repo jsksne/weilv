@@ -83,6 +83,9 @@ function rememberScrollPosition(): void {
 }
 
 function submit(question: string, scenario: AssistantScenario): void {
+  // A newly submitted question starts a new response; follow it by default.
+  // Scrolling up afterward still opts the reader out for the remainder of the run.
+  followLatest.value = true
   if (isDemo.value) demoFlow.submit(question, scenario)
   else void agenticFlow.submit(question)
 }
@@ -102,9 +105,22 @@ function retry(): void {
 watch(renderVersion, async () => {
   await nextTick()
   if (followLatest.value) {
-    const root = log.value?.$el as HTMLElement | undefined
-    const target = root?.querySelector<HTMLElement>('[data-testid="agent-pipeline"]') ?? log.value?.latestMessage
-    target?.scrollIntoView?.({ behavior: 'smooth', block: 'end' })
+    // The pipeline keeps growing while a stream is active. Always scroll to the
+    // actual bottom anchor instead of the pipeline container, whose height can
+    // change again before a smooth scroll finishes.
+    const target = log.value?.latestMessage
+    if (!target?.scrollIntoView) return
+
+    // The global page style is smooth for normal navigation. Temporarily opt
+    // out here so a stream update cannot queue a second animation.
+    const root = document.documentElement
+    const previousScrollBehavior = root.style.scrollBehavior
+    root.style.scrollBehavior = 'auto'
+    try {
+      target.scrollIntoView({ behavior: 'auto', block: 'end' })
+    } finally {
+      root.style.scrollBehavior = previousScrollBehavior
+    }
   }
 })
 

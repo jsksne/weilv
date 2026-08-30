@@ -1,8 +1,24 @@
 import { ref } from 'vue'
 
-import type { UiDataBundle, UiDataSource } from '@/contracts'
+import type { OnboardingContract, UiDataBundle, UiDataSource } from '@/contracts'
 
 export type UiDataSourceStatus = 'idle' | 'loading' | 'ready' | 'error'
+
+export interface UiLoadProgress {
+  completed: number
+  total: number
+  percent: number
+  stage: string
+}
+
+const LOAD_TOTAL = 6
+
+function progressStage(completed: number): string {
+  if (completed === 0) return '连接微律'
+  if (completed <= 2) return '读取你的状态'
+  if (completed < LOAD_TOTAL) return '整理今日微行动'
+  return '准备好了'
+}
 
 export function useUiDataSource(
   source: UiDataSource | null,
@@ -10,38 +26,94 @@ export function useUiDataSource(
 ) {
   const status = ref<UiDataSourceStatus>('idle')
   const data = ref<UiDataBundle | null>(null)
+  const onboarding = ref<OnboardingContract | null>(null)
   const error = ref<Error | null>(null)
+  const progress = ref<UiLoadProgress>({
+    completed: 0,
+    total: LOAD_TOTAL,
+    percent: 0,
+    stage: progressStage(0),
+  })
+  let inFlight: Promise<void> | null = null
+  let loadVersion = 0
 
   const initialData = source?.getInitialData?.()
   if (initialData) {
     data.value = initialData
+    onboarding.value = initialData.onboarding
     status.value = 'ready'
+    progress.value = {
+      completed: LOAD_TOTAL,
+      total: LOAD_TOTAL,
+      percent: 100,
+      stage: progressStage(LOAD_TOTAL),
+    }
   }
 
-  async function load(): Promise<void> {
-    if (!source || status.value === 'loading') return
-
+  function startLoad(): Promise<void> {
+    if (!source) return Promise.resolve()
+    const version = ++loadVersion
     status.value = 'loading'
     error.value = null
     data.value = null
-    try {
-      const [shell, today, assistant, profile, onboarding, weekly] = await Promise.all([
-        source.getShell(),
-        source.getToday(),
-        source.getAssistant(),
-        source.getProfile(),
-        source.getOnboarding(),
-        source.getWeekly(),
-      ])
-      data.value = { shell, today, assistant, profile, onboarding, weekly }
-      status.value = 'ready'
-    } catch (cause) {
-      error.value = cause instanceof Error ? cause : new Error('UI 数据加载失败。')
-      status.value = 'error'
+    onboarding.value = null
+    progress.value = {
+      completed: 0,
+      total: LOAD_TOTAL,
+      percent: 0,
+      stage: progressStage(0),
     }
+
+    const track = <T>(request: Promise<T>, onResolve?: (value: T) => void): Promise<T> =>
+      request.then(value => {
+        if (version === loadVersion && status.value === 'loading') {
+          onResolve?.(value)
+          const completed = progress.value.completed + 1
+          progress.value = {
+            completed,
+            total: LOAD_TOTAL,
+            percent: Math.round((completed / LOAD_TOTAL) * 100),
+            stage: progressStage(completed),
+          }
+        }
+        return value
+      })
+
+    const operation = (async () => {
+      try {
+        const [shell, today, assistant, profile, onboardingModel, weekly] = await Promise.all([
+          track(source.getShell()),
+          track(source.getToday()),
+          track(source.getAssistant()),
+          track(source.getProfile()),
+          track(source.getOnboarding(), model => { onboarding.value = model }),
+          track(source.getWeekly()),
+        ])
+        data.value = { shell, today, assistant, profile, onboarding: onboardingModel, weekly }
+        status.value = 'ready'
+      } catch (cause) {
+        error.value = cause instanceof Error ? cause : new Error('UI 数据加载失败。')
+        status.value = 'error'
+      }
+    })()
+
+    const current = operation.finally(() => {
+      if (inFlight === current) inFlight = null
+    })
+    inFlight = current
+    return current
+  }
+
+  function load(): Promise<void> {
+    return inFlight ?? startLoad()
+  }
+
+  async function reload(): Promise<void> {
+    if (inFlight) await inFlight
+    return startLoad()
   }
 
   if (options.autoLoad !== false && !initialData) void load()
 
-  return { status, data, error, load, retry: load }
+  return { status, data, onboarding, error, progress, load, reload, retry: load }
 }

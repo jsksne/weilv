@@ -14,6 +14,7 @@ import type {
   AgentTraceStageResult,
   RecommendationRequest,
   TargetStage,
+  UserProfile,
   WeeklyResponse,
 } from '@/api/types'
 import type {
@@ -141,6 +142,7 @@ export class ApiUiDataSource implements UiDataSource {
   private readonly recommendationContext?: ApiUiDataSourceOptions['recommendationContext']
   private profileTargetStage?: TargetStage
   private profileLoaded = false
+  private profileInFlight?: Promise<UserProfile | null>
   private weeklyInFlight?: Promise<WeeklyResponse>
   private todayContext = { mood: '', availableMinutes: 0 }
 
@@ -158,23 +160,36 @@ export class ApiUiDataSource implements UiDataSource {
     return Promise.resolve(createProductionShellContract())
   }
 
+  /** 同一轮 Today/Profile 共用真实 Profile 请求；settle 后允许 reload 读取新值。 */
+  private loadProfileDto(): Promise<UserProfile | null> {
+    if (!this.userId) return Promise.resolve(null)
+    if (!this.profileInFlight) {
+      const inFlight = getUserProfile(this.userId).then(
+        profile => {
+          this.profileTargetStage = profile.target_stage
+          this.profileLoaded = true
+          return profile
+        },
+        cause => {
+          if (cause instanceof ApiError && cause.status === 404) return null
+          throw cause
+        },
+      )
+      this.profileInFlight = inFlight
+      inFlight.then(
+        () => { if (this.profileInFlight === inFlight) this.profileInFlight = undefined },
+        () => { if (this.profileInFlight === inFlight) this.profileInFlight = undefined },
+      )
+    }
+    return this.profileInFlight
+  }
+
   /** 尝试加载并缓存真实 Profile（404 = 新用户，不缓存 target_stage）。 */
   private async ensureProfile(): Promise<{ targetStage: TargetStage | null }> {
     if (!this.userId) return { targetStage: null }
-    if (this.profileLoaded) {
-      return { targetStage: this.profileTargetStage ?? null }
-    }
-    try {
-      const profile = await getUserProfile(this.userId)
-      this.profileTargetStage = profile.target_stage
-      this.profileLoaded = true
-      return { targetStage: profile.target_stage }
-    } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 404) {
-        return { targetStage: null }
-      }
-      throw cause
-    }
+    if (this.profileLoaded) return { targetStage: this.profileTargetStage ?? null }
+    const profile = await this.loadProfileDto()
+    return { targetStage: profile?.target_stage ?? null }
   }
 
   /** 构造真实 RecommendationRequest：target_stage 来自 Profile，不硬编码。 */
@@ -304,32 +319,26 @@ export class ApiUiDataSource implements UiDataSource {
       return createUnavailableProfileContract('Production Profile unavailable：缺少真实 userId。')
     }
 
-    try {
-      const profile = await getUserProfile(this.userId)
-      this.profileTargetStage = profile.target_stage
-      this.profileLoaded = true
-      let memories: ProfileMemoryListContract | null = null
-      let weekly: WeeklyResponse | null = null
-      try {
-        memories = adaptMemoryListResponse(await getUserMemories(this.userId))
-      } catch (cause) {
-        // Memory list 失败不拖垮 Profile；保持 Memory 部分 unavailable。
-        if (!(cause instanceof ApiError)) throw cause
-      }
-      try {
-        weekly = await this.loadWeeklyDto()
-      } catch (cause) {
-        // Weekly 统计失败不拖垮 Profile；完成情况保持真实空态。
-        if (!(cause instanceof ApiError)) throw cause
-      }
-      return adaptProfileResponse(profile, memories, weekly)
-    } catch (cause) {
-      // 新用户尚无画像：保持 bundle 可加载，Profile 显示未建立状态。
-      if (cause instanceof ApiError && cause.status === 404) {
-        return createUnavailableProfileContract('新用户尚无画像：完成首次引导后建立。')
-      }
-      throw cause
+    const profile = await this.loadProfileDto()
+    if (!profile) {
+      return createUnavailableProfileContract('新用户尚无画像：完成首次引导后建立。')
     }
+
+    const [memoriesResult, weeklyResult] = await Promise.allSettled([
+      getUserMemories(this.userId),
+      this.loadWeeklyDto(),
+    ])
+    if (memoriesResult.status === 'rejected' && !(memoriesResult.reason instanceof ApiError)) {
+      throw memoriesResult.reason
+    }
+    if (weeklyResult.status === 'rejected' && !(weeklyResult.reason instanceof ApiError)) {
+      throw weeklyResult.reason
+    }
+    const memories = memoriesResult.status === 'fulfilled'
+      ? adaptMemoryListResponse(memoriesResult.value)
+      : null
+    const weekly = weeklyResult.status === 'fulfilled' ? weeklyResult.value : null
+    return adaptProfileResponse(profile, memories, weekly)
   }
 
   getOnboarding() {

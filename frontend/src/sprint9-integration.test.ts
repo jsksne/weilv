@@ -92,6 +92,7 @@ interface RouterState {
   memory: MemoryListResponse
   recommendation: RecommendationResponse | null
   weekly: WeeklyResponse | null
+  recommendationResponse?: Promise<Response>
   calls: Array<{ url: string; init: RequestInit }>
 }
 
@@ -130,6 +131,7 @@ function createProductionFetchRouter(state: RouterState) {
       return Promise.resolve(json({ status: 'recorded' }))
     }
     if (url.includes('/recommend')) {
+      if (state.recommendationResponse) return state.recommendationResponse
       return Promise.resolve(json(state.recommendation))
     }
     if (url.includes('/recommendations')) {
@@ -172,6 +174,7 @@ describe('Sprint 9 production mode boundary', () => {
     expect(wrapper.get('[data-testid="hero-progress"]').exists()).toBe(true)
     expect(wrapper.text()).not.toContain('demo-user-001')
     expect(wrapper.find('[data-testid="onboarding"]').exists()).toBe(false)
+    expect(state.calls.filter(call => call.url.includes('/profile')).length).toBe(1)
   })
 
   it('fails closed when VITE_USER_ID is missing in production', async () => {
@@ -203,6 +206,27 @@ describe('Sprint 9 production mode boundary', () => {
 })
 
 describe('Sprint 9 new user → Onboarding', () => {
+  it('shows first-visit onboarding while the Today recommendation is still loading', async () => {
+    vi.stubEnv('VITE_UI_MODE', 'production')
+    vi.stubEnv('VITE_USER_ID', 'u-9')
+    let resolveRecommendation!: (response: Response) => void
+    const state = defaultRouterState()
+    state.recommendationResponse = new Promise(resolve => {
+      resolveRecommendation = resolve
+    })
+    createProductionFetchRouter(state)
+
+    const wrapper = mount(App)
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="ui-data-loading"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="onboarding"]').exists()).toBe(true)
+
+    resolveRecommendation(json(state.recommendation))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="hero-progress"]').exists()).toBe(true)
+  })
+
   it('shows onboarding on first visit; hides it after the local seen mark', async () => {
     vi.stubEnv('VITE_UI_MODE', 'production')
     vi.stubEnv('VITE_USER_ID', 'u-9')

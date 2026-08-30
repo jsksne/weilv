@@ -17,6 +17,7 @@ import { getConfiguredRecommendationContext } from '@/config/recommendationConte
 import { getConfiguredUiMode, UiModeConfigurationError } from '@/config/uiMode'
 import { getConfiguredUserId, UserContextConfigurationError } from '@/config/userContext'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
+import StartupLoading from '@/components/StartupLoading.vue'
 import FeatureTour from '@/components/tour/FeatureTour.vue'
 import type { ShellContract, TodayContextSelection, UiDataSource, ViewId } from '@/contracts'
 import type {
@@ -111,7 +112,7 @@ const daily = useDailyTasks(today, { onAction: onTaskAction })
 const onboardingVisible = ref(false)
 /** 本次会话内用户已主动关闭引导（跳过/完成）后，不再因数据重载重新弹出。 */
 const onboardingDismissed = ref(false)
-const onboarding = computed(() => bundle.value?.onboarding ?? null)
+const onboarding = computed(() => ui.onboarding.value ?? bundle.value?.onboarding ?? null)
 
 /*
  * Production 的 userId 是共享的 controlled identity（非认证系统），
@@ -138,7 +139,11 @@ watch(
   [() => ui.status.value, onboarding],
   ([status, model]) => {
     if (onboardingDismissed.value) return
-    if (status !== 'ready' || !model) return
+    if (status === 'error') {
+      onboardingVisible.value = false
+      return
+    }
+    if (status === 'idle' || !model) return
     const isDemo = model.state.mode === 'demo'
     const firstVisit = isDemo
       ? !hasDemoOnboardingCompleted(model.storageKey)
@@ -196,15 +201,15 @@ function submitOnboarding(
 /**
  * Production 引导完成：重新加载 bundle（真实 Profile 已写入），
  * 由真实 Profile 状态驱动进入 Today。失败/跳过不假装完成。
- * 跳过与完成都写入本地"已见引导"标记；教程必须等 ui.load() 完成、
+ * 跳过与完成都写入本地"已见引导"标记；教程必须等 ui.reload() 完成、
  * FeatureTour 重新挂载后再启动（load 期间 ref 为 null，不能直接调度）。
  */
 function onOnboardingComplete(): void {
   onboardingDismissed.value = true
   markProdOnboardingSeen()
   closeOnboarding()
-  if (bundle.value?.onboarding.state.mode === 'production') {
-    void ui.load().then(() => startTourIfFirstVisit(900))
+  if (onboarding.value?.state.mode === 'production') {
+    void ui.reload().then(() => startTourIfFirstVisit(900))
   } else {
     startTourIfFirstVisit(900)
   }
@@ -272,9 +277,7 @@ watch(
       <WeeklyView :model="bundle.weekly" />
     </template>
   </AppShell>
-  <section v-else-if="status === 'loading'" data-testid="ui-data-loading" role="status">
-    正在加载微律数据……
-  </section>
+  <StartupLoading v-else-if="status === 'loading'" :progress="ui.progress.value" />
   <section v-else data-testid="ui-data-error" role="alert">
     <p>{{ errorMessage }}</p>
     <button type="button" @click="retry">重试</button>

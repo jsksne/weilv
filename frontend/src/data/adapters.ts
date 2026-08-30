@@ -32,6 +32,7 @@ import type {
   TodayContract,
   TodayDataAvailability,
   TodayRecommendationStatus,
+  TodayTaskTone,
   TodayTaskView,
   WeeklyContract,
   WeeklyTextSegment,
@@ -46,11 +47,11 @@ export function createProductionShellContract(): ShellContract {
       { id: 'today', label: '今日' },
       { id: 'assistant', label: '问问薇薇' },
       { id: 'profile', label: '我的画像' },
-      { id: 'weekly', label: '这一周' },
+      { id: 'weekly', label: '周度变化' },
     ],
     displayName: '微律',
     dateLabel: '今日',
-    progress: { completed: 0, total: 0, note: '今天从一件小事开始。' },
+    progress: { completed: 0, total: 0, note: '完成一件，就算今天有交代。' },
     toastExample: { id: 'production-shell', message: '' },
   }
 }
@@ -88,14 +89,23 @@ export function createUnavailableTodayContract(
       stats: [],
       suggestions: [],
     },
-    moods: [],
-    defaultMood: '',
-    timeOptions: [],
-    defaultTimeMinutes: 0,
+    moods: [
+      { value: 'happy', face: '◕‿◕', label: '还不错' },
+      { value: 'calm', face: '˘‿˘', label: '平静' },
+      { value: 'tired', face: '>﹏<', label: '有点累' },
+      { value: 'low', face: '·︿·', label: '有点低落' },
+    ],
+    defaultMood: 'calm',
+    timeOptions: [
+      { minutes: 10, label: '10 分钟' },
+      { minutes: 25, label: '25 分钟' },
+      { minutes: 40, label: '40 分钟以上' },
+    ],
+    defaultTimeMinutes: 25,
     moodNoteLead: '',
-    moodNoteLines: [],
+    moodNoteLines: ['怎么选都可以，微律只负责读懂你。', ''],
     tasksSectionTitle: '今日微任务',
-    tasksSectionNote: '来自审核白名单 · 仅展示真实推荐',
+    tasksSectionNote: '来自审核白名单 · 按你的画像生成',
     tasks: [],
     replacePool: [],
     lowMoodSwap: { taskId: '', name: '', description: '', why: '' },
@@ -106,8 +116,8 @@ export function createUnavailableTodayContract(
       tip: '这是微律的呼吸节律：吸气 20% · 呼气 80%。',
     },
     progressNotes: {
-      hero: ['今天从一件小事开始', '已经完成一件 ✦', '慢慢来，快收尾了', '今天有交代了 ✦'],
-      docked: ['今天从一件小事开始', '已经完成一件', '快收尾了', '今天完成啦 ✦'],
+      hero: ['完成一件，就算今天有交代', '已经完成一件 ✦', '慢慢来，快收尾了', '今天有交代了 ✦'],
+      docked: ['完成一件，就算今天有交代', '已经完成一件', '快收尾了', '今天完成啦 ✦'],
     },
     feedbackCopy: {
       start: '⏱ 开始啦 · 不着急',
@@ -116,8 +126,8 @@ export function createUnavailableTodayContract(
       skip: '🕊 跳过也没关系',
       restore: '',
       replace: '',
-      lowMood: '',
-      check: '✦ 查看此刻的真实状态',
+      lowMood: '🌷 收到 · 微律会轻轻调整推荐',
+      check: '✦ 从此刻的心情开始 · 30 秒完成今日检查',
     },
   }
 }
@@ -534,10 +544,43 @@ export function createProductionAssistantContract(): AssistantContract {
     ],
     greeting: {
       face: '薇薇',
-      segments: [{ text: '告诉我你现在的困扰，我会请求一次真实的 Agentic 推荐。' }],
+      segments: [{ text: '告诉我你现在的困扰，我会结合审核知识库和你的状态，给出适合你的小建议。' }],
     },
     replies: { exam: reply, sleep: reply, neck: reply, fallback: reply },
   }
+}
+
+/** 白名单领域 → 原型中文标签 / 卡片色调。 */
+const TASK_DOMAIN_LABELS: Record<string, string> = {
+  eye_health: '用眼健康',
+  light_recovery: '用眼健康',
+  sleep: '睡前准备',
+  sleep_hygiene: '睡前准备',
+  physical_activity: '身体活动',
+  sedentary: '身体活动',
+  study_break: '学习休息',
+  neck_shoulder: '颈肩放松',
+  emotion: '情绪照顾',
+  mood: '情绪照顾',
+  stress: '情绪照顾',
+}
+
+const TASK_DOMAIN_TONES: Record<string, 'eye' | 'move' | 'sleep'> = {
+  eye_health: 'eye',
+  light_recovery: 'eye',
+  sleep: 'sleep',
+  sleep_hygiene: 'sleep',
+  physical_activity: 'move',
+  sedentary: 'move',
+  neck_shoulder: 'move',
+}
+
+function taskToneFromDomains(domains: readonly string[]): TodayTaskTone {
+  for (const domain of domains) {
+    const tone = TASK_DOMAIN_TONES[domain]
+    if (tone) return tone
+  }
+  return 'default'
 }
 
 function toTodayTask(
@@ -546,17 +589,18 @@ function toTodayTask(
   explanation: string | null,
 ): TodayTaskView {
   const id = task.task_id
+  const domains = 'covered_domains' in task ? task.covered_domains : []
   return {
     id,
     taskId: id,
     recommendationId: recommendationId ?? undefined,
-    tone: 'default',
-    domain: 'covered_domains' in task ? task.covered_domains[0] ?? '微任务' : '微任务',
+    tone: taskToneFromDomains(domains),
+    domain: domains.map(domain => TASK_DOMAIN_LABELS[domain]).find(Boolean) ?? '微任务',
     meta: `约 ${task.estimated_minutes} 分钟`,
     name: task.title,
     description: task.instruction,
     /* B1：只有 rank1 有 LLM explanation；task2/task3 诚实省略。 */
-    why: explanation ?? '任务解释暂不可用。',
+    why: explanation ?? '该任务来自审核白名单，并结合你此刻的状态与可用时间选出。',
     whyIcon: 'flower',
   }
 }
@@ -604,7 +648,7 @@ export function adaptRecommendationResponse(dto: RecommendationResponse): TodayC
     unavailableFields,
     summaryLines: dto.explanation ? [[{ text: dto.explanation }]] : [],
     tasksSectionTitle: '今日微任务',
-    tasksSectionNote: '来自审核白名单 · 仅展示真实推荐',
+    tasksSectionNote: '来自审核白名单 · 按你的画像生成',
     tasks,
   }
 }

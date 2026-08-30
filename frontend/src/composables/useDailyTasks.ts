@@ -105,7 +105,15 @@ export function useDailyTasks(
   }
 
   reset(model.value)
-  watch(model, reset)
+  /* 上下文刷新（心情/时间变化 → 换一推荐）时保留用户已选的心情与时间；
+     首次加载两者为空值，仍落回契约默认。 */
+  watch(model, next => {
+    const keepMood = mood.value
+    const keepMinutes = availableMinutes.value
+    reset(next)
+    if (keepMood) mood.value = keepMood
+    if (keepMinutes > 0) availableMinutes.value = keepMinutes
+  })
 
   const completed = computed(
     () => entries.value.filter(entry => entry.interaction === 'done' || entry.interaction === 'partial').length,

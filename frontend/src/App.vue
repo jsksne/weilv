@@ -8,6 +8,7 @@ import ProfileView from '@/views/ProfileView.vue'
 import WeeklyView from '@/views/WeeklyView.vue'
 import { useDailyTasks } from '@/composables/useDailyTasks'
 import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
+import { useMotionPulse } from '@/composables/useMotionPulse'
 import { useUiDataSource } from '@/composables/useUiDataSource'
 import { createUiDataSource } from '@/data/createUiDataSource'
 import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
@@ -72,13 +73,43 @@ function onTaskAction(task: TodayTaskView, action: TodayTaskAction): void {
   if (dataSource?.submitTaskAction) void dataSource.submitTaskAction(task.recommendationId, action)
 }
 
+/** 心情/时间变化后轻刷新今日推荐（防抖；只换 today 数据，不闪烁整页）。 */
+const todayRefreshing = ref(false)
+const { delay } = useMotionPulse()
+let todayContextVersion = 0
 function onTodayContextChange(context: TodayContextSelection): void {
   dataSource?.setTodayContext?.(context)
+  const version = ++todayContextVersion
+  todayRefreshing.value = true
+  delay(800, () => {
+    if (version !== todayContextVersion) return
+    void refreshToday(version)
+  })
+}
+
+async function refreshToday(version: number): Promise<void> {
+  if (!dataSource) {
+    todayRefreshing.value = false
+    return
+  }
+  try {
+    const nextToday = await dataSource.getToday()
+    /* 只替换 today；profile/weekly 沿用当前数据，避免整页闪烁。 */
+    if (ui.data.value && version === todayContextVersion) {
+      ui.data.value = { ...ui.data.value, today: nextToday }
+    }
+  } catch {
+    /* 刷新失败保留当前推荐；不打断用户。 */
+  } finally {
+    if (version === todayContextVersion) todayRefreshing.value = false
+  }
 }
 
 /* 今日交互状态唯一实例：hero 进度行与吸附顶栏都从 DataSource Contract 取数 */
 const daily = useDailyTasks(today, { onAction: onTaskAction })
 const onboardingVisible = ref(false)
+/** 本次会话内用户已主动关闭引导（跳过/完成）后，不再因数据重载重新弹出。 */
+const onboardingDismissed = ref(false)
 const onboarding = computed(() => bundle.value?.onboarding ?? null)
 const productionNewUser = computed(
   () =>
@@ -90,6 +121,7 @@ const productionNewUser = computed(
 watch(
   [() => ui.status.value, onboarding, productionNewUser],
   ([status, model, newUser]) => {
+    if (onboardingDismissed.value) return
     if (status !== 'ready' || !model) return
     const isDemo = model.state.mode === 'demo'
     if (
@@ -148,8 +180,11 @@ function submitOnboarding(
 /**
  * Production 引导完成：重新加载 bundle（真实 Profile 已写入），
  * 由真实 Profile 状态驱动进入 Today。失败/跳过不假装完成。
+ * 跳过与完成都视为已处理：ui.load() 后 productionNewUser 仍为 true，
+ * 不能让 watch 又把引导弹回来（否则跳过永远无效）。
  */
 function onOnboardingComplete(): void {
+  onboardingDismissed.value = true
   closeOnboarding()
   if (bundle.value?.onboarding.state.mode === 'production') void ui.load()
 }

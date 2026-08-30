@@ -40,6 +40,9 @@ const renderVersion = computed(() =>
   isDemo.value ? demoFlow.renderVersion.value : agenticFlow.renderVersion.value,
 )
 const error = computed(() => (isDemo.value ? null : agenticFlow.error.value))
+const streamFallbackUsed = computed(() =>
+  isDemo.value ? false : agenticFlow.streamFallbackUsed.value,
+)
 const log = ref<InstanceType<typeof ConversationLog> | null>(null)
 const followLatest = ref(true)
 
@@ -130,6 +133,9 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
       <UserMessage v-if="question" :text="question" />
       <AgentPipeline v-if="pipeline" :reply="reply ?? pendingReply" :pipeline="pipeline" />
     </ConversationLog>
+    <p v-if="streamFallbackUsed && reply" class="ask-foot" data-testid="stream-fallback-note">
+      ✦ 本次回答由完整模式完成（流式通道暂不可用），流程与结果一致。
+    </p>
     <ChatComposer :busy="busy" @submit="submitManual" />
     <p class="ask-foot">
       回答基于审核知识库和你提供的信息 · 薇薇不做医疗诊断<br />

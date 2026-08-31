@@ -4,8 +4,8 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] 16 个粒子、光球和光环渲染在页面顶层，不受任务卡片 transform 坐标系影响。
-- [ ] 16ms、1100ms、2200ms 三阶段效果与原型一致。
-- [ ] reduced-motion 用户继续获得简化且无障碍的完成反馈。
+- [x] 16 个粒子、光球和光环渲染在页面顶层，不受任务卡片 transform 坐标系影响。
+- [x] 16ms、1100ms、2200ms 三阶段效果与原型一致。
+- [x] reduced-motion 用户继续获得简化且无障碍的完成反馈。

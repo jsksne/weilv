@@ -173,7 +173,7 @@
 .btn-send {
   border: none; cursor: pointer; border-radius: 13px; padding: 0 26px; height: 46px; flex: none;
   background: linear-gradient(120deg, #ffa8bd, #f78fb0 55%, #c9a8eb); color: #fff; font-weight: 700;
-  font-size: 14px; font-family: var(--sans); letter-spacing: 2px;
+  font-size: 14px; font-family: var(--sans); letter-spacing: 2px; white-space: nowrap;
   box-shadow: 0 6px 18px rgba(247,143,176,0.4); transition: transform 0.5s var(--ease-decay), box-shadow 0.5s var(--ease-decay);
 }
 .btn-send:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(247,143,176,0.5); }
@@ -186,7 +186,8 @@
   .pipe-rail { gap: 5px; }
   .pnode { padding: 4px 9px 4px 5px; font-size: 11px; gap: 5px; }
   .pnode .pno { width: 17px; height: 17px; }
-  .ask-input { flex-wrap: wrap; }
-  .ask-input input { min-width: 60%; }
-  .btn-send { flex: 1; }
+  .ask-input { flex-wrap: nowrap; gap: 8px; }
+  .ask-input .ai-dot { margin-left: 2px; }
+  .ask-input input { min-width: 0; padding-inline: 12px; }
+  .btn-send { flex: none; padding-inline: 15px; font-size: 13px; letter-spacing: 1px; }
 }

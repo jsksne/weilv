@@ -246,9 +246,14 @@ describe('visual system: tokens and fidelity', () => {
        article.task-card，需 class 级显式复位（layout.css / today.css），
        legacy 流程不受影响。原因记录于 sprint-04-fidelity.md「QA 发现并已修复的差异」。 */
     /* Sprint 11/上线前 QA 增补（无原型对应声明）：onboarding 工程化修正、新手教程、
-       移动端性能边界，以及问答页的真实底部锚点与折叠依据。
+       移动端性能边界，以及问答页的真实底部锚点、折叠依据与单行发送动作。
        .ob-skip 复位 UA 默认按钮框；.ob-consent 移到卡片底部并弱化字号；
        .ob-anim 每步渐入重放；.tour-* 为新手教程聚光引导组件。 */
+    const mobileComposerPrototypeReplacements = [
+      '@media(max-width:560px).ask-input{flex-wrap:wrap',
+      '@media(max-width:560px).ask-inputinput{min-width:60%',
+      '@media(max-width:560px).btn-send{flex:1',
+    ]
     const qaExtras = [
       '.ob-anim{',
       '.ob-consent{',
@@ -279,6 +284,16 @@ describe('visual system: tokens and fidelity', () => {
       '.retrieval-evidencesummary{',
       '.retrieval-evidence-body{',
       '.cites-body{',
+      '.btn-send{white-space:nowrap',
+      '@media(max-width:560px).ask-input{flex-wrap:nowrap',
+      '@media(max-width:560px).ask-input{gap:8px',
+      '@media(max-width:560px).ask-input.ai-dot{margin-left:2px',
+      '@media(max-width:560px).ask-inputinput{min-width:0',
+      '@media(max-width:560px).ask-inputinput{padding-inline:12px',
+      '@media(max-width:560px).btn-send{flex:none',
+      '@media(max-width:560px).btn-send{padding-inline:15px',
+      '@media(max-width:560px).btn-send{font-size:13px',
+      '@media(max-width:560px).btn-send{letter-spacing:1px',
     ]
 
     const legacyLeakOverrides = [
@@ -291,6 +306,7 @@ describe('visual system: tokens and fidelity', () => {
     for (const [key, count] of prototypeCounts) {
       if (key === splitMediaRule) continue
       if (key === viewFillPrototype) continue
+      if (mobileComposerPrototypeReplacements.includes(key)) continue
       if ((migratedCounts.get(key) ?? 0) < count) missing.push(key)
     }
 

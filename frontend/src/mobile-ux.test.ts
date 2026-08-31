@@ -63,4 +63,11 @@ describe('mobile visual budget', () => {
     expect(auroraStyles).toContain('@media (max-width: 768px)')
     expect(auroraStyles).toContain('.blob { filter: blur(72px); }')
   })
+
+  it('keeps the mobile send action on one readable line', () => {
+    const styles = readFileSync(join(process.cwd(), 'src/styles/assistant.css'), 'utf8')
+
+    expect(styles).toMatch(/\.btn-send\s*\{[^}]*white-space:\s*nowrap/)
+    expect(styles).toContain('.ask-input { flex-wrap: nowrap; gap: 8px; }')
+  })
 })

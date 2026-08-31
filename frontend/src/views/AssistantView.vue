@@ -43,7 +43,7 @@ const error = computed(() => (isDemo.value ? null : agenticFlow.error.value))
 const streamFallbackUsed = computed(() =>
   isDemo.value ? false : agenticFlow.streamFallbackUsed.value,
 )
-const log = ref<InstanceType<typeof ConversationLog> | null>(null)
+const latestMessage = ref<HTMLElement | null>(null)
 const followLatest = ref(true)
 
 /** B3：流式期间 reply 尚未落地，用占位 reply 驱动真实 live pipeline。 */
@@ -83,8 +83,7 @@ function rememberScrollPosition(): void {
 }
 
 function submit(question: string, scenario: AssistantScenario): void {
-  // A newly submitted question starts a new response; follow it by default.
-  // Scrolling up afterward still opts the reader out for the remainder of the run.
+  // 新问题默认重新跟随；之后主动上滑仍可退出本轮自动跟随。
   followLatest.value = true
   if (isDemo.value) demoFlow.submit(question, scenario)
   else void agenticFlow.submit(question)
@@ -105,14 +104,11 @@ function retry(): void {
 watch(renderVersion, async () => {
   await nextTick()
   if (followLatest.value) {
-    // The pipeline keeps growing while a stream is active. Always scroll to the
-    // actual bottom anchor instead of the pipeline container, whose height can
-    // change again before a smooth scroll finishes.
-    const target = log.value?.latestMessage
+    // 流式管线会持续增高，始终跟随整个页面的真实底部锚点。
+    const target = latestMessage.value
     if (!target?.scrollIntoView) return
 
-    // The global page style is smooth for normal navigation. Temporarily opt
-    // out here so a stream update cannot queue a second animation.
+    // 全局导航使用平滑滚动；流式更新临时切到即时滚动，避免动画排队。
     const root = document.documentElement
     const previousScrollBehavior = root.style.scrollBehavior
     root.style.scrollBehavior = 'auto'
@@ -145,7 +141,7 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
       {{ error.message }}
       <button class="btn btn-ghost" type="button" @click="retry">重试</button>
     </p>
-    <ConversationLog ref="log" :greeting="model.greeting">
+    <ConversationLog :greeting="model.greeting">
       <UserMessage v-if="question" :text="question" />
       <AgentPipeline v-if="pipeline" :reply="reply ?? pendingReply" :pipeline="pipeline" />
     </ConversationLog>
@@ -157,6 +153,7 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
       回答基于审核知识库和你提供的信息 · 薇薇不做医疗诊断<br />
       遇到持续不适，请第一时间告诉家长或老师
     </p>
+    <span ref="latestMessage" class="latest-message-anchor" data-testid="latest-message" aria-hidden="true"></span>
   </div>
 </template>
 

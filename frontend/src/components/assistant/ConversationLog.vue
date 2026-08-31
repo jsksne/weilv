@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import type { AssistantGreeting } from '@/contracts'
 
 defineProps<{
   greeting: AssistantGreeting
 }>()
-
-const latestMessage = ref<HTMLElement | null>(null)
-
-defineExpose({ latestMessage })
 </script>
 
 <template>
@@ -29,11 +23,5 @@ defineExpose({ latestMessage })
       </div>
     </div>
     <slot />
-    <span
-      ref="latestMessage"
-      data-testid="latest-message"
-      aria-hidden="true"
-      style="display: block; width: 1px; height: 1px; flex: none; pointer-events: none"
-    ></span>
   </div>
 </template>

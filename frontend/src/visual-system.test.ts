@@ -245,7 +245,8 @@ describe('visual system: tokens and fidelity', () => {
        article{margin-top:2rem} 命中冻结页的 main.shell / section.view /
        article.task-card，需 class 级显式复位（layout.css / today.css），
        legacy 流程不受影响。原因记录于 sprint-04-fidelity.md「QA 发现并已修复的差异」。 */
-    /* Sprint 11 QA 增补（无原型对应声明）：onboarding 工程化修正与新手教程。
+    /* Sprint 11/上线前 QA 增补（无原型对应声明）：onboarding 工程化修正、新手教程、
+       移动端性能边界，以及问答页的真实底部锚点与折叠依据。
        .ob-skip 复位 UA 默认按钮框；.ob-consent 移到卡片底部并弱化字号；
        .ob-anim 每步渐入重放；.tour-* 为新手教程聚光引导组件。 */
     const qaExtras = [
@@ -271,6 +272,13 @@ describe('visual system: tokens and fidelity', () => {
       '@media(prefers-reduced-motion:reduce).ob-anim{animation:none',
       '@media(prefers-reduced-motion:reduce).tour-spot{transition:none',
       '@media(prefers-reduced-motion:reduce).tour-card{animation:none',
+      '@media(max-width:768px).blob{filter:blur(72px)',
+      'html{overflow-x:clip',
+      '.latest-message-anchor{',
+      '.retrieval-evidencesummary,.citessummary{',
+      '.retrieval-evidencesummary{',
+      '.retrieval-evidence-body{',
+      '.cites-body{',
     ]
 
     const legacyLeakOverrides = [
@@ -303,9 +311,9 @@ describe('visual system: tokens and fidelity', () => {
 
   it('keeps every backdrop-filter declaration (with its -webkit- prefix where the prototype had one)', () => {
     const migrated = STYLE_FILES.map(readStyle).join('\n')
-    /* tour-card 的毛玻璃卡片加入后为 5 处（原型 4 处 + Sprint 11 教程 1 处）。 */
-    expect(migrated.match(/[^-]backdrop-filter:/g)).toHaveLength(5)
-    expect(migrated.match(/-webkit-backdrop-filter:/g)).toHaveLength(3)
+    /* 原型 4 处 + Sprint 11 教程 1 处 + 移动端 nav-pill 降模糊覆盖 1 处。 */
+    expect(migrated.match(/[^-]backdrop-filter:/g)).toHaveLength(6)
+    expect(migrated.match(/-webkit-backdrop-filter:/g)).toHaveLength(4)
   })
 
   it('freezes animations under prefers-reduced-motion', () => {

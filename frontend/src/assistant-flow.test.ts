@@ -135,6 +135,14 @@ describe('Assistant demo flow', () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
   })
 
+  it('places the follow anchor after the composer at the true end of the view', () => {
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+    const composer = wrapper.get('[data-testid="chat-composer"]').element
+    const anchor = wrapper.get('[data-testid="latest-message"]').element
+
+    expect(composer.compareDocumentPosition(anchor) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('starts following again for a new question after scroll-up opt-out', async () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 720 })
     Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2000 })

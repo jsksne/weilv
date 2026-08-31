@@ -112,11 +112,11 @@ describe('Sprint 8.1 Production data boundary', () => {
     source.setTodayContext({ mood: 'tired', availableMinutes: 10 })
     await source.getToday()
 
-    const body = requestBody(fetchMock.mock.calls[0]!)
-    const { query, ...bodyWithoutQuery } = body
-    const { query: _configuredQuery, ...configuredWithoutQuery } = explicitRecommendationRequest
-    expect(bodyWithoutQuery).toEqual({ ...configuredWithoutQuery, available_minutes: 10 })
-    expect(query).toContain('有点累')
+    expect(requestBody(fetchMock.mock.calls[0]!)).toEqual({
+      ...explicitRecommendationRequest,
+      query: `${explicitRecommendationRequest.query}\n当前心情：有点累`,
+      available_minutes: 10,
+    })
   })
 
   it('does not turn an incomplete request into health defaults', async () => {

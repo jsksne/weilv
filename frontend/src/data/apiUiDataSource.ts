@@ -166,8 +166,10 @@ export class ApiUiDataSource implements UiDataSource {
     if (!this.profileInFlight) {
       const inFlight = getUserProfile(this.userId).then(
         profile => {
-          this.profileTargetStage = profile.target_stage
-          this.profileLoaded = true
+          if (this.profileInFlight === inFlight) {
+            this.profileTargetStage = profile.target_stage
+            this.profileLoaded = true
+          }
           return profile
         },
         cause => {
@@ -365,6 +367,7 @@ export class ApiUiDataSource implements UiDataSource {
         target_stage: answers.grade as TargetStage,
         memory_enabled: answers.memoryEnabled,
       })
+      this.profileInFlight = undefined
       this.profileLoaded = false
       this.profileTargetStage = answers.grade as TargetStage
       return {

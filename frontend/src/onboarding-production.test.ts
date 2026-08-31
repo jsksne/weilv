@@ -7,6 +7,7 @@ import { ApiUiDataSource } from './data/apiUiDataSource'
 import { FixtureUiDataSource } from './data/fixtureUiDataSource'
 import { createProductionOnboardingContract } from './data/adapters'
 import { useToast } from './composables/useToast'
+import { allowedRecommendation } from './test/recommendationFixtures'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -141,6 +142,44 @@ describe('B6 ApiUiDataSource.submitOnboarding', () => {
     expect(result.status).toBe('error')
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(JSON.stringify(result)).not.toContain('demo')
+  })
+
+  it('starts a fresh Profile request after onboarding while an older request is still pending', async () => {
+    let resolveStaleProfile!: (response: Response) => void
+    const staleProfile = new Promise<Response>(resolve => {
+      resolveStaleProfile = resolve
+    })
+    let profileGetCount = 0
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = String(input)
+      const method = init?.method ?? 'GET'
+      if (url.includes('/profile') && method === 'GET') {
+        profileGetCount += 1
+        if (profileGetCount === 1) return staleProfile
+        return Promise.resolve(okProfile())
+      }
+      if (url.includes('/profile') && method === 'PUT') return Promise.resolve(okProfile())
+      if (url.includes('/recommendations')) {
+        return Promise.resolve(new Response(JSON.stringify(allowedRecommendation), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }))
+      }
+      return Promise.reject(new Error(`unmocked url: ${url}`))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const source = new ApiUiDataSource({ userId: 'u-1' })
+
+    const originalLoad = source.getToday()
+    await vi.waitFor(() => expect(profileGetCount).toBe(1))
+    await source.submitOnboarding({ grade: 'junior_high', memoryEnabled: true })
+    const refreshedLoad = source.getToday()
+    await Promise.resolve()
+    const countBeforeStaleRequestSettles = profileGetCount
+
+    resolveStaleProfile(okProfile())
+    await Promise.all([originalLoad, refreshedLoad])
+    expect(countBeforeStaleRequestSettles).toBe(2)
   })
 })
 

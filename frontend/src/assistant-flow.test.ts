@@ -121,6 +121,35 @@ describe('Assistant demo flow', () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
   })
 
+  it('offers a visible return to latest control after scroll-up and resumes following on click', async () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 720 })
+    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2000 })
+    Object.defineProperty(document.body, 'scrollHeight', { configurable: true, value: 2000 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1300 })
+
+    const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(wrapper.get('[data-testid="latest-message"]').element, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+    await wrapper.get('[data-prompt="exam"]').trigger('click')
+    await nextTick()
+    scrollIntoView.mockClear()
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 })
+    window.dispatchEvent(new Event('scroll'))
+    await nextTick()
+
+    const returnButton = wrapper.get('[data-testid="return-to-latest"]')
+    expect(returnButton.text()).toContain('回到最新')
+    expect(returnButton.attributes('aria-label')).toBe('回到最新回答')
+    await returnButton.trigger('click')
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'end' })
+    expect(wrapper.find('[data-testid="return-to-latest"]').exists()).toBe(false)
+  })
+
   it('follows the real bottom anchor immediately while a response grows', async () => {
     const wrapper = mount(AssistantView, { props: { model: assistantFixture } })
     const scrollIntoView = vi.fn()

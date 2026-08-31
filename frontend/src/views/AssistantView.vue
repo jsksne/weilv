@@ -101,22 +101,31 @@ function retry(): void {
   if (question.value) submit(question.value, 'fallback')
 }
 
+function scrollToLatestAnchor(): void {
+  const target = latestMessage.value
+  if (!target?.scrollIntoView) return
+
+  // 全局导航使用平滑滚动；流式更新临时切到即时滚动，避免动画排队。
+  const root = document.documentElement
+  const previousScrollBehavior = root.style.scrollBehavior
+  root.style.scrollBehavior = 'auto'
+  try {
+    target.scrollIntoView({ behavior: 'auto', block: 'end' })
+  } finally {
+    root.style.scrollBehavior = previousScrollBehavior
+  }
+}
+
+function returnToLatest(): void {
+  followLatest.value = true
+  scrollToLatestAnchor()
+}
+
 watch(renderVersion, async () => {
   await nextTick()
   if (followLatest.value) {
     // 流式管线会持续增高，始终跟随整个页面的真实底部锚点。
-    const target = latestMessage.value
-    if (!target?.scrollIntoView) return
-
-    // 全局导航使用平滑滚动；流式更新临时切到即时滚动，避免动画排队。
-    const root = document.documentElement
-    const previousScrollBehavior = root.style.scrollBehavior
-    root.style.scrollBehavior = 'auto'
-    try {
-      target.scrollIntoView({ behavior: 'auto', block: 'end' })
-    } finally {
-      root.style.scrollBehavior = previousScrollBehavior
-    }
+    scrollToLatestAnchor()
   }
 })
 
@@ -153,6 +162,17 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
       回答基于审核知识库和你提供的信息 · 薇薇不做医疗诊断<br />
       遇到持续不适，请第一时间告诉家长或老师
     </p>
+    <button
+      v-if="question && !followLatest"
+      class="return-to-latest"
+      data-testid="return-to-latest"
+      type="button"
+      aria-label="回到最新回答"
+      @click="returnToLatest"
+    >
+      <span aria-hidden="true">↓</span>
+      回到最新
+    </button>
     <span ref="latestMessage" class="latest-message-anchor" data-testid="latest-message" aria-hidden="true"></span>
   </div>
 </template>
@@ -170,5 +190,40 @@ onUnmounted(() => window.removeEventListener('scroll', rememberScrollPosition))
 
 .ask-wrap :deep(.ask-input input) {
   margin-top: 0;
+}
+
+.return-to-latest {
+  position: fixed;
+  right: max(16px, calc((100vw - 820px) / 2 + 16px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid rgba(247, 143, 176, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 250, 252, 0.96);
+  color: var(--ink-1);
+  box-shadow: 0 8px 24px rgba(110, 74, 118, 0.18);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  animation: msgIn 0.28s var(--ease-decay) both;
+}
+
+.return-to-latest:focus-visible {
+  outline: 3px solid rgba(157, 123, 223, 0.38);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .return-to-latest:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 28px rgba(110, 74, 118, 0.23);
+  }
 }
 </style>

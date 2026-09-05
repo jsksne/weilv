@@ -81,6 +81,8 @@ describe('production Today 契约对齐 02-sakura-spring 原型', () => {
     const today = adaptRecommendationResponse(allowedRecommendation)
     expect(today.moods.map(mood => mood.label)).toEqual(['还不错', '平静', '有点累', '有点低落'])
     expect(today.timeOptions.map(option => option.label)).toEqual([
+      '3 分钟',
+      '5 分钟',
       '10 分钟',
       '25 分钟',
       '40 分钟以上',

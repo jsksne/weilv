@@ -261,16 +261,17 @@ describe('Sprint 4 TodayView: mood, time and check CTA', () => {
     const wrapper = mount(TodayView, { props: { model, daily } })
 
     expect(wrapper.findAll('.mood')).toHaveLength(4)
-    expect(wrapper.findAll('.chip')).toHaveLength(3)
+    expect(wrapper.findAll('.chip')).toHaveLength(5)
 
     await wrapper.findAll('.mood')[2]!.trigger('click')
     await wrapper.findAll('.chip')[0]!.trigger('click')
 
     expect(daily.mood.value).toBe('tired')
-    expect(daily.availableMinutes.value).toBe(10)
+    /* F7：短选项靠前，第一个 chip 现在是 3 分钟。 */
+    expect(daily.availableMinutes.value).toBe(3)
     expect(wrapper.emitted('context-change')?.at(-1)?.[0]).toEqual({
       mood: 'tired',
-      availableMinutes: 10,
+      availableMinutes: 3,
     })
   })
 

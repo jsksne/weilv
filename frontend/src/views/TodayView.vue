@@ -28,6 +28,12 @@ const props = defineProps<{
   daily: DailyTasksController
   /** 日程最小实现：Production 由 App 传入 DataSource。 */
   dataSource?: import('@/contracts').UiDataSource
+  /** F6：完成后轻反馈（Production 由 App 传正式链路）。 */
+  submitLightFeedback?: (
+    task: import('@/contracts').TodayTaskView,
+    completionStatus: 'completed' | 'partially_completed',
+    usefulness: 'helpful' | 'neutral' | 'not_helpful',
+  ) => Promise<{ status: string }>
 }>()
 
 const emit = defineEmits<{
@@ -175,6 +181,7 @@ defineExpose({ focusTask })
       <TaskList
         :model="model"
         :controller="daily"
+        :submit-light-feedback="submitLightFeedback"
         @open-panel="panelEntry = $event"
         @unsuitable="unsuitableEntry = $event"
       />

@@ -97,6 +97,25 @@ function onTaskAction(task: TodayTaskView, action: TodayTaskAction): Promise<{ s
   return result
 }
 
+/**
+ * F6：完成后一次轻反馈 → 正式反馈端点。保存成功会写入用户记忆，
+ * 影响后续个性化排序；失败只影响评价，不撤销完成状态。
+ */
+async function submitLightFeedback(
+  task: TodayTaskView,
+  completionStatus: 'completed' | 'partially_completed',
+  usefulness: 'helpful' | 'neutral' | 'not_helpful',
+): Promise<{ status: string }> {
+  if (!task.recommendationId || !dataSource?.submitLightFeedback) return { status: 'error' }
+  const difficulty = usefulness === 'neutral' ? 'difficult' : usefulness === 'helpful' ? 'easy' : 'suitable'
+  return dataSource.submitLightFeedback(task.recommendationId, {
+    completion_status: completionStatus,
+    usefulness,
+    difficulty,
+    reason: '',
+  })
+}
+
 /** 心情/时间变化后轻刷新今日推荐（防抖；只换 today 数据，不闪烁整页）。 */
 const todayRefreshing = ref(false)
 const { delay } = useMotionPulse()
@@ -345,6 +364,7 @@ watch(
         :model="bundle.today"
         :daily="daily"
         :data-source="dataSource ?? undefined"
+        :submit-light-feedback="submitLightFeedback"
         @context-change="onTodayContextChange"
       />
     </template>

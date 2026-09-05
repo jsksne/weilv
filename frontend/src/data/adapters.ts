@@ -100,6 +100,8 @@ export function createUnavailableTodayContract(
     ],
     defaultMood: 'calm',
     timeOptions: [
+      { minutes: 3, label: '3 分钟' },
+      { minutes: 5, label: '5 分钟' },
       { minutes: 10, label: '10 分钟' },
       { minutes: 25, label: '25 分钟' },
       { minutes: 40, label: '40 分钟以上' },

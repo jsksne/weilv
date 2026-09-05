@@ -31,7 +31,6 @@ function submit(): void {
       placeholder="说说你现在的状态…"
       aria-label="说说你现在的状态"
       autocomplete="off"
-      :disabled="busy"
     />
     <button class="btn-send" data-testid="chat-submit" type="submit" :disabled="busy">
       问问薇薇

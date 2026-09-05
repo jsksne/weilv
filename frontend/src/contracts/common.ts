@@ -39,3 +39,11 @@ export interface ScheduleEventUpsertContract {
   kind: ScheduleKind
   busy_level: ScheduleBusyLevel | null
 }
+
+/** F6：完成后轻反馈的请求体（契约层，结构对齐后端 FeedbackRequest）。 */
+export interface LightFeedbackPayload {
+  completion_status: 'completed' | 'partially_completed'
+  usefulness: 'helpful' | 'neutral' | 'not_helpful'
+  difficulty: 'easy' | 'difficult' | 'suitable'
+  reason: string
+}

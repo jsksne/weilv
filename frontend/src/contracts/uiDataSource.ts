@@ -1,4 +1,9 @@
-import type { ConversationTurn, ScheduleEventContract, ScheduleEventUpsertContract } from './common'
+import type {
+  ConversationTurn,
+  LightFeedbackPayload,
+  ScheduleEventContract,
+  ScheduleEventUpsertContract,
+} from './common'
 import type { AssistantContract } from './assistant'
 import type { AssistantReply } from './assistant'
 import type { AssistantTraceEvent } from './assistant'
@@ -52,6 +57,11 @@ export interface UiDataSource {
   getUserMemories?(): Promise<ProfileMemoryListContract>
   /** B4：删除一条 Memory（后端 forget_memory）。 */
   deleteUserMemory?(memoryId: string): Promise<{ status: string }>
+  /** F6：完成后轻反馈 → 正式 Feedback 端点（写记忆、影响个性化排序）。 */
+  submitLightFeedback?(
+    recommendationId: string,
+    body: LightFeedbackPayload,
+  ): Promise<{ status: string }>
   /** 日程最小实现：列出/新增/修改/删除当天可见事件（名称只存不传模型）。 */
   getSchedule?(fromDate?: string, toDate?: string): Promise<ScheduleEventContract[]>
   saveScheduleEvent?(body: ScheduleEventUpsertContract, eventId?: string): Promise<{ status: string }>

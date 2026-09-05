@@ -225,3 +225,24 @@ body .onboard button.ob-skip {
   width: auto;
   margin: 0;
 }
+
+/* F6：完成后一次轻反馈 */
+.light-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(230, 201, 247, 0.16);
+  font-size: 12px;
+}
+
+.light-feedback .lf-q {
+  color: var(--ink-1, #3f3348);
+}
+
+.light-feedback .lf-failed {
+  color: #c2557b;
+}

@@ -24,6 +24,12 @@ const props = defineProps<{
   controller: DailyTasksController
   copy: TodayContract['feedbackCopy']
   canReplace?: boolean
+  /** F6：轻反馈走正式反馈链路（仅完成/部分完成后出现一次）。 */
+  submitLightFeedback?: (
+    task: TodayTaskView,
+    completionStatus: 'completed' | 'partially_completed',
+    usefulness: 'helpful' | 'neutral' | 'not_helpful',
+  ) => Promise<{ status: string }>
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +40,49 @@ const emit = defineEmits<{
 const { play, delay, dispose } = useMotionPulse()
 const { push } = useToast()
 const submitting = ref(false)
+
+/* ---------- F6：完成后一次轻反馈 ---------- */
+type LightFeedbackState = 'idle' | 'saving' | 'sent' | 'failed'
+const feedbackState = ref<LightFeedbackState>('idle')
+
+const pendingOwnFeedback = computed(() =>
+  props.controller.pendingFeedback.value.find(
+    item => item.slotId === props.entry.slotId &&
+      (item.completionStatus === 'completed' || item.completionStatus === 'partially_completed'),
+  ),
+)
+
+const showFeedbackPrompt = computed(
+  () =>
+    !!props.submitLightFeedback &&
+    !!pendingOwnFeedback.value &&
+    (feedbackState.value === 'idle' || feedbackState.value === 'failed'),
+)
+
+const FEEDBACK_CHOICES = [
+  { key: 'helpful', label: '合适', usefulness: 'helpful' as const, difficulty: 'easy' as const },
+  { key: 'hard', label: '有点费劲', usefulness: 'neutral' as const, difficulty: 'difficult' as const },
+  { key: 'unhelpful', label: '没什么帮助', usefulness: 'not_helpful' as const, difficulty: 'suitable' as const },
+]
+
+async function sendLightFeedback(usefulness: 'helpful' | 'neutral' | 'not_helpful', difficulty: 'easy' | 'difficult' | 'suitable'): Promise<void> {
+  const pending = pendingOwnFeedback.value
+  if (!pending || pending.completionStatus === 'skipped') return
+  if (!pending || !props.submitLightFeedback || feedbackState.value === 'saving') return
+  feedbackState.value = 'saving'
+  try {
+    const result = await props.submitLightFeedback(
+      props.entry.task,
+      pending.completionStatus,
+      usefulness,
+    )
+    feedbackState.value = result.status === 'recorded' ? 'sent' : 'failed'
+    if (feedbackState.value === 'failed') push('评价没有记上，可以再试一次')
+  } catch {
+    feedbackState.value = 'failed'
+    push('评价没有记上，可以再试一次')
+  }
+}
 
 const toneClass = computed(() =>
   props.entry.task.tone === 'default' ? undefined : `t-${props.entry.task.tone}`,
@@ -251,6 +300,20 @@ onUnmounted(dispose)
     <div class="task-badge">
       <span class="bdot"></span>
       <span class="badge-txt">{{ badgeText }}</span>
+    </div>
+
+    <div v-if="showFeedbackPrompt" class="light-feedback" data-testid="light-feedback">
+      <span class="lf-q">这次感觉怎么样？</span>
+      <button
+        v-for="choice in FEEDBACK_CHOICES"
+        :key="choice.key"
+        class="btn btn-ghost"
+        type="button"
+        :data-feedback="choice.key"
+        :disabled="feedbackState === 'saving'"
+        @click="sendLightFeedback(choice.usefulness, choice.difficulty)"
+      >{{ choice.label }}</button>
+      <span v-if="feedbackState === 'failed'" class="lf-failed">没有记上，再点一次即可</span>
     </div>
 
     <TaskCompletionFx ref="fx" />

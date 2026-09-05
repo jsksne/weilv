@@ -3,6 +3,7 @@ import {
   createScheduleEvent,
   deleteScheduleEvent,
   deleteUserMemory,
+  submitFeedback,
   getAgenticRecommendation,
   getRecommendation,
   getSchedule,
@@ -35,6 +36,7 @@ import type {
   TodayTaskAction,
   UiDataSource,
 } from '@/contracts'
+import type { LightFeedbackPayload } from '@/contracts'
 import {
   adaptAgenticRecommendation,
   adaptMemoryListResponse,
@@ -179,6 +181,21 @@ export class ApiUiDataSource implements UiDataSource {
     easyStart?: boolean
   }): void {
     this.todayContext = { ...context }
+  }
+
+  /** F6：轻反馈走正式 Feedback 端点。 */
+  async submitLightFeedback(
+    recommendationId: string,
+    body: LightFeedbackPayload,
+  ): Promise<{ status: string }> {
+    const userId = this.userId
+    if (!userId) return { status: 'error' }
+    try {
+      const result = await submitFeedback(userId, recommendationId, body)
+      return { status: result.status }
+    } catch {
+      return { status: 'error' }
+    }
   }
 
   /* ---------- 日程最小实现（缓存 60s；写操作立即失效） ---------- */

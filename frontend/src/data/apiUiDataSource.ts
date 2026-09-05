@@ -1,18 +1,27 @@
 import {
   ApiError,
+  createScheduleEvent,
+  deleteScheduleEvent,
   deleteUserMemory,
   getAgenticRecommendation,
   getRecommendation,
+  getSchedule,
+  getTodaySessions,
   getUserMemories,
   getUserProfile,
   getWeekly,
   postTaskEvent,
   streamAgenticRecommendation,
+  updateScheduleEvent,
   upsertUserProfile,
 } from '@/api/client'
 import type {
   AgentTraceStageResult,
+  ConversationTurn,
   RecommendationRequest,
+  ScheduleEvent,
+  ScheduleEventFact,
+  ScheduleEventUpsert,
   TargetStage,
   UserProfile,
   WeeklyResponse,
@@ -31,6 +40,7 @@ import {
   adaptMemoryListResponse,
   adaptProfileResponse,
   adaptRecommendationResponse,
+  adaptTodaySessions,
   adaptWeeklyResponse,
   createProductionAssistantContract,
   createProductionOnboardingContract,
@@ -38,6 +48,7 @@ import {
   createUnavailableProfileContract,
   createUnavailableTodayContract,
   createUnavailableWeeklyContract,
+  mergeTodayContracts,
   PRODUCTION_TARGET_STAGES,
 } from './adapters'
 
@@ -144,7 +155,16 @@ export class ApiUiDataSource implements UiDataSource {
   private profileLoaded = false
   private profileInFlight?: Promise<UserProfile | null>
   private weeklyInFlight?: Promise<WeeklyResponse>
-  private todayContext = { mood: '', availableMinutes: 0 }
+  private todayContext: {
+    mood: string
+    availableMinutes: number
+    cannotMove?: boolean
+    easyStart?: boolean
+  } = {
+    mood: '',
+    availableMinutes: 0,
+  }
+  private scheduleCache?: { loadedAt: number; events: ScheduleEvent[] }
 
   constructor(options: ApiUiDataSourceOptions = {}) {
     this.userId = options.userId
@@ -152,8 +172,52 @@ export class ApiUiDataSource implements UiDataSource {
     this.recommendationContext = options.recommendationContext
   }
 
-  setTodayContext(context: { mood: string; availableMinutes: number }): void {
+  setTodayContext(context: {
+    mood: string
+    availableMinutes: number
+    cannotMove?: boolean
+    easyStart?: boolean
+  }): void {
     this.todayContext = { ...context }
+  }
+
+  /* ---------- 日程最小实现（缓存 60s；写操作立即失效） ---------- */
+
+  async getSchedule(fromDate?: string, toDate?: string): Promise<ScheduleEvent[]> {
+    if (!this.userId) return []
+    const dto = await getSchedule(this.userId, fromDate, toDate)
+    return dto.events
+  }
+
+  async getTodaySchedule(): Promise<ScheduleEvent[]> {
+    if (!this.userId) return []
+    if (this.scheduleCache && Date.now() - this.scheduleCache.loadedAt < 60_000) {
+      return this.scheduleCache.events
+    }
+    try {
+      const events = await this.getSchedule()
+      this.scheduleCache = { loadedAt: Date.now(), events }
+      return events
+    } catch {
+      return []
+    }
+  }
+
+  async saveScheduleEvent(body: ScheduleEventUpsert, eventId?: string): Promise<{ status: string }> {
+    const userId = this.userId
+    if (!userId) return { status: 'error' }
+    if (eventId) await updateScheduleEvent(userId, eventId, body)
+    else await createScheduleEvent(userId, body)
+    this.scheduleCache = undefined
+    return { status: 'saved' }
+  }
+
+  async deleteScheduleEvent(eventId: string): Promise<{ status: string }> {
+    const userId = this.userId
+    if (!userId) return { status: 'error' }
+    await deleteScheduleEvent(userId, eventId)
+    this.scheduleCache = undefined
+    return { status: 'deleted' }
   }
 
   getShell() {
@@ -197,13 +261,22 @@ export class ApiUiDataSource implements UiDataSource {
   /** 构造真实 RecommendationRequest：target_stage 来自 Profile，不硬编码。 */
   private async buildRecommendationRequest(
     queryOverride?: string,
+    history?: ConversationTurn[],
+    options: { withSchedule?: boolean; easyStart?: boolean } = {},
   ): Promise<RecommendationRequest | null> {
     if (!this.userId) return null
+    /* 日程事实只在与推荐/对话相关的请求中读取；读取失败不阻塞推荐。 */
+    const events = options.withSchedule
+      ? (await this.getTodaySchedule()).map(event => ({
+          kind: event.kind,
+          busy_level: event.busy_level ?? undefined,
+        }))
+      : undefined
     if (hasCompleteRecommendationRequest(this.recommendationRequest)) {
       const request = queryOverride
         ? { ...this.recommendationRequest, query: queryOverride }
         : { ...this.recommendationRequest }
-      return this.applyTodayContext(request)
+      return this.applyTodayContext(request, history, events, options.easyStart)
     }
     const { targetStage } = await this.ensureProfile()
     if (!targetStage) return null
@@ -212,29 +285,56 @@ export class ApiUiDataSource implements UiDataSource {
       current_context: 'unknown' as const,
       activity_context: 'unknown' as const,
     }
-    return this.applyTodayContext({
-      user_id: this.userId,
-      query: queryOverride ?? context.query,
-      target_stage: targetStage,
-      current_context: context.current_context,
-      activity_context: context.activity_context,
-      vision_abnormal: false,
-      physical_discomfort: false,
-      medical_request: false,
-      cannot_move: false,
-      unstable_environment: false,
-      sleep_being_crowded: false,
-    })
+    return this.applyTodayContext(
+      {
+        user_id: this.userId,
+        query: queryOverride ?? context.query,
+        target_stage: targetStage,
+        current_context: context.current_context,
+        activity_context: context.activity_context,
+        vision_abnormal: false,
+        physical_discomfort: false,
+        medical_request: false,
+        cannot_move: false,
+        unstable_environment: false,
+        sleep_being_crowded: false,
+      },
+      history,
+      events,
+      options.easyStart,
+    )
   }
 
-  private applyTodayContext(request: RecommendationRequest): RecommendationRequest {
+  private applyTodayContext(
+    request: RecommendationRequest,
+    history?: ConversationTurn[],
+    events?: ScheduleEventFact[],
+    easyStart?: boolean,
+  ): RecommendationRequest {
     const next = { ...request }
     if (this.todayContext.availableMinutes > 0) {
       next.available_minutes = this.todayContext.availableMinutes
     }
     const moodLabel = TODAY_MOOD_LABELS[this.todayContext.mood] ?? this.todayContext.mood
     if (moodLabel) next.query = `${next.query}\n当前心情：${moodLabel}`
+    if (this.todayContext.cannotMove) next.cannot_move = true
+    if (this.todayContext.easyStart || easyStart) next.prefer_easy_start = true
+    if (history && history.length > 0) next.conversation_history = history
+    if (events && events.length > 0) next.schedule_events = events
     return next
+  }
+
+  /** “本次考虑”：只从本次请求真实使用的字段生成，最多 3 条。 */
+  private consideredFromRequest(request: RecommendationRequest): string[] {
+    const items: string[] = []
+    if (request.available_minutes) items.push(`可用 ${request.available_minutes} 分钟`)
+    const kinds = new Set((request.schedule_events ?? []).map(event => event.kind))
+    if (kinds.has('exam')) items.push('今天有考试安排')
+    else if (kinds.has('holiday')) items.push('今天在假期')
+    if (request.cannot_move) items.push('希望原地、轻量')
+    else if (request.current_context === 'school') items.push('当前在教室')
+    if (request.prefer_easy_start) items.push('想要更容易开始的')
+    return items.slice(0, 3)
   }
 
   /** B5 共享同一轮 in-flight GET；settle 后清空，后续 reload 会重新读取真实历史。 */
@@ -256,50 +356,85 @@ export class ApiUiDataSource implements UiDataSource {
     if (!this.userId) {
       return createUnavailableTodayContract('Production Today context unavailable：缺少真实 userId。')
     }
+    /* F4：读回当天已保存的会话（任务/动作状态）；已开始/已完成/已放下
+       的记录始终保留，未开始候选由新推荐按当前上下文给出。 */
+    const restored = await this.loadRestoredToday()
     const request = await this.buildRecommendationRequest()
     if (!request) {
-      return createUnavailableTodayContract(
-        'Production Today 尚无可用的真实 Profile；完成首次引导后即可获得推荐。',
+      return (
+        restored ??
+        createUnavailableTodayContract(
+          'Production Today 尚无可用的真实 Profile；完成首次引导后即可获得推荐。',
+        )
       )
     }
-    return getRecommendation(request).then(adaptRecommendationResponse)
+    try {
+      const fresh = await getRecommendation(request).then(adaptRecommendationResponse)
+      return restored ? mergeTodayContracts(restored, fresh) : fresh
+    } catch (cause) {
+      /* 新推荐失败时，已保存的当天记录仍然如实展示。 */
+      if (restored) return restored
+      throw cause
+    }
+  }
+
+  /** 读回当天会话；读取失败返回 null（退回既有“新推荐”路径，不阻塞加载）。 */
+  private async loadRestoredToday() {
+    const userId = this.userId
+    if (!userId) return null
+    try {
+      const dto = await getTodaySessions(userId)
+      return adaptTodaySessions(dto)
+    } catch {
+      return null
+    }
   }
 
   getAssistant() {
     return Promise.resolve(createProductionAssistantContract())
   }
 
-  async askAssistant(question: string) {
+  async askAssistant(question: string, history?: ConversationTurn[], easyStart?: boolean) {
     if (!this.userId) {
       throw new UiDataContextUnavailableError(
         'Production Assistant context unavailable：缺少真实 userId。',
       )
     }
-    const request = await this.buildRecommendationRequest(question)
+    const request = await this.buildRecommendationRequest(question, history, {
+      withSchedule: true,
+      easyStart,
+    })
     if (!request) {
       throw new UiDataContextUnavailableError(
         'Production Assistant context unavailable：缺少真实 Profile。',
       )
     }
-    return getAgenticRecommendation(request).then(dto =>
+    const reply = await getAgenticRecommendation(request).then(dto =>
       adaptAgenticRecommendation(dto, { traceIsReal: true }),
     )
+    return { ...reply, considered: this.consideredFromRequest(request) }
   }
 
   /**
    * B3：一次真实 Agentic 流式执行。onEvent 只携带 sanitized 公开阶段；
    * 最终回答来自同一次执行（stream 的 completed 事件），不重复调用旧 endpoint。
+   * history（F1）随请求进入后端理解环节。
    */
   async askAssistantStreaming(
     question: string,
     onEvent: (event: AssistantTraceEvent) => void,
+    history?: ConversationTurn[],
+    easyStart?: boolean,
   ) {
     if (!this.userId) {
       throw new UiDataContextUnavailableError(
         'Production Assistant context unavailable：缺少真实 userId。',
       )
     }
-    const request = await this.buildRecommendationRequest(question)
+    const request = await this.buildRecommendationRequest(question, history, {
+      withSchedule: true,
+      easyStart,
+    })
     if (!request) {
       throw new UiDataContextUnavailableError(
         'Production Assistant context unavailable：缺少真实 Profile。',
@@ -313,7 +448,8 @@ export class ApiUiDataSource implements UiDataSource {
         stageResult: mapStageResult(raw.stage_result),
       })
     })
-    return adaptAgenticRecommendation(dto, { traceIsReal: true })
+    const reply = adaptAgenticRecommendation(dto, { traceIsReal: true })
+    return { ...reply, considered: this.consideredFromRequest(request) }
   }
 
   async getProfile() {

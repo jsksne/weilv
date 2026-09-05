@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useMotionPulse } from '@/composables/useMotionPulse'
 import { useOnboarding } from '@/composables/useOnboarding'
@@ -26,6 +26,10 @@ const emit = defineEmits<{
 const flow = useOnboarding(props.model, props.submit)
 const open = ref(props.open)
 const closing = ref(false)
+const dialog = ref<HTMLElement | null>(null)
+let restoreFocusTo: HTMLElement | null = null
+let previousBodyOverflow = ''
+let pageScrollLocked = false
 const { delay } = useMotionPulse()
 const { push } = useToast()
 const welcomeToast = '欢迎使用微律'
@@ -37,9 +41,82 @@ const nextLabel = computed(() =>
 const mismatchMessage = computed(() => props.model.questionnaireCompatibility.message)
 const submitting = computed(() => flow.phase.value === 'submitting')
 const submitBlocked = computed(() => flow.phase.value === 'error' || flow.phase.value === 'unsupported')
+const currentStepComplete = computed(() => {
+  const step = flow.currentStep.value
+  if (!step || step.kind !== 'choices') return true
+  return (step.groups ?? []).every(group => {
+    if (group.multiple) return true
+    const answer = flow.answers[group.id]
+    return typeof answer === 'string' && answer.length > 0
+  })
+})
+
+function focusDialog(): void {
+  const active = document.activeElement
+  if (active instanceof HTMLElement && !dialog.value?.contains(active)) restoreFocusTo = active
+  dialog.value?.focus()
+}
+
+function restoreDialogFocus(): void {
+  restoreFocusTo?.focus()
+  restoreFocusTo = null
+}
+
+function lockPageScroll(): void {
+  if (pageScrollLocked) return
+  previousBodyOverflow = document.body.style.overflow
+  document.body.style.overflow = 'hidden'
+  pageScrollLocked = true
+}
+
+function unlockPageScroll(): void {
+  if (!pageScrollLocked) return
+  document.body.style.overflow = previousBodyOverflow
+  pageScrollLocked = false
+}
+
+function onDialogKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Tab' || !dialog.value) return
+  const focusable = Array.from(
+    dialog.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled])'),
+  )
+  if (focusable.length === 0) {
+    event.preventDefault()
+    dialog.value.focus()
+    return
+  }
+  const first = focusable[0]!
+  const last = focusable[focusable.length - 1]!
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog.value)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
 
 watch(() => props.open, value => {
   open.value = value
+  if (value) {
+    lockPageScroll()
+    focusDialog()
+  } else {
+    unlockPageScroll()
+    restoreDialogFocus()
+  }
+})
+
+onMounted(() => {
+  if (open.value) {
+    lockPageScroll()
+    focusDialog()
+  }
+})
+
+onBeforeUnmount(() => {
+  unlockPageScroll()
+  restoreDialogFocus()
 })
 
 async function finish(status: 'completed' | 'skipped'): Promise<void> {
@@ -58,11 +135,14 @@ async function finish(status: 'completed' | 'skipped'): Promise<void> {
   }
   emit('complete', status)
   delay(850, () => {
+    unlockPageScroll()
+    restoreDialogFocus()
     open.value = false
   })
 }
 
 async function next(): Promise<void> {
+  if (!currentStepComplete.value) return
   if (flow.isLast.value) await finish('completed')
   else flow.next()
 }
@@ -75,12 +155,15 @@ function skip(): void {
 <template>
   <div
     v-if="open && model.totalSteps > 0"
+    ref="dialog"
     class="onboard"
     :class="{ hide: closing }"
     data-testid="onboarding"
     role="dialog"
     aria-modal="true"
     aria-label="首次使用引导"
+    tabindex="-1"
+    @keydown="onDialogKeydown"
   >
     <div class="ob-card">
       <OnboardingProgress :current="currentNumber" :total="flow.total.value" />
@@ -108,6 +191,9 @@ function skip(): void {
       >
         {{ flow.submitMessage.value }}
       </p>
+      <p v-else-if="!currentStepComplete" class="ob-validation" role="status">
+        请先完成本页选择
+      </p>
 
       <div class="ob-actions">
         <button
@@ -115,7 +201,7 @@ function skip(): void {
           class="btn btn-ghost"
           type="button"
           data-action="onboarding-back"
-          :disabled="submitting"
+          :disabled="submitting || !currentStepComplete"
           @click="flow.back"
         >
           上一步
@@ -140,14 +226,14 @@ function skip(): void {
         跳过，先随便看看
       </button>
       <p
-        v-if="model.state.mode === 'demo' && mismatchMessage"
+        v-if="flow.isLast.value && model.state.mode === 'demo' && mismatchMessage"
         class="ob-skip"
         data-testid="questionnaire-contract-status"
       >
         {{ mismatchMessage }}
       </p>
 
-      <div v-if="flow.isLast && model.consent.prompt" class="ob-consent" data-testid="onboarding-consent">
+      <div v-if="flow.isLast.value && model.consent.prompt" class="ob-consent" data-testid="onboarding-consent">
         <label class="ob-consent-row">
           <input
             type="checkbox"

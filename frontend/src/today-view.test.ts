@@ -1,4 +1,4 @@
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 
 import TodayView from './views/TodayView.vue'
 import { todayFixture } from './data/fixtures/today.fixture'
@@ -69,9 +69,11 @@ describe('Sprint 4 TodayView: frozen structure', () => {
     expect(moods.map(mood => mood.findAll('span')[1]!.text())).toEqual(['还不错', '平静', '有点累', '有点低落'])
     expect(moods.map(mood => mood.get('.face').text())).toEqual(['◕‿◕', '˘‿˘', '>﹏<', '·︿·'])
     expect(moods[1]!.classes()).toContain('on')
+    expect(moods.map(mood => mood.attributes('aria-pressed'))).toEqual(['false', 'true', 'false', 'false'])
     const chips = moodCard.findAll('.chip')
     expect(chips).toHaveLength(3)
     expect(chips[1]!.classes()).toContain('on')
+    expect(chips.map(chip => chip.attributes('aria-pressed'))).toEqual(['false', 'true', 'false'])
     expect(chips[1]!.text()).toBe('25 分钟')
 
     const cards = wrapper.findAll('.task-card')
@@ -106,6 +108,27 @@ describe('Sprint 4 TodayView: frozen structure', () => {
 })
 
 describe('Sprint 4 TodayView: task interactions', () => {
+  it('keeps the original controls and explains when recording fails', async () => {
+    const model = {
+      ...todayFixture,
+      tasks: [
+        { ...todayFixture.tasks[0]!, recommendationId: 'rec-1' },
+        ...todayFixture.tasks.slice(1),
+      ],
+    }
+    const onAction = vi.fn().mockRejectedValue(new Error('offline'))
+    const daily = useDailyTasks(model, { onAction })
+    const wrapper = mount(TodayView, { props: { model, daily } })
+    const card = wrapper.findAll('.task-card')[0]!
+
+    await card.get('[data-act="start"]').trigger('click')
+    await flushPromises()
+
+    expect(card.get('[data-act="start"]').text()).toBe(TASK_COPY.start)
+    expect(card.find('[data-act="done"]').exists()).toBe(false)
+    expect(toastMessages()).toContain('这次没有记上，请检查网络后重试')
+  })
+
   it('start swaps the button set, done marks terminal state with fx, toast and progress', async () => {
     vi.useFakeTimers()
     const { wrapper, clock } = mountToday()
@@ -117,6 +140,7 @@ describe('Sprint 4 TodayView: task interactions', () => {
       TASK_COPY.partial,
       TASK_COPY.replace,
       TASK_COPY.skip,
+      '看怎么做',
     ])
     expect(toastMessages()).toContain('⏱ 开始啦 · 不着急')
 
@@ -149,7 +173,7 @@ describe('Sprint 4 TodayView: task interactions', () => {
     expect(card.classes()).not.toContain('skippedcard')
     expect(
       card.findAll('.task-actions button').map(btn => btn.text()),
-    ).toEqual([TASK_COPY.start, TASK_COPY.replace, TASK_COPY.skip])
+    ).toEqual([TASK_COPY.start, TASK_COPY.replace, TASK_COPY.skip, '现在不适合'])
   })
 
   it('replace swaps the card content from the frozen pool', async () => {

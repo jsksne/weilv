@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from elasticsearch import ApiError, Elasticsearch
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -36,13 +36,26 @@ from weilv.api.schemas import (
     QuestionnaireSchemaResponse,
     RecommendationRequest,
     RecommendationResponse,
+    ScheduleDeleteResponse,
+    ScheduleEventRequest,
+    ScheduleEventResponse,
+    ScheduleListResponse,
     TaskEventRequest,
     TaskEventResponse,
     TaskFeedbackRequest,
     TaskFeedbackResponse,
+    TodaySessionsResponse,
     WeeklyResponse,
 )
+from weilv.api.schedule_queries import (
+    create_schedule_event,
+    delete_schedule_event,
+    get_schedule_event,
+    list_schedule_events,
+    update_schedule_event,
+)
 from weilv.api.task_events import append_task_event
+from weilv.api.today_queries import list_today_sessions
 from weilv.api.weekly_queries import aggregate_weekly
 from weilv.basic_rag import BasicRagRequest
 from weilv.elasticsearch_indices import ensure_stage_one_indices, ensure_user_memory_indices
@@ -126,6 +139,20 @@ def _dependency(request: Request, name: str):
     return value
 
 
+def _task_snapshot(task: dict, fallback: dict | None = None) -> dict:
+    """Display fields kept with the interaction log so the day's tasks can be
+    faithfully restored later even if the formal library changes."""
+    merged = {**(fallback or {}), **task}
+    return {
+        "task_id": merged["task_id"],
+        "title": merged.get("title") or "",
+        "instruction": merged.get("instruction") or "",
+        "estimated_minutes": merged.get("estimated_minutes"),
+        "covered_domains": list(merged.get("covered_domains") or []),
+        "sources": list(merged.get("sources") or []),
+    }
+
+
 @app.post(
     "/api/v1/recommendations",
     response_model=RecommendationResponse,
@@ -167,6 +194,7 @@ def recommendations(payload: RecommendationRequest, request: Request):
                     "user_id": payload.user_id,
                     "status": result["status"],
                     "selected_task_id": task["task_id"],
+                    "task": _task_snapshot(task, result.get("selected_task")),
                     "target_stage": payload.target_stage,
                     "current_context": payload.current_context,
                     "activity_context": payload.activity_context,
@@ -198,6 +226,10 @@ def _agentic_recommendation_session(
         "user_id": payload.user_id,
         "status": result["status"],
         "selected_task_id": result["selected_task"]["task_id"],
+        "task": {
+            **_task_snapshot(result["selected_task"]),
+            "sources": list(result.get("sources") or []),
+        },
         "target_stage": payload.target_stage,
         "current_context": payload.current_context,
         "activity_context": payload.activity_context,
@@ -604,6 +636,127 @@ def delete_user_memory(user_id: str, memory_id: str, request: Request):
     if result["status"] != "forgotten":
         raise HTTPException(status_code=404, detail="memory_not_found")
     return result
+
+
+@app.get("/api/v1/users/{user_id}/schedule", response_model=ScheduleListResponse)
+def read_user_schedule(
+    user_id: str,
+    request: Request,
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
+):
+    """List the user's schedule events overlapping [from, to] (default: 14 days)."""
+    today = datetime.now(UTC).date()
+    overlap_start = from_date or today
+    overlap_end = to_date or today + timedelta(days=13)
+    if overlap_start > overlap_end:
+        raise HTTPException(status_code=422, detail="invalid_date_range")
+    try:
+        events = list_schedule_events(_dependency(request, "es_client"), user_id, overlap_start, overlap_end)
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    return {
+        "user_id": user_id,
+        "events": [
+            ScheduleEventResponse(
+                event_id=event["event_id"],
+                name=event["name"],
+                start_date=event["start_date"],
+                end_date=event["end_date"],
+                kind=event["kind"],
+                busy_level=event.get("busy_level"),
+                created_at=event.get("created_at") or "",
+                updated_at=event.get("updated_at") or "",
+            )
+            for event in events
+        ],
+    }
+
+
+@app.post("/api/v1/users/{user_id}/schedule", response_model=ScheduleEventResponse)
+def create_user_schedule_event(
+    user_id: str,
+    payload: ScheduleEventRequest,
+    request: Request,
+):
+    client = _dependency(request, "es_client")
+    try:
+        document = create_schedule_event(client, user_id, payload.model_dump())
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    return ScheduleEventResponse(
+        event_id=document["event_id"],
+        name=document["name"],
+        start_date=document["start_date"],
+        end_date=document["end_date"],
+        kind=document["kind"],
+        busy_level=document.get("busy_level"),
+        created_at=document["created_at"],
+        updated_at=document["updated_at"],
+    )
+
+
+@app.put("/api/v1/users/{user_id}/schedule/{event_id}", response_model=ScheduleEventResponse)
+def update_user_schedule_event(
+    user_id: str,
+    event_id: str,
+    payload: ScheduleEventRequest,
+    request: Request,
+):
+    client = _dependency(request, "es_client")
+    try:
+        document = update_schedule_event(client, user_id, event_id, payload.model_dump())
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    if document is None:
+        raise HTTPException(status_code=404, detail="schedule_event_not_found")
+    return ScheduleEventResponse(
+        event_id=document["event_id"],
+        name=document["name"],
+        start_date=document["start_date"],
+        end_date=document["end_date"],
+        kind=document["kind"],
+        busy_level=document.get("busy_level"),
+        created_at=document.get("created_at") or "",
+        updated_at=document.get("updated_at") or "",
+    )
+
+
+@app.delete("/api/v1/users/{user_id}/schedule/{event_id}", response_model=ScheduleDeleteResponse)
+def delete_user_schedule_event(user_id: str, event_id: str, request: Request):
+    client = _dependency(request, "es_client")
+    try:
+        deleted = delete_schedule_event(client, user_id, event_id)
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
+    if not deleted:
+        raise HTTPException(status_code=404, detail="schedule_event_not_found")
+    return ScheduleDeleteResponse(status="deleted", event_id=event_id)
+
+
+@app.get("/api/v1/users/{user_id}/today", response_model=TodaySessionsResponse)
+def read_user_today(
+    user_id: str,
+    request: Request,
+    day: date | None = Query(default=None, alias="date"),
+):
+    """Restore the user's same-day recommendation sessions (read-only).
+
+    Date convention matches the weekly aggregation: UTC day boundaries.
+    """
+    selected_day = day or datetime.now(UTC).date()
+    try:
+        return list_today_sessions(_dependency(request, "es_client"), user_id, selected_day)
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="dependency_service_unavailable") from error
 
 
 @app.get("/api/v1/users/{user_id}/weekly", response_model=WeeklyResponse)

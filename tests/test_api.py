@@ -63,6 +63,7 @@ def test_lifespan_creates_all_formal_product_indices_before_serving(monkeypatch)
                 "user_memory_v1",
                 "interaction_logs_v1",
                 "user_questionnaire_v1",
+                "user_schedule_v1",
             }
             memory_call = next(
                 call for call in client.indices.created if call["index"] == "user_memory_v1"

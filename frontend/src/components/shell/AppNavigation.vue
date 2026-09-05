@@ -70,7 +70,15 @@ defineExpose({ activeView, gliderStyle, recalculateGlider })
       </div>
       <div class="nav-right">
         <span id="navDate" class="nav-date">{{ dateLabel }}</span>
-        <div class="avatar" aria-hidden="true">{{ displayName.slice(0, 1) }}</div>
+        <button
+          class="avatar"
+          type="button"
+          data-action="open-profile"
+          aria-label="打开我的画像"
+          @click="activate('profile')"
+        >
+          {{ displayName.slice(0, 1) }}
+        </button>
       </div>
     </div>
   </nav>

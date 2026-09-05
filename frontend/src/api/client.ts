@@ -11,8 +11,11 @@ import type {
   QuestionnaireState,
   RecommendationRequest,
   RecommendationResponse,
+  ScheduleEventUpsert,
+  ScheduleListResponse,
   TaskAction,
   TaskEventResponse,
+  TodaySessionsResponse,
   UserProfile,
   UserProfileUpsertRequest,
   WeeklyResponse,
@@ -218,6 +221,54 @@ export function postTaskEvent(
   return request(
     `/api/v1/users/${encodeURIComponent(userId)}/recommendations/${encodeURIComponent(recommendationId)}/events`,
     jsonRequest('POST', { action }),
+  )
+}
+
+/** 日程最小实现：列出与 [from, to] 重叠的事件。 */
+export function getSchedule(userId: string, fromDate?: string, toDate?: string): Promise<ScheduleListResponse> {
+  const params = new URLSearchParams()
+  if (fromDate) params.set('from', fromDate)
+  if (toDate) params.set('to', toDate)
+  const query = params.toString()
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/schedule${query ? `?${query}` : ''}`,
+    { method: 'GET' },
+  )
+}
+
+export function createScheduleEvent(userId: string, body: ScheduleEventUpsert): Promise<ScheduleEventUpsert & { event_id: string }> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/schedule`,
+    jsonRequest('POST', body),
+  )
+}
+
+export function updateScheduleEvent(
+  userId: string,
+  eventId: string,
+  body: ScheduleEventUpsert,
+): Promise<ScheduleEventUpsert & { event_id: string }> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/schedule/${encodeURIComponent(eventId)}`,
+    jsonRequest('PUT', body),
+  )
+}
+
+export function deleteScheduleEvent(userId: string, eventId: string): Promise<{ status: string }> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/schedule/${encodeURIComponent(eventId)}`,
+    { method: 'DELETE' },
+  )
+}
+
+/** F4：读回某用户当天（UTC 日界）已保存的推荐会话。 */
+export function getTodaySessions(
+  userId: string,
+  date?: string,
+): Promise<TodaySessionsResponse> {
+  return request(
+    `/api/v1/users/${encodeURIComponent(userId)}/today${date ? `?date=${encodeURIComponent(date)}` : ''}`,
+    { method: 'GET' },
   )
 }
 

@@ -34,9 +34,10 @@ describe('stream fallback（PocketBay 网关对流式返回 403 时的产品级�
     const flow = useAgenticRecommendation(source)
     const ok = await flow.submit('我最近睡不好')
     expect(ok).toBe(true)
-    expect(flow.reply.value).toStrictEqual(reply)
-    expect(flow.error.value).toBeNull()
-    expect(flow.streamFallbackUsed.value).toBe(true)
+    expect(flow.messages.value).toHaveLength(1)
+    expect(flow.messages.value[0]!.status).toBe('complete')
+    expect(flow.messages.value[0]!.reply).toStrictEqual(reply)
+    expect(flow.messages.value[0]!.streamFallbackUsed).toBe(true)
   })
 
   it('keeps the original stream error when no non-streaming source exists', async () => {
@@ -49,8 +50,10 @@ describe('stream fallback（PocketBay 网关对流式返回 403 时的产品级�
     const flow = useAgenticRecommendation(source)
     const ok = await flow.submit('我最近睡不好')
     expect(ok).toBe(false)
-    expect(flow.error.value?.message).toBe('http_403')
-    expect(flow.streamFallbackUsed.value).toBe(false)
+    expect(flow.messages.value).toHaveLength(1)
+    expect(flow.messages.value[0]!.status).toBe('error')
+    expect(flow.messages.value[0]!.errorMessage).toBe('http_403')
+    expect(flow.messages.value[0]!.streamFallbackUsed).toBe(false)
   })
 
   it('does not use the fallback when streaming succeeds', async () => {
@@ -67,8 +70,9 @@ describe('stream fallback（PocketBay 网关对流式返回 403 时的产品级�
     const flow = useAgenticRecommendation(source)
     const ok = await flow.submit('我最近睡不好')
     expect(ok).toBe(true)
-    expect(flow.reply.value).toStrictEqual(reply)
-    expect(flow.streamFallbackUsed.value).toBe(false)
+    expect(flow.messages.value).toHaveLength(1)
+    expect(flow.messages.value[0]!.reply).toStrictEqual(reply)
+    expect(flow.messages.value[0]!.streamFallbackUsed).toBe(false)
   })
 })
 

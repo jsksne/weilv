@@ -41,11 +41,20 @@ export interface AssistantSource {
   url?: string
 }
 
+/** F2：建议任务在今日清单中的落地状态（由 App 按今日 entries 解析）。 */
+export type SuggestedTaskState = 'absent' | 'pending' | 'started' | 'done'
+
 export interface AssistantSuggestedTask {
+  taskId: string
   icon: string
   title: string
   meta: string
   actionLabel: string
+  /** F2：本次 Agentic 执行的正式记录 id；无真实记录时缺省（不可捏造）。 */
+  recommendationId?: string
+  /** 正式任务说明，用于加入今日时完整建卡。 */
+  instruction?: string
+  domains?: readonly string[]
 }
 
 export interface AssistantSafetyNotice {
@@ -105,6 +114,8 @@ export interface AssistantReply {
   sources: readonly AssistantSource[]
   /** Production Output Guard 使用固定安全兜底时的透明提示；Demo 可省略。 */
   guardNotice?: string | null
+  /** “本次考虑”：来自本次请求真实字段的条件摘要（最多 3 条）。 */
+  considered?: readonly string[]
   traceIsReal: boolean
   timing: AssistantTiming | null
 }

@@ -134,7 +134,9 @@ describe('B3 client — stream API transport', () => {
 
     await streamAgenticRecommendation(request, () => {})
 
-    const url = fetchMock.mock.calls[0][0] as string
+    const streamCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/agentic/stream'))
+    expect(streamCall).toBeDefined()
+    const url = streamCall![0] as string
     expect(url).toContain('/agentic/stream')
     expect(url).not.toMatch(/\/agentic$/)
   })
@@ -288,7 +290,9 @@ describe('B3 DataSource — Production uses the stream API', () => {
     const uiEvents: AssistantTraceEvent[] = []
     const reply = await source.askAssistantStreaming('最近睡不好', event => uiEvents.push(event))
 
-    const url = fetchMock.mock.calls[0][0] as string
+    const streamCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/agentic/stream'))
+    expect(streamCall).toBeDefined()
+    const url = streamCall![0] as string
     expect(url).toContain('/agentic/stream')
     expect(uiEvents).toHaveLength(9)
     expect(uiEvents[0]).toEqual({ stage: 'accepted', status: 'active', label: '正在理解你的需求' })

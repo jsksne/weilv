@@ -452,3 +452,25 @@ def test_langgraph_is_real_compiled_fixed_graph():
         "output_guard",
         "__end__",
     }
+
+
+def test_analyze_problem_passes_session_history_to_decomposition(monkeypatch):
+    import weilv.agentic_rag as agentic
+
+    received = {}
+
+    def fake_decompose(query, api_key, history=None):
+        received["args"] = (query, history)
+        return json.dumps({"is_complex": False, "factors": []})
+
+    monkeypatch.setattr(agentic, "decompose_problem", fake_decompose)
+
+    history = [{"role": "user", "content": "推荐一个课间任务"}]
+    request = _request(conversation_history=history)
+    runtime = _runtime(request)
+    state = runtime.analyze_problem({"diagnostics": agentic.initial_diagnostics()})
+
+    query, sent_history = received["args"]
+    assert query == request.query
+    assert sent_history == history
+    assert state["analysis_fallback"] is True

@@ -51,6 +51,7 @@ function onSelect(value: string): void {
         class="mood"
         :class="{ on: option.value === selected }"
         type="button"
+        :aria-pressed="option.value === selected"
         :style="option.value === pulseValue ? { transform: pulseTransform } : undefined"
         @click="onSelect(option.value)"
       >

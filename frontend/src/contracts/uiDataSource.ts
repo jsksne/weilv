@@ -1,3 +1,4 @@
+import type { ConversationTurn, ScheduleEventContract, ScheduleEventUpsertContract } from './common'
 import type { AssistantContract } from './assistant'
 import type { AssistantReply } from './assistant'
 import type { AssistantTraceEvent } from './assistant'
@@ -26,15 +27,22 @@ export interface UiDataSource {
   getToday(): Promise<TodayContract>
   /** Today 的用户选择作为下一次真实 RecommendationRequest 的上下文。 */
   setTodayContext?(context: TodayContextSelection): void
-  askAssistant(question: string): Promise<AssistantReply>
+  askAssistant(
+    question: string,
+    history?: ConversationTurn[],
+    easyStart?: boolean,
+  ): Promise<AssistantReply>
   /**
    * B3：流式 Agentic 提交。每次调用 = 一次真实 backend Agentic 执行；
    * onEvent 仅在收到真实 sanitized trace 事件时触发。最终回答来自同一执行。
+   * history 为最近会话轮次（F1），进入理解环节但不写 Memory。
    * 未实现时（如 Demo/fixture）回退到 askAssistant。
    */
   askAssistantStreaming?(
     question: string,
     onEvent: (event: AssistantTraceEvent) => void,
+    history?: ConversationTurn[],
+    easyStart?: boolean,
   ): Promise<AssistantReply>
   /** Production 提交首次引导：只写学段与 Memory 偏好；Demo 实现为本地 no-op。 */
   submitOnboarding?(answers: OnboardingSubmitAnswers): Promise<OnboardingSubmitResult>
@@ -44,4 +52,8 @@ export interface UiDataSource {
   getUserMemories?(): Promise<ProfileMemoryListContract>
   /** B4：删除一条 Memory（后端 forget_memory）。 */
   deleteUserMemory?(memoryId: string): Promise<{ status: string }>
+  /** 日程最小实现：列出/新增/修改/删除当天可见事件（名称只存不传模型）。 */
+  getSchedule?(fromDate?: string, toDate?: string): Promise<ScheduleEventContract[]>
+  saveScheduleEvent?(body: ScheduleEventUpsertContract, eventId?: string): Promise<{ status: string }>
+  deleteScheduleEvent?(eventId: string): Promise<{ status: string }>
 }

@@ -42,7 +42,7 @@ function useReducedMotion(): void {
 }
 
 describe('B6 Production onboarding contract', () => {
-  it('keeps the frozen five steps and marks unsupported grade honestly', () => {
+  it('keeps five steps and offers exactly the three supported student stages', () => {
     const model = createProductionOnboardingContract()
 
     expect(model.state.mode).toBe('production')
@@ -61,8 +61,11 @@ describe('B6 Production onboarding contract', () => {
     const gradeGroup = basics && 'groups' in basics
       ? basics.groups?.find(group => group.id === 'grade')
       : undefined
-    expect(gradeGroup?.options.find(option => option.value === 'university')?.supported).toBe(false)
-    expect(gradeGroup?.options.find(option => option.value === 'junior_high')?.supported).toBeUndefined()
+    expect(gradeGroup?.options.map(option => option.value)).toEqual([
+      'primary_upper',
+      'junior_high',
+      'senior_high',
+    ])
   })
 
   it('persists only grade and memory consent; sleep/issues/duration/slot stay unavailable', () => {
@@ -174,12 +177,13 @@ describe('B6 ApiUiDataSource.submitOnboarding', () => {
     await vi.waitFor(() => expect(profileGetCount).toBe(1))
     await source.submitOnboarding({ grade: 'junior_high', memoryEnabled: true })
     const refreshedLoad = source.getToday()
-    await Promise.resolve()
+    /* F4 读回引入了额外的 /today 异步步骤；等新 Profile 请求真正发出后再数。 */
+    await vi.waitFor(() => expect(profileGetCount).toBe(2))
     const countBeforeStaleRequestSettles = profileGetCount
 
     resolveStaleProfile(okProfile())
     await Promise.all([originalLoad, refreshedLoad])
-    expect(countBeforeStaleRequestSettles).toBe(2)
+    expect(profileGetCount).toBe(2)
   })
 })
 
@@ -240,6 +244,23 @@ describe('B6 useOnboarding submission', () => {
 })
 
 describe('B6 OnboardingFlow production submission', () => {
+  it('requires both grade and sleep choices before leaving the basics step', async () => {
+    const wrapper = mount(OnboardingFlow, {
+      props: { model: createProductionOnboardingContract(), submit: vi.fn() },
+    })
+
+    /* 组件行为：本页未完成时不前进并显示校验提示（F9 无假默认值）。 */
+    await wrapper.get('[data-action="onboarding-next"]').trigger('click')
+    expect(wrapper.get('[data-onboarding-step="basics"]').exists()).toBe(true)
+    expect(wrapper.find('.ob-validation').exists()).toBe(true)
+
+    await wrapper.get('[data-option="junior_high"]').trigger('click')
+    expect(wrapper.find('.ob-validation').exists()).toBe(true)
+
+    await wrapper.get('[data-option="6_to_7"]').trigger('click')
+    expect(wrapper.find('.ob-validation').exists()).toBe(false)
+  })
+
   it('selects grade, grants consent, submits, and emits completed only on success', async () => {
     vi.useFakeTimers()
     useReducedMotion()
@@ -250,8 +271,12 @@ describe('B6 OnboardingFlow production submission', () => {
 
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await wrapper.get('[data-option="junior_high"]').trigger('click')
+    await wrapper.get('[data-option="6_to_7"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
+    /* behavior 步骤需要显式选择，不再吃 fixture 默认值。 */
+    await wrapper.get('[data-option="3_to_5"]').trigger('click')
+    await wrapper.get('[data-option="after_dinner"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     expect(wrapper.get('[data-onboarding-step="generation"]').exists()).toBe(true)
 
@@ -274,8 +299,11 @@ describe('B6 OnboardingFlow production submission', () => {
 
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await wrapper.get('[data-option="junior_high"]').trigger('click')
+    await wrapper.get('[data-option="6_to_7"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
+    await wrapper.get('[data-option="3_to_5"]').trigger('click')
+    await wrapper.get('[data-option="after_dinner"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await wrapper.get('[data-action="onboarding-next"]').trigger('click')
     await vi.advanceTimersByTimeAsync(1000)

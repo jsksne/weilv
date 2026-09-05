@@ -84,7 +84,14 @@ def test_rank1_regression_selected_task_equals_tasks0_and_returns_three(monkeypa
     assert first["instruction"] == result["selected_task"]["instruction"]
     assert first["estimated_minutes"] == result["selected_task"]["estimated_minutes"]
     # minimal display contract: no ranking internals / raw query / embeddings
-    assert set(first) == {"task_id", "title", "instruction", "estimated_minutes", "sources"}
+    assert set(first) == {
+        "task_id",
+        "title",
+        "instruction",
+        "estimated_minutes",
+        "covered_domains",
+        "sources",
+    }
     # candidate ids remain unique
     assert len({item["task_id"] for item in result["tasks"]}) == 3
 

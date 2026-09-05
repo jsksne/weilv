@@ -200,6 +200,21 @@ def get_user_memory_index_definitions() -> dict[str, dict]:
                 }
             }
         },
+        "user_schedule_v1": {
+            "mappings": {
+                "properties": {
+                    "user_id": {"type": "keyword"},
+                    "event_id": {"type": "keyword"},
+                    "name": {"type": "keyword", "index": False},
+                    "start_date": {"type": "date", "format": "yyyy-MM-dd"},
+                    "end_date": {"type": "date", "format": "yyyy-MM-dd"},
+                    "kind": {"type": "keyword"},
+                    "busy_level": {"type": "keyword"},
+                    "created_at": {"type": "date"},
+                    "updated_at": {"type": "date"},
+                }
+            }
+        },
     }
 
 

@@ -31,6 +31,23 @@ describe('Sprint 2R navigation', () => {
     expect(wrapper.emitted('update:activeView')?.at(-1)).toEqual(['assistant'])
   })
 
+  it('opens Profile when the user activates the avatar', async () => {
+    const wrapper = mount(AppNavigation, {
+      props: {
+        items: shellFixture.navigation,
+        displayName: shellFixture.displayName,
+        dateLabel: shellFixture.dateLabel,
+      },
+    })
+
+    const avatar = wrapper.get('[data-action="open-profile"]')
+    expect(avatar.element.tagName).toBe('BUTTON')
+    expect(avatar.attributes('aria-label')).toBe('打开我的画像')
+    await avatar.trigger('click')
+
+    expect(wrapper.emitted('update:activeView')?.at(-1)).toEqual(['profile'])
+  })
+
   it('calculates the glider from tab width and offset after resize', async () => {
     const wrapper = mount(AppNavigation, {
       props: {

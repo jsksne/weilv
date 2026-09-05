@@ -1,4 +1,5 @@
 import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 
 import OnboardingFlow from './components/onboarding/OnboardingFlow.vue'
 import { onboardingFixture } from './data/fixtures/onboarding.fixture'
@@ -38,11 +39,32 @@ describe('Sprint 6 OnboardingFlow', () => {
     expect(wrapper.get('[data-onboarding-step="welcome"]').exists()).toBe(true)
   })
 
-  it('keeps questionnaire mismatch visible and Skip writes only the Demo completion marker', async () => {
+  it('shows consent only on the final step and keeps keyboard focus inside the dialog', async () => {
+    /* attachTo：jsdom 的 focus() 只对已连接文档的元素生效。 */
+    const wrapper = mount(OnboardingFlow, { attachTo: document.body, props: { model: onboardingFixture } })
+    const dialog = wrapper.get('[data-testid="onboarding"]')
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="onboarding-consent"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(dialog.element)
+
+    const focusable = dialog.findAll('button:not([disabled]), input:not([disabled])')
+    const last = focusable.at(-1)!
+    ;(last.element as HTMLElement).focus()
+    await dialog.trigger('keydown', { key: 'Tab' })
+    expect(document.activeElement).toBe(focusable[0]!.element)
+
+    for (let index = 0; index < 4; index += 1) {
+      await wrapper.get('[data-action="onboarding-next"]').trigger('click')
+    }
+    expect(wrapper.get('[data-testid="onboarding-consent"]').exists()).toBe(true)
+  })
+
+  it('keeps questionnaire mismatch off the welcome step and Skip writes only the Demo completion marker', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     const wrapper = mount(OnboardingFlow, { props: { model: onboardingFixture } })
 
-    expect(wrapper.get('[data-testid="questionnaire-contract-status"]').text()).toContain('不会提交')
+    expect(wrapper.find('[data-testid="questionnaire-contract-status"]').exists()).toBe(false)
     await wrapper.get('[data-action="onboarding-skip"]').trigger('click')
 
     expect(wrapper.emitted('complete')).toEqual([['skipped']])

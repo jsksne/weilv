@@ -1,6 +1,11 @@
 import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 
-import type { TodayContract, TodayTaskAction, TodayTaskView } from '@/contracts'
+import type {
+  TodayContract,
+  TodaySavedInteraction,
+  TodayTaskAction,
+  TodayTaskView,
+} from '@/contracts'
 
 /**
  * Sprint 4：Today 本地交互状态机（迁移自冻结原型脚本）。
@@ -25,6 +30,9 @@ export type TaskActionResult =
   | 'applied'
   | 'cooldown'
   | 'rejected-state'
+  | 'submission-failed'
+
+export type TaskActionOutcome = TaskActionResult | Promise<TaskActionResult>
 
 export interface DailyTaskEntry {
   /** 卡片槽位（对应原型 data-idx）：内容可被 replace/low 换掉，槽位不变 */
@@ -50,12 +58,13 @@ export interface DailyTasksController {
   mood: Readonly<Ref<string>>
   availableMinutes: Readonly<Ref<number>>
   pendingFeedback: Readonly<Ref<readonly PendingFeedback[]>>
-  start: (slotId: string) => TaskActionResult
-  complete: (slotId: string) => TaskActionResult
-  partial: (slotId: string) => TaskActionResult
-  skip: (slotId: string) => TaskActionResult
-  restore: (slotId: string) => TaskActionResult
-  replace: (slotId: string) => TaskActionResult
+  adoptSuggested: (task: TodayTaskView) => 'added' | 'exists'
+  start: (slotId: string) => TaskActionOutcome
+  complete: (slotId: string) => TaskActionOutcome
+  partial: (slotId: string) => TaskActionOutcome
+  skip: (slotId: string) => TaskActionOutcome
+  restore: (slotId: string) => TaskActionOutcome
+  replace: (slotId: string) => TaskActionOutcome
   applyMood: (value: string) => TaskActionResult
   selectTime: (minutes: number) => TaskActionResult
 }
@@ -67,10 +76,28 @@ export interface UseDailyTasksOptions {
    * Sprint 9：B2 任务动作事件回调（Production 由 App 接 DataSource）。
    * 只在任务带 recommendation_id 时调用，保证事件写对该任务。
    */
-  onAction?: (task: TodayTaskView, action: TodayTaskAction) => void
+  onAction?: (task: TodayTaskView, action: TodayTaskAction) => Promise<{ status: string }>
 }
 
 const ACTION_COOLDOWN_MS = 450
+
+/** 卡片身份：优先真实执行记录（recommendationId），无记录时退回任务定义 id。 */
+function taskSlotKey(task: TodayTaskView): string {
+  return task.recommendationId ?? `t:${task.taskId}`
+}
+
+function stageForSaved(interaction: TodaySavedInteraction): TaskActionStage {
+  if (interaction === 'started') return 'active'
+  if (interaction === 'done' || interaction === 'partial') return 'completed'
+  if (interaction === 'skipped') return 'restore'
+  return 'initial'
+}
+
+/** F4：当天读回的已完成/部分完成任务，若反馈尚未保存则恢复待反馈提示。 */
+function needsRestoredFeedback(entry: DailyTaskEntry): boolean {
+  const saved = entry.task.savedInteraction
+  return (saved === 'done' || saved === 'partial') && entry.task.feedbackSaved !== true
+}
 
 export function useDailyTasks(
   input: MaybeRefOrGetter<TodayContract>,
@@ -79,10 +106,6 @@ export function useDailyTasks(
   const now = options.now ?? (() => performance.now())
   const model = computed(() => toValue(input))
 
-  function emitAction(entry: DailyTaskEntry, action: TodayTaskAction): void {
-    if (entry.task.recommendationId) options.onAction?.(entry.task, action)
-  }
-
   const entries = ref<readonly DailyTaskEntry[]>([])
   const mood = ref('')
   const availableMinutes = ref(0)
@@ -90,30 +113,67 @@ export function useDailyTasks(
   let replacePointer = 0
   const lastActionAt = new Map<string, number>()
 
-  function reset(next: TodayContract): void {
-    entries.value = next.tasks.map((task, index) => ({
-      slotId: `today-slot-${index}`,
-      task,
-      interaction: 'pending',
-      actions: 'initial',
-    }))
-    mood.value = next.defaultMood
-    availableMinutes.value = next.defaultTimeMinutes
-    pendingFeedback.value = []
-    replacePointer = 0
-    lastActionAt.clear()
+  /**
+   * F4：模型变化不再整体重置交互状态。
+   * 按稳定记录身份（recommendationId / taskId）合并：已有条目保留本地
+   * 交互状态（可能比读回更新）；新条目从 savedInteraction 恢复；
+   * 已开始/已完成/已放下的条目即使不在新模型里也保留——今日记录不消失，
+   * 只有未开始的候选任务会被新推荐替换。
+   */
+  function syncModel(next: TodayContract): void {
+    const previous = entries.value
+    const byKey = new Map(previous.map(entry => [taskSlotKey(entry.task), entry]))
+    const merged: DailyTaskEntry[] = []
+    const consumed = new Set<string>()
+    next.tasks.forEach((task, index) => {
+      const key = taskSlotKey(task)
+      consumed.add(key)
+      const kept = byKey.get(key)
+      merged.push(kept ? { ...kept, task } : entryFromTask(task, index))
+    })
+    for (const entry of previous) {
+      if (!consumed.has(taskSlotKey(entry.task)) && entry.interaction !== 'pending') {
+        merged.push(entry)
+      }
+    }
+    /* 已开始/已完成/已放下的记录排在候选前面（首页优先动作语义）。 */
+    entries.value = [
+      ...merged.filter(entry => entry.interaction !== 'pending'),
+      ...merged.filter(entry => entry.interaction === 'pending'),
+    ]
+
+    const knownFeedback = new Set(pendingFeedback.value.map(item => item.slotId))
+    pendingFeedback.value = [
+      ...pendingFeedback.value,
+      ...merged
+        .filter(entry => !knownFeedback.has(entry.slotId) && needsRestoredFeedback(entry))
+        .map(entry => ({
+          slotId: entry.slotId,
+          completionStatus:
+            entry.task.savedInteraction === 'done'
+              ? ('completed' as const)
+              : ('partially_completed' as const),
+        })),
+    ]
+
+    /* 用户尚未主动选择时落回契约默认；已选择则原样保留。 */
+    if (!mood.value) mood.value = next.defaultMood
+    if (availableMinutes.value <= 0) availableMinutes.value = next.defaultTimeMinutes
   }
 
-  reset(model.value)
-  /* 上下文刷新（心情/时间变化 → 换一推荐）时保留用户已选的心情与时间；
-     首次加载两者为空值，仍落回契约默认。 */
-  watch(model, next => {
-    const keepMood = mood.value
-    const keepMinutes = availableMinutes.value
-    reset(next)
-    if (keepMood) mood.value = keepMood
-    if (keepMinutes > 0) availableMinutes.value = keepMinutes
-  })
+  function entryFromTask(task: TodayTaskView, index: number): DailyTaskEntry {
+    const interaction = task.savedInteraction ?? 'pending'
+    return {
+      slotId: `slot-${index}-${taskSlotKey(task)}`,
+      task,
+      interaction,
+      actions: stageForSaved(interaction),
+    }
+  }
+
+  syncModel(model.value)
+  /* 模型刷新保留用户已选的心情与时间；未选择时落回契约默认。 */
+  watch(model, syncModel)
 
   const completed = computed(
     () => entries.value.filter(entry => entry.interaction === 'done' || entry.interaction === 'partial').length,
@@ -152,61 +212,88 @@ export function useDailyTasks(
     )
   }
 
-  function start(slotId: string): TaskActionResult {
+  function applyAfterSubmission(
+    entry: DailyTaskEntry,
+    action: TodayTaskAction,
+    apply: () => void,
+  ): TaskActionOutcome {
+    if (!entry.task.recommendationId || !options.onAction) {
+      apply()
+      return 'applied'
+    }
+
+    return options.onAction(entry.task, action).then(
+      result => {
+        if (result.status !== 'recorded' && result.status !== 'demo_local') {
+          lastActionAt.delete(entry.slotId)
+          return 'submission-failed'
+        }
+        apply()
+        return 'applied'
+      },
+      () => {
+        lastActionAt.delete(entry.slotId)
+        return 'submission-failed'
+      },
+    )
+  }
+
+  function start(slotId: string): TaskActionOutcome {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    updateEntry(slotId, { interaction: 'started', actions: 'active' })
-    emitAction(entry, 'started')
-    return 'applied'
+    return applyAfterSubmission(entry, 'started', () => {
+      updateEntry(slotId, { interaction: 'started', actions: 'active' })
+    })
   }
 
-  function finish(slotId: string, interaction: 'done' | 'partial'): TaskActionResult {
+  function finish(slotId: string, interaction: 'done' | 'partial'): TaskActionOutcome {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
     if (entry.interaction === 'done' || entry.interaction === 'partial') return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    updateEntry(slotId, { interaction, actions: 'completed' })
-    pendingFeedback.value = [
-      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
-      {
-        slotId,
-        completionStatus: interaction === 'done' ? 'completed' : 'partially_completed',
-      },
-    ]
-    emitAction(entry, interaction === 'done' ? 'completed' : 'partially_completed')
-    return 'applied'
+    const action = interaction === 'done' ? 'completed' : 'partially_completed'
+    return applyAfterSubmission(entry, action, () => {
+      updateEntry(slotId, { interaction, actions: 'completed' })
+      pendingFeedback.value = [
+        ...pendingFeedback.value.filter(item => item.slotId !== slotId),
+        {
+          slotId,
+          completionStatus: action,
+        },
+      ]
+    })
   }
 
-  function complete(slotId: string): TaskActionResult {
+  function complete(slotId: string): TaskActionOutcome {
     return finish(slotId, 'done')
   }
 
-  function partial(slotId: string): TaskActionResult {
+  function partial(slotId: string): TaskActionOutcome {
     return finish(slotId, 'partial')
   }
 
-  function skip(slotId: string): TaskActionResult {
+  function skip(slotId: string): TaskActionOutcome {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    updateEntry(slotId, { interaction: 'skipped', actions: 'restore' })
-    pendingFeedback.value = [
-      ...pendingFeedback.value.filter(item => item.slotId !== slotId),
-      { slotId, completionStatus: 'skipped' },
-    ]
-    emitAction(entry, 'skipped')
-    return 'applied'
+    return applyAfterSubmission(entry, 'skipped', () => {
+      updateEntry(slotId, { interaction: 'skipped', actions: 'restore' })
+      pendingFeedback.value = [
+        ...pendingFeedback.value.filter(item => item.slotId !== slotId),
+        { slotId, completionStatus: 'skipped' },
+      ]
+    })
   }
 
-  function restore(slotId: string): TaskActionResult {
+  function restore(slotId: string): TaskActionOutcome {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    updateEntry(slotId, { interaction: 'pending', actions: 'initial' })
-    pendingFeedback.value = pendingFeedback.value.filter(item => item.slotId !== slotId)
-    emitAction(entry, 'restored')
-    return 'applied'
+    return applyAfterSubmission(entry, 'restored', () => {
+      updateEntry(slotId, { interaction: 'pending', actions: 'initial' })
+      pendingFeedback.value = pendingFeedback.value.filter(item => item.slotId !== slotId)
+    })
   }
 
   /**
@@ -214,16 +301,16 @@ export function useDailyTasks(
    * 初始三钮，但 taskStates[idx] 不回退（started 仍为 started，随后 low
    * 心情因此不再改写该卡——保持该语义）。
    */
-  function replace(slotId: string): TaskActionResult {
+  function replace(slotId: string): TaskActionOutcome {
     const entry = findEntry(slotId)
     if (!entry) return 'rejected-state'
     if (model.value.replacePool.length === 0) return 'rejected-state'
     if (!passesCooldown(slotId)) return 'cooldown'
-    const next = model.value.replacePool[replacePointer % model.value.replacePool.length]!
-    replacePointer += 1
-    updateEntry(slotId, { task: next, actions: 'initial' })
-    emitAction(entry, 'replaced')
-    return 'applied'
+    return applyAfterSubmission(entry, 'replaced', () => {
+      const next = model.value.replacePool[replacePointer % model.value.replacePool.length]!
+      replacePointer += 1
+      updateEntry(slotId, { task: next, actions: 'initial' })
+    })
   }
 
   /**
@@ -234,7 +321,11 @@ export function useDailyTasks(
     mood.value = value
     if (value !== 'low') return 'applied'
     const swap = model.value.lowMoodSwap
-    const target = entries.value[lowMoodSlotIndex.value]
+    /* 槽位按模型位置定位，条目按记录身份查找（记录可能排在候选前面）。 */
+    const targetTask = model.value.tasks[lowMoodSlotIndex.value]
+    const target = targetTask
+      ? entries.value.find(entry => taskSlotKey(entry.task) === taskSlotKey(targetTask))
+      : undefined
     if (target && target.interaction === 'pending') {
       updateEntry(target.slotId, {
         task: {
@@ -253,10 +344,29 @@ export function useDailyTasks(
     return 'applied'
   }
 
+  /**
+   * F2：把 AI 建议加入今日。绑定真实 recommendationId（该会话已在后端建立），
+   * 动作事件照常落到该记录；按任务定义 id 去重，不重复添加。
+   */
+  function adoptSuggested(task: TodayTaskView): 'added' | 'exists' {
+    if (entries.value.some(entry => entry.task.taskId === task.taskId)) return 'exists'
+    entries.value = [
+      ...entries.value,
+      {
+        slotId: `slot-adopt-${taskSlotKey(task)}`,
+        task,
+        interaction: 'pending',
+        actions: 'initial',
+      },
+    ]
+    return 'added'
+  }
+
   return {
     entries,
     completed,
     total,
+    adoptSuggested,
     heroProgressNote,
     dockedProgressNote,
     mood,

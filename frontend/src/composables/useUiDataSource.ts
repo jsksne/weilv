@@ -113,7 +113,26 @@ export function useUiDataSource(
     return startLoad()
   }
 
+  /**
+   * F4：保存成功后按需刷新部分视图数据（周报/画像），
+   * 不清空 bundle——整站卸载会丢掉助手会话与今日交互状态。
+   * 单项失败保留旧数据（已保存的任务不因此回滚），可下次再取。
+   */
+  async function refreshPartial(keys: ReadonlyArray<'weekly' | 'profile'>): Promise<void> {
+    if (!source || !data.value) return
+    await Promise.all(
+      keys.map(async key => {
+        try {
+          const next = key === 'weekly' ? await source.getWeekly() : await source.getProfile()
+          if (data.value) data.value = { ...data.value, [key]: next }
+        } catch {
+          /* 保留旧数据；统计暂未更新不打断用户。 */
+        }
+      }),
+    )
+  }
+
   if (options.autoLoad !== false && !initialData) void load()
 
-  return { status, data, onboarding, error, progress, load, reload, retry: load }
+  return { status, data, onboarding, error, progress, load, reload, refreshPartial, retry: load }
 }

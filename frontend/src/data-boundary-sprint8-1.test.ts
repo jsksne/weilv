@@ -43,6 +43,19 @@ function requestBody(call: unknown[]): unknown {
   return JSON.parse(String((call[1] as RequestInit).body))
 }
 
+/** F4：getToday 会先读回 /today 会话；给非 /today 的调用按顺序返回队列响应。 */
+const emptyTodaySessions = { user_id: 'real-user-123', date: '2026-09-05', sessions: [] }
+
+function fetchWithoutToday(queue: Response[]): ReturnType<typeof vi.fn> {
+  return vi.fn((input: RequestInfo | URL): Promise<Response> => {
+    if (String(input).includes('/today')) return Promise.resolve(response(emptyTodaySessions))
+    if (String(input).includes('/schedule')) {
+      return Promise.resolve(response({ user_id: 'real-user-123', events: [] }))
+    }
+    return Promise.resolve(queue.shift() ?? response({}))
+  })
+}
+
 describe('Sprint 8.1 Production data boundary', () => {
   it('returns explicit unavailable contracts without fabricating a user or calling the network', async () => {
     const fetchMock = vi.fn()
@@ -81,10 +94,7 @@ describe('Sprint 8.1 Production data boundary', () => {
   })
 
   it('uses a complete explicit request as-is and changes only the Agentic query', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(response(allowedRecommendation))
-      .mockResolvedValueOnce(response(agenticRecommendation))
+    const fetchMock = fetchWithoutToday([response(allowedRecommendation), response(agenticRecommendation)])
     vi.stubGlobal('fetch', fetchMock)
     const source = new ApiUiDataSource({
       userId: 'real-profile-user',
@@ -94,15 +104,19 @@ describe('Sprint 8.1 Production data boundary', () => {
     await source.getToday()
     await source.askAssistant('用户本次真实问题')
 
-    expect(requestBody(fetchMock.mock.calls[0]!)).toEqual(explicitRecommendationRequest)
-    expect(requestBody(fetchMock.mock.calls[1]!)).toEqual({
+    const recommendationCalls = fetchMock.mock.calls.filter(
+      ([input]) =>
+        !String(input).includes('/today') && !String(input).includes('/schedule'),
+    )
+    expect(requestBody(recommendationCalls[0]!)).toEqual(explicitRecommendationRequest)
+    expect(requestBody(recommendationCalls[1]!)).toEqual({
       ...explicitRecommendationRequest,
       query: '用户本次真实问题',
     })
   })
 
   it('sends the selected Today mood and available time through the next real recommendation request', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(response(allowedRecommendation))
+    const fetchMock = fetchWithoutToday([response(allowedRecommendation)])
     vi.stubGlobal('fetch', fetchMock)
     const source = new ApiUiDataSource({
       userId: 'real-profile-user',
@@ -112,7 +126,11 @@ describe('Sprint 8.1 Production data boundary', () => {
     source.setTodayContext({ mood: 'tired', availableMinutes: 10 })
     await source.getToday()
 
-    expect(requestBody(fetchMock.mock.calls[0]!)).toEqual({
+    const recommendationCalls = fetchMock.mock.calls.filter(
+      ([input]) =>
+        !String(input).includes('/today') && !String(input).includes('/schedule'),
+    )
+    expect(requestBody(recommendationCalls[0]!)).toEqual({
       ...explicitRecommendationRequest,
       query: `${explicitRecommendationRequest.query}\n当前心情：有点累`,
       available_minutes: 10,

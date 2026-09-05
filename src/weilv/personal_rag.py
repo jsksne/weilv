@@ -136,6 +136,10 @@ def run_personal_rag(
     )
     personalized = personalize_task_candidates(pipeline["reranked_tasks"], memories)
     personalized, cf_diagnostics = apply_cf_to_ranking(personalized, cf_provider)
+    if getattr(request, "prefer_easy_start", False):
+        from weilv.basic_rag import apply_easy_start_ordering
+
+        personalized = apply_easy_start_ordering(personalized)
     selected_task = _selected_task(personalized[0])
     result = _finalize_selected_task(
         request,

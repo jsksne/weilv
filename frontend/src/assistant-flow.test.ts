@@ -43,7 +43,12 @@ describe('Assistant demo flow', () => {
 
     await advance(900)
     expect(wrapper.get('[data-testid="answer-card"]').text()).toContain('10 分钟')
-    expect(wrapper.get('[data-testid="suggested-mini-task"] button').attributes('disabled')).toBeDefined()
+    const go = wrapper.get('[data-testid="suggested-mini-task"] button')
+    expect(go.attributes('disabled')).toBeUndefined()
+    await go.trigger('click')
+    expect(wrapper.emitted('activate-task')?.at(-1)).toEqual([
+      expect.objectContaining({ taskId: 'today-task-move-neck-stretch', title: '颈肩小伸展' }),
+    ])
     expect(wrapper.get('[data-stage="answer"]').classes()).toContain('done')
   })
 

@@ -26,8 +26,14 @@ const props = defineProps<{
   canReplace?: boolean
 }>()
 
+const emit = defineEmits<{
+  'open-panel': [entry: DailyTaskEntry]
+  unsuitable: [entry: DailyTaskEntry]
+}>()
+
 const { play, delay, dispose } = useMotionPulse()
 const { push } = useToast()
+const submitting = ref(false)
 
 const toneClass = computed(() =>
   props.entry.task.tone === 'default' ? undefined : `t-${props.entry.task.tone}`,
@@ -123,13 +129,19 @@ function notify(message: string): void {
   if (message) push(message)
 }
 
-function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace'): void {
-  const slotId = props.entry.slotId
-  const method = act === 'done' ? 'complete' : act
-  const result = props.controller[method](slotId)
+function applyResult(
+  act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace',
+  result: Awaited<ReturnType<DailyTasksController['start']>>,
+): void {
+  if (result === 'submission-failed') {
+    notify('这次没有记上，请检查网络后重试')
+    return
+  }
   if (result !== 'applied') return
 
   if (act === 'start') {
+    /* F3：开始后直接进入执行界面；关闭面板不结束任务。 */
+    emit('open-panel', props.entry)
     pulseCard(700, v => `translateY(${-3 * v}px)`)
     notify(props.copy.start)
     return
@@ -153,14 +165,35 @@ function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace')
     animateReplace()
     notify(props.copy.replace)
   }
-  /* restore：原型无反馈 */
+}
+
+function run(act: 'start' | 'done' | 'partial' | 'skip' | 'restore' | 'replace'): void {
+  if (submitting.value) return
+  const slotId = props.entry.slotId
+  const method = act === 'done' ? 'complete' : act
+  const result = props.controller[method](slotId)
+  if (result instanceof Promise) {
+    submitting.value = true
+    void result.then(resolved => applyResult(act, resolved)).finally(() => {
+      submitting.value = false
+    })
+  } else {
+    applyResult(act, result)
+  }
 }
 
 onUnmounted(dispose)
 </script>
 
 <template>
-  <article class="card task-card" :class="[toneClass, stateClass]" :style="cardStyle">
+  <article
+    class="card task-card"
+    :class="[toneClass, stateClass]"
+    :style="cardStyle"
+    :aria-busy="submitting || undefined"
+    :data-task-id="displayTask.id"
+    tabindex="-1"
+  >
     <div class="task-top">
       <span class="task-domain">{{ displayTask.domain }}</span>
       <span class="task-meta">{{ displayTask.meta }}</span>
@@ -177,30 +210,34 @@ onUnmounted(dispose)
 
     <div class="task-actions">
       <template v-if="entry.actions === 'initial'">
-        <button class="btn btn-primary" type="button" data-act="start" @click="run('start')">开始</button>
+        <button class="btn btn-primary" type="button" data-act="start" :disabled="submitting" @click="run('start')">开始</button>
         <button
           v-if="canReplace"
           class="btn btn-ghost"
           type="button"
           data-act="replace"
+          :disabled="submitting"
           @click="run('replace')"
         >换一朵</button>
-        <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
+        <button class="btn btn-ghost" type="button" data-act="skip" :disabled="submitting" @click="run('skip')">先跳过</button>
+        <button class="btn btn-ghost" type="button" data-act="unsuitable" :disabled="submitting" @click="emit('unsuitable', props.entry)">现在不适合</button>
       </template>
       <template v-else-if="entry.actions === 'active'">
-        <button class="btn btn-ok" type="button" data-act="done" @click="run('done')">✓ 完成啦</button>
-        <button class="btn btn-ghost" type="button" data-act="partial" @click="run('partial')">部分完成</button>
+        <button class="btn btn-ok" type="button" data-act="done" :disabled="submitting" @click="run('done')">✓ 完成啦</button>
+        <button class="btn btn-ghost" type="button" data-act="partial" :disabled="submitting" @click="run('partial')">部分完成</button>
         <button
           v-if="canReplace"
           class="btn btn-ghost"
           type="button"
           data-act="replace"
+          :disabled="submitting"
           @click="run('replace')"
         >换一朵</button>
-        <button class="btn btn-ghost" type="button" data-act="skip" @click="run('skip')">先跳过</button>
+        <button class="btn btn-ghost" type="button" data-act="skip" :disabled="submitting" @click="run('skip')">先跳过</button>
+        <button class="btn btn-ghost" type="button" data-act="panel" :disabled="submitting" @click="emit('open-panel', props.entry)">看怎么做</button>
       </template>
       <template v-else-if="entry.actions === 'restore'">
-        <button class="btn btn-ghost" type="button" data-act="restore" @click="run('restore')">恢复它</button>
+        <button class="btn btn-ghost" type="button" data-act="restore" :disabled="submitting" @click="run('restore')">恢复它</button>
       </template>
       <span v-else class="done-note">{{ doneNote }}</span>
     </div>

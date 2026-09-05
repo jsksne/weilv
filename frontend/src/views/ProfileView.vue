@@ -19,7 +19,10 @@ const model = computed(() => props.model)
 const presentation = useProfilePresentation(model.value)
 const memoryModel = computed(() => ({
   ...model.value.memory,
-  items: presentation.memoryItems.value,
+  items:
+    model.value.state.mode === 'demo'
+      ? presentation.memoryItems.value
+      : model.value.memory.items,
 }))
 
 const removingIds = ref<ReadonlySet<string>>(new Set())

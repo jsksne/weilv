@@ -24,6 +24,6 @@ const emit = defineEmits<{
       :removing="removingIds?.has(item.id)"
       @remove="emit('remove', $event)"
     />
-    <p v-if="items.length === 0" class="consent" data-testid="memory-empty">暂无可展示的 Memory。</p>
+    <p v-if="items.length === 0" class="consent" data-testid="memory-empty">暂时还没有可展示的记忆。</p>
   </div>
 </template>

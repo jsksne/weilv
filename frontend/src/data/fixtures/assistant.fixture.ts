@@ -130,7 +130,13 @@ const examReply: AssistantReply = {
     { text: '颈肩伸展 3 分钟', emphasis: true },
     { text: '照顾脖子，剩下的时间安心复习。' },
   ],
-  suggestedTask: { icon: '🌿', title: '颈肩小伸展', meta: '约 3 分钟 · 你接受率最高的类型', actionLabel: '去做' },
+  suggestedTask: {
+    taskId: 'today-task-move-neck-stretch',
+    icon: '🌿',
+    title: '颈肩小伸展',
+    meta: '约 3 分钟 · 你接受率最高的类型',
+    actionLabel: '去做',
+  },
   safety: null,
   sources: [
     { label: '《中小学生健康教育指导纲要》' },
@@ -161,7 +167,13 @@ const sleepReply: AssistantReply = {
     { text: '21:40 的节奏', emphasis: true },
     { text: '里啦。复习结束后留 10 分钟「不看书也不碰手机」的空白，会比直接躺下更容易睡着。' },
   ],
-  suggestedTask: { icon: '🌙', title: '花瓣呼吸 4-7-8', meta: '约 2 分钟 · 已在今日清单', actionLabel: '去做' },
+  suggestedTask: {
+    taskId: 'today-task-sleep-petal-breath',
+    icon: '🌙',
+    title: '花瓣呼吸 4-7-8',
+    meta: '约 2 分钟 · 已在今日清单',
+    actionLabel: '去做',
+  },
   safety: null,
   sources: [
     { label: '《中国青少年睡眠健康白皮书》' },

@@ -55,6 +55,52 @@ button {
   cursor: pointer;
 }
 
+/* 真实触控区与模态层约束；视觉继续沿用组件样式。 */
+body .chip {
+  min-height: 44px;
+}
+
+.weilv-shell-root .avatar,
+.weilv-shell-root .mem-del {
+  width: 44px;
+  height: 44px;
+}
+
+.weilv-shell-root .avatar {
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+}
+
+.weilv-shell-root .mem-del {
+  font-size: 14px;
+}
+
+body .onboard {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+body .onboard:focus {
+  outline: none;
+}
+
+body .onboard .ob-card {
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+}
+
+body .onboard .ob-validation {
+  margin-top: 14px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+body .onboard button.ob-skip {
+  min-height: 44px;
+  padding: 7px 14px;
+}
+
 /* Stage 10A cold-start questionnaire */
 
 .questionnaire {

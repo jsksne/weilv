@@ -8,6 +8,8 @@ import type {
   RecommendationResponse,
   SelectedTask,
   SurfacedTask,
+  TodaySessionItem,
+  TodaySessionsResponse,
   UserProfile,
   WeeklyEvent,
   WeeklyResponse,
@@ -32,6 +34,7 @@ import type {
   TodayContract,
   TodayDataAvailability,
   TodayRecommendationStatus,
+  TodaySavedInteraction,
   TodayTaskTone,
   TodayTaskView,
   WeeklyContract,
@@ -289,14 +292,18 @@ function toSource(source: EvidenceSource): AssistantSource {
   }
 }
 
-function toSuggestedTask(task: SelectedTask | null) {
+function toSuggestedTask(task: SelectedTask | null, recommendationId?: string | null) {
   if (!task) return null
 
   return {
+    taskId: task.task_id,
     icon: '🌿',
     title: task.title,
     meta: `约 ${task.estimated_minutes} 分钟`,
     actionLabel: '去做',
+    recommendationId: recommendationId ?? undefined,
+    instruction: task.instruction,
+    domains: 'covered_domains' in task ? task.covered_domains : [],
   }
 }
 
@@ -401,7 +408,9 @@ export function adaptAgenticRecommendation(
     scenario: null,
     pipeline,
     answer: text,
-    suggestedTask: dto.status === 'allowed' ? toSuggestedTask(dto.selected_task) : null,
+    suggestedTask: dto.status === 'allowed'
+      ? toSuggestedTask(dto.selected_task, dto.recommendation_id)
+      : null,
     safety: toSafety(dto),
     sources,
     guardNotice: dto.explanation_guard?.fallback_used
@@ -653,6 +662,97 @@ export function adaptRecommendationResponse(dto: RecommendationResponse): TodayC
   }
 }
 
+/** 由 B2 任务动作事件按时间顺序推导当天已保存的交互状态。 */
+function deriveSavedInteraction(actions: readonly { action: string }[]): TodaySavedInteraction {
+  let state: TodaySavedInteraction = 'pending'
+  for (const event of actions) {
+    if (event.action === 'started') state = 'started'
+    else if (event.action === 'completed') state = 'done'
+    else if (event.action === 'partially_completed') state = 'partial'
+    else if (event.action === 'skipped') state = 'skipped'
+    else if (event.action === 'restored') state = 'pending'
+  }
+  return state
+}
+
+function toTodayTaskFromSession(session: TodaySessionItem): TodayTaskView {
+  return {
+    id: session.task_id,
+    taskId: session.task_id,
+    recommendationId: session.recommendation_id,
+    tone: taskToneFromDomains(session.covered_domains),
+    domain: session.covered_domains.map(domain => TASK_DOMAIN_LABELS[domain]).find(Boolean) ?? '微任务',
+    meta: `约 ${session.estimated_minutes} 分钟`,
+    name: session.title,
+    description: session.instruction,
+    why: '这项任务今天已加入你的清单，直接继续就好。',
+    whyIcon: 'flower',
+    savedInteraction: deriveSavedInteraction(session.actions),
+    feedbackSaved: session.feedback !== null && session.feedback !== undefined,
+  }
+}
+
+/**
+ * F4：把当天已保存的推荐会话还原为 Today 契约。
+ * 任务内容来自创建时保存的正式任务快照，不是重新生成。
+ */
+export function adaptTodaySessions(dto: TodaySessionsResponse): TodayContract {
+  const tasks = dto.sessions.filter(session => session.recommendation_id).map(toTodayTaskFromSession)
+  const message =
+    tasks.length > 0
+      ? `已恢复今天保存的 ${tasks.length} 项任务记录。`
+      : '今天还没有已保存的任务。'
+  return {
+    ...createUnavailableTodayContract(message),
+    state: { status: 'ready', mode: 'production', message },
+    dataAvailability: tasks.length > 0 ? 'available' : 'unavailable',
+    recommendationStatus: 'allowed',
+    availability: {
+      ...unavailableTodayAvailability,
+      selectedTask: tasks.length > 0 ? 'available' : 'unavailable',
+      dailyTasks: tasks.length > 0 ? 'available' : 'unavailable',
+      progress: tasks.length > 0 ? 'available' : 'unavailable',
+      restore: tasks.length > 0 ? 'available' : 'unavailable',
+    },
+    unavailableFields: [],
+    tasksSectionTitle: '今日微任务',
+    tasksSectionNote: '来自审核白名单 · 按你的画像生成',
+    tasks,
+  }
+}
+
+/**
+ * F4：读回记录 + 新推荐合并。
+ * 已开始/已完成/已放下的读回条目是今天的记录，始终保留；
+ * 未开始候选一律来自最新一次推荐（反映当前心情/时间），避免用旧上下文
+ * 的候选冒充已适配；新推荐不可用时才回退展示读回的未开始候选。
+ * 按任务定义 id 去重，不把已处理过的任务再排进候选。
+ */
+export function mergeTodayContracts(restored: TodayContract, fresh: TodayContract): TodayContract {
+  const isPending = (task: TodayTaskView): boolean =>
+    !task.savedInteraction || task.savedInteraction === 'pending'
+  const active = restored.tasks.filter(task => !isPending(task))
+  const restoredPending = restored.tasks.filter(isPending)
+  const handled = new Set(active.map(task => task.taskId))
+  const target = Math.max(3, active.length)
+  const extra: TodayTaskView[] = []
+  for (const task of fresh.tasks) {
+    if (extra.length + active.length >= target) break
+    if (handled.has(task.taskId)) continue
+    handled.add(task.taskId)
+    extra.push(task)
+  }
+  const candidates =
+    extra.length > 0 ? extra : restoredPending.slice(0, Math.max(0, target - active.length))
+  const tasks = [...active, ...candidates]
+  const count = tasks.length
+  return {
+    ...restored,
+    dataAvailability: count > 0 ? (count < 3 ? 'partial' : 'available') : 'unavailable',
+    tasks,
+  }
+}
+
 /**
  * Profile/Questionnaire 适配器只消费真实 DTO。
  * 偏好统计没有正式数据源时保留真实空态；Memory 与近 7 天完成情况
@@ -791,7 +891,7 @@ export function adaptProfileResponse(
     memoryEnabled,
     header: {
       title: '我的画像',
-      description: '这里只展示真实 Profile、任务记录和已授权记忆；没有数据时不会用演示内容填充。',
+      description: '这里只展示你的个人设置、任务记录和已授权记忆；没有数据时不会用示例内容填充。',
     },
     timePreference: unavailablePreference('time', 'clock', '时间偏好', preferenceEmptyMessage),
     taskPreference: unavailablePreference('task', 'leaf', '任务偏好', preferenceEmptyMessage),
@@ -866,7 +966,7 @@ export function adaptOnboardingContract(
   }
 }
 
-/** 后端合法学段（TargetStage）；原型 university 不在其中。 */
+/** 后端合法学段（TargetStage）。 */
 export const PRODUCTION_TARGET_STAGES: readonly string[] = [
   'primary_upper',
   'junior_high',
@@ -874,29 +974,13 @@ export const PRODUCTION_TARGET_STAGES: readonly string[] = [
 ]
 
 /**
- * B6：Production 5 步引导。步骤与冻结原型一致，但大学选项如实标记为
- * unsupported；只有学段与 Memory 偏好会持久化，其余字段仅为本次会话展示。
+ * B6：Production 5 步引导。只有学段与 Memory 偏好会持久化，
+ * 其余字段仅为本次会话展示。
  */
 export function createProductionOnboardingContract(
   message = '完成引导后，只保存你的学段与 Memory 偏好；其余回答仅用于本次会话。',
 ): OnboardingContract {
-  const steps = frozenOnboardingSteps.map(step =>
-    step.kind === 'choices'
-      ? {
-          ...step,
-          groups: step.groups?.map(group =>
-            group.id === 'grade'
-              ? {
-                  ...group,
-                  options: group.options.map(option =>
-                    option.value === 'university' ? { ...option, supported: false } : option,
-                  ),
-                }
-              : group,
-          ),
-        }
-      : step,
-  )
+  const steps = frozenOnboardingSteps
 
   return {
     state: { status: 'ready', mode: 'production', message },

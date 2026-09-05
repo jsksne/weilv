@@ -28,6 +28,12 @@ export type TodayRecommendationStatus =
   | 'no_safe_task'
   | 'unavailable'
 
+/**
+ * 读回当天已保存交互状态（由 B2 任务动作事件推导）；
+ * 缺省 = 全新待开始。与 useDailyTasks 的 TaskInteraction 语义一致。
+ */
+export type TodaySavedInteraction = 'pending' | 'started' | 'done' | 'partial' | 'skipped'
+
 export interface TodayTaskView {
   id: string
   /** B1：后端正式任务 id（用于展示与追溯）。 */
@@ -43,6 +49,10 @@ export interface TodayTaskView {
   description: string
   why: string
   whyIcon: ShellIconName
+  /** F4：当天读回时已保存的交互状态；新推荐不携带。 */
+  savedInteraction?: TodaySavedInteraction
+  /** F4：该任务当天的主观反馈已保存（避免读回后重复追问）。 */
+  feedbackSaved?: boolean
 }
 
 export interface TodayObservationStat {
@@ -88,6 +98,8 @@ export interface TodayTimeOption {
 export interface TodayContextSelection {
   mood: string
   availableMinutes: number
+  /** F5：“现在不适合——场合不方便（不方便起身等）”→ 正式 cannot_move 约束；仅当次有效。 */
+  cannotMove?: boolean
 }
 
 /** 选择「有点低落」时对第二张任务卡的内容替换（仅 pending 可用） */

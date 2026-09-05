@@ -1,3 +1,6 @@
+export type { ConversationTurn } from '@/contracts/common'
+import type { ConversationTurn } from '@/contracts/common'
+
 export type TargetStage = 'primary_upper' | 'junior_high' | 'senior_high'
 
 export type CurrentContext =
@@ -26,6 +29,44 @@ export interface RecommendationRequest {
   cannot_move?: boolean
   unstable_environment?: boolean
   sleep_being_crowded?: boolean
+  /** F1：最近会话轮次（仅进入理解环节，不写 Memory）。 */
+  conversation_history?: ConversationTurn[]
+  /** 日程结构化事实（仅 kind/busy_level，名称绝不发送）。 */
+  schedule_events?: ScheduleEventFact[]
+  /** 易启动：用户表达“不想动/轻一点”后在安全候选内优先短任务。 */
+  prefer_easy_start?: boolean
+}
+
+export type ScheduleKind = 'exam' | 'holiday' | 'plan'
+export type ScheduleBusyLevel = 'busy' | 'some' | 'free'
+
+export interface ScheduleEvent {
+  event_id: string
+  name: string
+  start_date: string
+  end_date: string
+  kind: ScheduleKind
+  busy_level: ScheduleBusyLevel | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ScheduleListResponse {
+  user_id: string
+  events: ScheduleEvent[]
+}
+
+export interface ScheduleEventUpsert {
+  name: string
+  start_date: string
+  end_date: string
+  kind: ScheduleKind
+  busy_level: ScheduleBusyLevel | null
+}
+
+export interface ScheduleEventFact {
+  kind: ScheduleKind
+  busy_level?: ScheduleBusyLevel | null
 }
 
 export interface SelectedTask {
@@ -116,6 +157,32 @@ export type TaskAction =
 
 export interface TaskEventRequest {
   action: TaskAction
+}
+
+/** F4：当天推荐会话读回（GET /users/{id}/today）。 */
+export interface TodayActionRecord {
+  action: string
+  recorded_at: string
+}
+
+export interface TodaySessionItem {
+  recommendation_id: string
+  task_id: string
+  title: string
+  instruction: string
+  estimated_minutes: number
+  covered_domains: string[]
+  sources: EvidenceSource[]
+  agentic: boolean
+  created_at: string
+  actions: TodayActionRecord[]
+  feedback: Record<string, unknown> | null
+}
+
+export interface TodaySessionsResponse {
+  user_id: string
+  date: string
+  sessions: TodaySessionItem[]
 }
 
 export interface TaskEventResponse {

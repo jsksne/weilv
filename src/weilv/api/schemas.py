@@ -2,6 +2,8 @@
 
 from typing import Any, Literal
 
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from weilv.feedback_loop import DIFFICULTY_VALUES, USEFULNESS_VALUES
@@ -18,6 +20,71 @@ class StrictRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+ScheduleKind = Literal["exam", "holiday", "plan"]
+
+
+class ScheduleEventRequest(StrictRequest):
+    """User schedule event (spec: 日程最小实现).
+
+    ``name`` is user data: stored verbatim, never indexed, never sent to any
+    model prompt. Only structured facts (kind/busy_level) enter the
+    recommendation path.
+    """
+
+    name: str = Field(min_length=1, max_length=60)
+    start_date: date
+    end_date: date
+    kind: ScheduleKind
+    busy_level: Literal["busy", "some", "free"] | None = None
+
+    @field_validator("end_date")
+    @classmethod
+    def validate_range(cls, value: date, info):
+        start = info.data.get("start_date")
+        if start is not None and value < start:
+            raise ValueError("end_date_before_start_date")
+        return value
+
+
+class ScheduleEventResponse(BaseModel):
+    event_id: str
+    name: str
+    start_date: date
+    end_date: date
+    kind: ScheduleKind
+    busy_level: Literal["busy", "some", "free"] | None = None
+    created_at: str
+    updated_at: str
+
+
+class ScheduleListResponse(BaseModel):
+    user_id: str
+    events: list[ScheduleEventResponse] = Field(default_factory=list)
+
+
+class ScheduleDeleteResponse(BaseModel):
+    status: str
+    event_id: str
+
+
+class ScheduleEventFact(BaseModel):
+    """Structured fact about a schedule event; names are never included."""
+
+    kind: ScheduleKind
+    busy_level: Literal["busy", "some", "free"] | None = None
+
+
+class ConversationTurn(BaseModel):
+    """One prior in-session turn carried for continuity (spec F1).
+
+    History only informs understanding of the CURRENT request; it never
+    becomes Memory and never bypasses safety filtering.
+    """
+
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=1000)
+
+
 class RecommendationRequest(StrictRequest):
     user_id: str = Field(min_length=1)
     query: str = Field(min_length=1)
@@ -31,6 +98,17 @@ class RecommendationRequest(StrictRequest):
     cannot_move: bool = False
     unstable_environment: bool = False
     sleep_being_crowded: bool = False
+    conversation_history: list[ConversationTurn] = Field(
+        default_factory=list,
+        max_length=12,
+    )
+    """Structured facts of today's schedule events (names excluded)."""
+    schedule_events: list[ScheduleEventFact] = Field(
+        default_factory=list,
+        max_length=10,
+    )
+    """易启动偏好：用户表达“不想动/轻一点”后在安全候选内优先短任务。"""
+    prefer_easy_start: bool = False
 
 
 class SurfacedTask(BaseModel):
@@ -194,6 +272,33 @@ class MemoryListResponse(BaseModel):
 class MemoryDeleteResponse(BaseModel):
     status: str
     memory_id: str
+
+
+class TodayActionRecord(BaseModel):
+    action: str
+    recorded_at: str
+
+
+class TodaySessionItem(BaseModel):
+    """One same-day recommendation session restored for the Today list."""
+
+    recommendation_id: str
+    task_id: str
+    title: str
+    instruction: str
+    estimated_minutes: int
+    covered_domains: list[str] = Field(default_factory=list)
+    sources: list[dict[str, Any]] = Field(default_factory=list)
+    agentic: bool = False
+    created_at: str
+    actions: list[TodayActionRecord] = Field(default_factory=list)
+    feedback: dict[str, Any] | None = None
+
+
+class TodaySessionsResponse(BaseModel):
+    user_id: str
+    date: str
+    sessions: list[TodaySessionItem] = Field(default_factory=list)
 
 
 class WeeklyEventReport(BaseModel):

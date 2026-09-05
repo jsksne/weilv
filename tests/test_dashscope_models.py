@@ -241,3 +241,62 @@ def test_generate_with_rag_context_exposes_api_failure(monkeypatch):
             [{"document_id": "SRC-1", "source_locator": "a.md:L1", "content": "内容"}],
             api_key="test-key",
         )
+
+
+def test_decompose_problem_without_history_keeps_single_user_turn(monkeypatch):
+    from weilv import dashscope_models
+
+    calls = []
+
+    def fake_call(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(
+            status_code=200,
+            output=SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content='{"factors":[]}'))]
+            ),
+        )
+
+    monkeypatch.setattr(dashscope_models.Generation, "call", fake_call)
+
+    dashscope_models.decompose_problem("现在眼睛很酸", api_key="test-key")
+
+    roles = [message["role"] for message in calls[0]["messages"]]
+    assert roles == ["system", "user"]
+    assert calls[0]["messages"][1]["content"] == "现在眼睛很酸"
+
+
+def test_decompose_problem_carries_session_history_before_current_query(monkeypatch):
+    from weilv import dashscope_models
+
+    calls = []
+
+    def fake_call(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(
+            status_code=200,
+            output=SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content='{"factors":[]}'))]
+            ),
+        )
+
+    monkeypatch.setattr(dashscope_models.Generation, "call", fake_call)
+
+    history = [
+        {"role": "user", "content": "推荐一个课间能做的任务"},
+        {"role": "assistant", "content": "已选择：窗边远眺 20 秒"},
+    ]
+    dashscope_models.decompose_problem("再简单一点", api_key="test-key", history=history)
+
+    messages = calls[0]["messages"]
+    assert [message["role"] for message in messages] == [
+        "system",
+        "system",
+        "user",
+        "assistant",
+        "user",
+    ]
+    assert messages[2]["content"] == "推荐一个课间能做的任务"
+    assert messages[3]["content"] == "已选择：窗边远眺 20 秒"
+    assert messages[4]["content"] == "再简单一点"
+    assert "不得据此放宽任何限制" in messages[1]["content"]

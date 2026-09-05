@@ -46,8 +46,8 @@ describe('Sprint 10 accessibility', () => {
     const input = composer.get('input, textarea')
     const hasLabel =
       !!input.attributes('aria-label') ||
-      !!input.attributes('placeholder') ||
-      composer.find('label').exists()
+      !!input.attributes('aria-labelledby') ||
+      (!!input.attributes('id') && composer.find(`label[for="${input.attributes('id')}"]`).exists())
     expect(hasLabel).toBe(true)
   })
 
@@ -57,6 +57,10 @@ describe('Sprint 10 accessibility', () => {
     const wrapper = mount(App)
     await flushPromises()
 
+    expect(wrapper.find('[data-testid="onboarding-consent"]').exists()).toBe(false)
+    for (let index = 0; index < 4; index += 1) {
+      await wrapper.get('[data-action="onboarding-next"]').trigger('click')
+    }
     const consent = wrapper.get('[data-testid="onboarding-consent"]')
     expect(consent.find('label').text().trim()).toBeTruthy()
     expect(consent.get('input[type="checkbox"]').exists()).toBe(true)

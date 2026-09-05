@@ -24,9 +24,9 @@ export const frozenOnboardingSteps: readonly OnboardingStepContract[] = [
         id: 'grade',
         prompt: '你现在在读…',
         options: [
+          { value: 'primary_upper', label: '小学高年级' },
           { value: 'junior_high', label: '初中' },
           { value: 'senior_high', label: '高中' },
-          { value: 'university', label: '大学' },
         ],
         defaultValue: 'senior_high',
       },

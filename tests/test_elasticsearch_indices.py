@@ -257,7 +257,7 @@ def test_serverless_index_creation_omits_only_infrastructure_settings(monkeypatc
     assert serverless["mappings"] == standard["mappings"] == definition["mappings"]
 
 
-def test_all_seven_formal_indices_use_the_same_serverless_compatibility_rule(monkeypatch):
+def test_all_formal_indices_use_the_same_serverless_compatibility_rule(monkeypatch):
     from weilv.elasticsearch_indices import ensure_stage_one_indices, ensure_user_memory_indices
 
     class Indices:
@@ -274,8 +274,8 @@ def test_all_seven_formal_indices_use_the_same_serverless_compatibility_rule(mon
     monkeypatch.setenv("WEILV_ELASTICSEARCH_SERVERLESS", "1")
 
     assert len(ensure_stage_one_indices(client)) == 3
-    assert len(ensure_user_memory_indices(client)) == 4
-    assert len(client.indices.calls) == 7
+    assert len(ensure_user_memory_indices(client)) == 5
+    assert len(client.indices.calls) == 8
     assert all("settings" not in call for call in client.indices.calls)
     assert all(call["mappings"]["properties"] for call in client.indices.calls)
 

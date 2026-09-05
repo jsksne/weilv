@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import AppShell from '@/layouts/AppShell.vue'
 import TodayView from '@/views/TodayView.vue'
@@ -9,6 +9,7 @@ import WeeklyView from '@/views/WeeklyView.vue'
 import { useDailyTasks } from '@/composables/useDailyTasks'
 import { hasDemoOnboardingCompleted } from '@/composables/useOnboarding'
 import { useMotionPulse } from '@/composables/useMotionPulse'
+import { useToast } from '@/composables/useToast'
 import { useUiDataSource } from '@/composables/useUiDataSource'
 import { createUiDataSource } from '@/data/createUiDataSource'
 import { createProductionShellContract, createUnavailableTodayContract } from '@/data/adapters'
@@ -19,12 +20,19 @@ import { getConfiguredUserId, UserContextConfigurationError } from '@/config/use
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow.vue'
 import StartupLoading from '@/components/StartupLoading.vue'
 import FeatureTour from '@/components/tour/FeatureTour.vue'
-import type { ShellContract, TodayContextSelection, UiDataSource, ViewId } from '@/contracts'
+import type {
+  AssistantSuggestedTask,
+  ShellContract,
+  SuggestedTaskState,
+  TodayContextSelection,
+  TodayTaskAction,
+  TodayTaskView,
+  UiDataSource,
+  ViewId,
+} from '@/contracts'
 import type {
   OnboardingSubmitAnswers,
   OnboardingSubmitResult,
-  TodayTaskAction,
-  TodayTaskView,
 } from '@/contracts'
 
 /**
@@ -69,15 +77,30 @@ const errorMessage = computed(() => ui.error.value?.message ?? 'UI 数据配置�
 const bundle = computed(() => ui.data.value)
 const today = computed(() => bundle.value?.today ?? createUnavailableTodayContract('UI 数据加载中。'))
 
-/** Sprint 9：Production 任务动作 → B2 事件（用该任务自己的 recommendation_id）。 */
-function onTaskAction(task: TodayTaskView, action: TodayTaskAction): void {
-  if (!task.recommendationId) return
-  if (dataSource?.submitTaskAction) void dataSource.submitTaskAction(task.recommendationId, action)
+/**
+ * Sprint 9：Production 任务动作 → B2 事件（用该任务自己的 recommendation_id）。
+ * F4：完成/部分完成保存成功后局部刷新周报与画像概览；
+ * 刷新失败不撤销已保存的任务。
+ */
+function onTaskAction(task: TodayTaskView, action: TodayTaskAction): Promise<{ status: string }> {
+  if (!task.recommendationId || !dataSource?.submitTaskAction) {
+    return Promise.resolve({ status: 'error' })
+  }
+  const result = dataSource.submitTaskAction(task.recommendationId, action)
+  if (action === 'completed' || action === 'partially_completed') {
+    void result.then(reply => {
+      if (reply.status === 'recorded' || reply.status === 'demo_local') {
+        void ui.refreshPartial(['weekly', 'profile'])
+      }
+    })
+  }
+  return result
 }
 
 /** 心情/时间变化后轻刷新今日推荐（防抖；只换 today 数据，不闪烁整页）。 */
 const todayRefreshing = ref(false)
 const { delay } = useMotionPulse()
+const { push } = useToast()
 let todayContextVersion = 0
 function onTodayContextChange(context: TodayContextSelection): void {
   dataSource?.setTodayContext?.(context)
@@ -221,7 +244,63 @@ async function refreshProfile(): Promise<void> {
 
 /* ---------- 新手教程 ---------- */
 const shellRef = ref<InstanceType<typeof AppShell> | null>(null)
+const todayRef = ref<InstanceType<typeof TodayView> | null>(null)
 const tourRef = ref<InstanceType<typeof FeatureTour> | null>(null)
+
+/** F2：建议卡按今日真实状态分流——去开始/继续/加入今日/今天已完成。 */
+function resolveSuggestedState(taskId: string): SuggestedTaskState {
+  const entry = daily.entries.value.find(item => item.task.taskId === taskId)
+  if (!entry) return 'absent'
+  if (entry.interaction === 'done' || entry.interaction === 'partial') return 'done'
+  if (entry.interaction === 'started') return 'started'
+  return 'pending'
+}
+
+function suggestedToTodayTask(task: AssistantSuggestedTask): TodayTaskView {
+  const domains = task.domains ?? []
+  const tone = domains.includes('eye_health') || domains.includes('light_recovery')
+    ? 'eye' as const
+    : domains.includes('sleep') || domains.includes('sleep_hygiene')
+      ? 'sleep' as const
+      : domains.some(domain => ['physical_activity', 'sedentary', 'neck_shoulder'].includes(domain))
+        ? 'move' as const
+        : 'default' as const
+  return {
+    id: task.taskId,
+    taskId: task.taskId,
+    recommendationId: task.recommendationId,
+    tone,
+    domain: domains[0] ?? '微任务',
+    meta: task.meta,
+    name: task.title,
+    description: task.instruction ?? '按回答里的说明完成即可。',
+    why: '来自本轮对话推荐，并已通过安全与适用检查。',
+    whyIcon: 'flower',
+  }
+}
+
+async function openSuggestedTask(task: AssistantSuggestedTask): Promise<void> {
+  const state = resolveSuggestedState(task.taskId)
+  if (state === 'done') {
+    push('这件事今天已经完成了')
+    return
+  }
+  if (state === 'absent') {
+    /* 无真实执行记录时不假装已加入（不捏造 recommendationId）。 */
+    if (!task.recommendationId) {
+      push('这项建议暂未加入今日清单，可以先按回答里的步骤完成')
+      return
+    }
+    daily.adoptSuggested(suggestedToTodayTask(task))
+    push('已加入今日清单')
+  }
+
+  shellRef.value?.switchView('today')
+  await nextTick()
+  if (await todayRef.value?.focusTask(task.taskId)) {
+    push(state === 'started' ? '继续这件事，做完就算数' : '已帮你找到这项任务')
+  }
+}
 
 function navigateForTour(view: ViewId): void {
   shellRef.value?.switchView(view)
@@ -261,10 +340,21 @@ watch(
     @tour="startTour"
   >
     <template #today>
-      <TodayView :model="bundle.today" :daily="daily" @context-change="onTodayContextChange" />
+      <TodayView
+        ref="todayRef"
+        :model="bundle.today"
+        :daily="daily"
+        :data-source="dataSource ?? undefined"
+        @context-change="onTodayContextChange"
+      />
     </template>
     <template #assistant>
-      <AssistantView :model="bundle.assistant" :data-source="dataSource ?? undefined" />
+      <AssistantView
+        :model="bundle.assistant"
+        :data-source="dataSource ?? undefined"
+        :resolve-task-state="resolveSuggestedState"
+        @activate-task="openSuggestedTask"
+      />
     </template>
     <template #profile>
       <ProfileView

@@ -28,6 +28,12 @@ class BasicRagRequest:
     cannot_move: bool = False
     unstable_environment: bool = False
     sleep_being_crowded: bool = False
+    """F1：最近会话轮次（仅 Agentic 理解环节消费，非 Memory）。"""
+    conversation_history: list[dict[str, str]] | None = None
+    """日程结构化事实（仅 kind/busy_level，名称绝不进入）。"""
+    schedule_events: list[dict[str, str]] | None = None
+    """易启动：用户表达“不想动/轻一点”后，在安全候选内优先短任务。"""
+    prefer_easy_start: bool = False
 
     def __post_init__(self) -> None:
         if self.target_stage not in {"primary_upper", "junior_high", "senior_high"}:
@@ -137,6 +143,7 @@ def _surfaced_task_view(task: dict, sources: list[dict]) -> dict:
         "title": task["title"],
         "instruction": task["instruction"],
         "estimated_minutes": task["estimated_minutes"],
+        "covered_domains": list(task.get("covered_domains") or []),
         "sources": sources,
     }
 
@@ -340,6 +347,14 @@ def _finalize_selected_task(
     }
 
 
+def apply_easy_start_ordering(tasks: list[dict]) -> list[dict]:
+    """易启动排序：安全候选不变，仅在候选内把短任务排前（稳定排序）。
+
+    只调整优先级，不做二次筛选、不改写任务内容；关闭时是严格 no-op。
+    """
+    return sorted(tasks, key=lambda task: task.get("estimated_minutes") or 0)
+
+
 def _basic_result_from_pipeline(
     request: BasicRagRequest,
     pipeline: dict,
@@ -348,9 +363,12 @@ def _basic_result_from_pipeline(
     knowledge_index: str,
     task_index: str,
 ) -> dict:
+    ranking = pipeline["reranked_tasks"]
+    if request.prefer_easy_start:
+        ranking = apply_easy_start_ordering(ranking)
     result = _finalize_selected_task(
         request,
-        _selected_task(pipeline["reranked_tasks"][0]),
+        _selected_task(ranking[0]),
         pipeline,
         client,
         api_key,
@@ -358,9 +376,7 @@ def _basic_result_from_pipeline(
         task_index,
     )
     if result["status"] == "allowed":
-        result["tasks"] = _surfaced_tasks(
-            pipeline["reranked_tasks"], result, client, knowledge_index
-        )
+        result["tasks"] = _surfaced_tasks(ranking, result, client, knowledge_index)
     return result
 
 

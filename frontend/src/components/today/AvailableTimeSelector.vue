@@ -47,6 +47,7 @@ function onSelect(minutes: number): void {
         class="chip"
         :class="{ on: option.minutes === selectedMinutes }"
         type="button"
+        :aria-pressed="option.minutes === selectedMinutes"
         :style="option.minutes === pulseMinutes ? { transform: pulseTransform } : undefined"
         @click="onSelect(option.minutes)"
       >

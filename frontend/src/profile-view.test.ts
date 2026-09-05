@@ -47,8 +47,38 @@ describe('Sprint 6 ProfileView', () => {
     expect(production.state.mode).toBe('production')
     expect(production.memory.enabled).toBe(false)
     expect(wrapper.findAll('[data-memory-id]')).toHaveLength(0)
-    expect(wrapper.get('[data-testid="memory-unavailable"]').text()).toContain('Memory 保持关闭')
+    expect(wrapper.get('[data-testid="memory-unavailable"]').text()).toContain('还没有开启记忆功能')
+    expect(wrapper.get('[data-testid="profile-header"]').text()).not.toMatch(/Profile|Memory|consent/i)
     expect(wrapper.find('[data-testid="completion-ring"]').exists()).toBe(false)
+  })
+
+  it('renders refreshed production memories instead of keeping the first response', async () => {
+    const first = adaptProfileResponse(
+      { user_id: 'production-user', memory_enabled: true },
+      {
+        enabled: true,
+        consent: 'granted',
+        items: [{ id: 'old', icon: 'leaf', lead: '旧记录', text: '旧内容' }],
+        canDelete: true,
+        notice: '只保留你允许记住的内容。',
+      },
+    )
+    const refreshed = adaptProfileResponse(
+      { user_id: 'production-user', memory_enabled: true },
+      {
+        enabled: true,
+        consent: 'granted',
+        items: [{ id: 'new', icon: 'leaf', lead: '新记录', text: '新内容' }],
+        canDelete: true,
+        notice: '只保留你允许记住的内容。',
+      },
+    )
+    const wrapper = mount(ProfileView, { props: { model: first } })
+
+    await wrapper.setProps({ model: refreshed })
+
+    expect(wrapper.find('[data-memory-id="old"]').exists()).toBe(false)
+    expect(wrapper.get('[data-memory-id="new"]').text()).toContain('新内容')
   })
 
   it('defaults missing consent to memory disabled', () => {

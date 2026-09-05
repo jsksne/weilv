@@ -30,12 +30,12 @@ const emit = defineEmits<{
       />
       <div class="consent">{{ model.notice }}</div>
       <div v-if="mode === 'demo'" class="consent" data-memory-local-only>
-        演示模式：点击 × 只会移除当前本地 fixture，不会调用 Memory API。
+        演示模式：点击 × 只会移除当前页面里的示例，不会保存。
       </div>
     </template>
     <template v-else>
       <p class="consent" data-testid="memory-unavailable">
-        {{ model.enabled ? model.unavailableMessage : '没有明确 consent 时，Memory 保持关闭。' }}
+        {{ model.enabled ? model.unavailableMessage : '你还没有开启记忆功能。' }}
       </p>
     </template>
   </div>

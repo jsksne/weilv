@@ -10,6 +10,11 @@ defineProps<{
   model: TodayContract
   controller: DailyTasksController
 }>()
+
+const emit = defineEmits<{
+  'open-panel': [entry: import('@/composables/useDailyTasks').DailyTaskEntry]
+  unsuitable: [entry: import('@/composables/useDailyTasks').DailyTaskEntry]
+}>()
 </script>
 
 <template>
@@ -29,6 +34,8 @@ defineProps<{
       :controller="controller"
       :copy="model.feedbackCopy"
       :can-replace="model.availability.replace === 'available' && model.replacePool.length > 0"
+      @open-panel="emit('open-panel', $event)"
+      @unsuitable="emit('unsuitable', $event)"
     />
   </div>
 </template>

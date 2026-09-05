@@ -48,6 +48,23 @@ describe('Sprint 4 useDailyTasks: task state machine', () => {
     return { clock, tasks }
   }
 
+  it('keeps a production task pending when recording the action fails', async () => {
+    const model = {
+      ...todayFixture,
+      tasks: [
+        { ...todayFixture.tasks[0]!, recommendationId: 'rec-1' },
+        ...todayFixture.tasks.slice(1),
+      ],
+    }
+    const onAction = vi.fn().mockRejectedValue(new Error('offline'))
+    const tasks = useDailyTasks(model, { onAction })
+    const id = slot(tasks, 0)
+
+    expect(await tasks.start(id)).toBe('submission-failed')
+    expect(tasks.entries.value[0]!.interaction).toBe('pending')
+    expect(tasks.entries.value[0]!.actions).toBe('initial')
+  })
+
   it('start moves a pending task to started with the active button set', () => {
     const { tasks } = setup()
     const id = slot(tasks, 0)

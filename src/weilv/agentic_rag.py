@@ -242,7 +242,11 @@ class AgenticRagRuntime:
         diagnostics["model_calls"]["decomposition"] += 1
         fallback = False
         try:
-            raw = decompose_problem(self.request.query, self.api_key)
+            raw = decompose_problem(
+                self.request.query,
+                self.api_key,
+                history=self.request.conversation_history or None,
+            )
             analysis = ProblemAnalysis.model_validate(json.loads(raw))
             factor_ids = [factor.factor_id for factor in analysis.factors]
             if factor_ids != [f"F{position}" for position in range(1, len(factor_ids) + 1)]:
@@ -446,6 +450,10 @@ class AgenticRagRuntime:
         personalized, cf_diagnostics = apply_cf_to_ranking(personalized, self.cf_provider)
         if cf_diagnostics is not None:
             diagnostics["cf"] = cf_diagnostics
+        if getattr(self.request, "prefer_easy_start", False):
+            from weilv.basic_rag import apply_easy_start_ordering
+
+            personalized = apply_easy_start_ordering(personalized)
         deltas = {
             task["task_id"]: task["personalization"]["personalization_delta"]
             for task in personalized

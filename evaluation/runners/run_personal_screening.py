@@ -34,10 +34,14 @@ KNOWLEDGE_INDEX = "health_knowledge_v1"
 TASK_INDEX = "micro_tasks_v1"
 BM25_RECALL_K = inspect.signature(basic_rag.bm25_search).parameters["size"].default
 VECTOR_RECALL_K = inspect.signature(basic_rag.vector_search).parameters["size"].default
+# 非安全输入的 bool 开关（易启动偏好等）不进入冻结评估的安全字段集。
+NON_SAFETY_BOOL_FIELDS = {"prefer_easy_start"}
 SAFETY_INPUT_FIELDS = tuple(
     name
     for name, field in RecommendationRequest.model_fields.items()
-    if field.annotation is bool and field.default is False
+    if field.annotation is bool
+    and field.default is False
+    and name not in NON_SAFETY_BOOL_FIELDS
 )
 MODEL_CALL_KEYS = (
     "text_embedding_v4",

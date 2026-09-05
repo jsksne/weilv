@@ -45,18 +45,30 @@ describe('App shell runtime (default)', () => {
     expect(health).not.toHaveBeenCalled()
   })
 
-  it('keeps the Assistant suggestion display-only and leaves Today unchanged', async () => {
+  it('opens and focuses the matching Today task from an Assistant suggestion', async () => {
     vi.useFakeTimers()
     try {
       vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
-      const wrapper = mount(App)
+      /* attachTo：jsdom 只对已连接文档的元素生效 focus()；
+         未连接的 test-utils 树里 focus 是 no-op。 */
+      const wrapper = mount(App, { attachTo: document.body })
       await wrapper.get('nav .tab[data-view="assistant"]').trigger('click')
       await wrapper.get('[data-prompt="exam"]').trigger('click')
       await vi.advanceTimersByTimeAsync(4050)
       await flushPromises()
 
       expect(wrapper.get('[data-testid="docked-progress"] .tb-num').text()).toBe('0 / 3')
-      expect(wrapper.get('[data-testid="suggested-mini-task"] button').attributes('disabled')).toBeDefined()
+      const target = wrapper.get('[data-task-id="today-task-move-neck-stretch"]')
+      Object.defineProperty(target.element, 'scrollIntoView', {
+        configurable: true,
+        value: vi.fn(),
+      })
+
+      await wrapper.get('[data-testid="suggested-mini-task"] button').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-view="today"]').classes()).toContain('active')
+      expect(document.activeElement).toBe(target.element)
     } finally {
       vi.useRealTimers()
     }

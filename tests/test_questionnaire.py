@@ -235,6 +235,24 @@ def test_resubmission_keeps_feedback_memory_with_same_task(monkeypatch):
     assert client.docs[("user_memory_v1", feedback_id)]["active"] is True
 
 
+def test_resubmission_with_memory_disabled_never_wipes_cold_start_memories(monkeypatch):
+    """记忆开关关闭时重提交：upsert 全部被拒、清扫必须跳过，旧记忆原样保留。"""
+    client = _profile_client()
+    save_questionnaire(client, "usr_a", FULL_ANSWERS)
+    before = {d["memory_id"] for d in _stored_memories(client, "usr_a")}
+    assert before
+
+    # 关闭记忆开关
+    client.docs[("user_profiles_v1", "usr_a")]["memory_enabled"] = False
+
+    result = save_questionnaire(client, "usr_a", {**FULL_ANSWERS, "rest_preference": "outdoor"})
+
+    assert result["status"] == "saved"
+    assert result["memory_record_ids"] == []
+    after = {d["memory_id"] for d in _stored_memories(client, "usr_a")}
+    assert after == before  # 一条都不许被清扫
+
+
 def test_completion_marks_completed_and_generates_memory():
     client = _profile_client()
     result = save_questionnaire(client, "usr_a", FULL_ANSWERS)

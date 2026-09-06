@@ -461,7 +461,8 @@ def put_user_questionnaire(
             _dependency(request, "es_client"),
             user_id,
             payload.answers,
-            api_key=_dependency(request, "api_key"),
+            # Missing key skips embedding; it must never block the save.
+            api_key=getattr(request.app.state, "api_key", None),
         )
     except HTTPException:
         raise

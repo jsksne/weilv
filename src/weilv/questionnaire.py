@@ -30,6 +30,7 @@ from weilv.user_memory import (
 QUESTIONNAIRE_VERSION = "v1"
 QUESTIONNAIRE_INDEX = "user_questionnaire_v1"
 QUESTIONNAIRE_SOURCE = "questionnaire_cold_start"
+_COLD_START_SWEEP_SIZE = 100
 
 COMPLETION_STATES = {"not_started", "partially_completed", "completed", "skipped"}
 
@@ -374,7 +375,7 @@ def _forget_superseded_cold_start_memories(
     """
     response = client.search(
         index=USER_MEMORY_INDEX,
-        size=100,
+        size=_COLD_START_SWEEP_SIZE,
         query={
             "bool": {
                 "filter": [
@@ -412,7 +413,10 @@ def save_questionnaire(
     Re-submission semantics: the latest questionnaire replaces the previous
     cold-start profile.  Memories the new answers no longer imply are
     forgotten via the existing lifecycle (same path as the profile page's
-    delete button); behavioral task_feedback memory is never touched.
+    delete button); behavioral task_feedback memory is never touched.  The
+    replacement only runs when this submission actually persisted memory;
+    two concurrent submissions can still interleave their sweeps (accepted
+    window - resubmission is a rare, single-user action).
 
     When ``api_key`` is provided, every persisted memory is embedded right
     after the upsert so vector recall works immediately.  Embedding failures
@@ -448,10 +452,6 @@ def save_questionnaire(
 
     memory_ids = list(dict.fromkeys(memory_ids))  # a task can be implied by >1 answer
 
-    # Re-submission: retire cold-start memories the new answers no longer
-    # imply, before embedding what remains.
-    _forget_superseded_cold_start_memories(client, user_id, set(memory_ids))
-
     record = {
         "user_id": user_id,
         "questionnaire_id": QUESTIONNAIRE_VERSION,
@@ -461,7 +461,17 @@ def save_questionnaire(
         "answers": answers,
         "memory_record_ids": memory_ids,
     }
+    # The questionnaire record is written before any superseded memory is
+    # retired: if this index call fails, nothing has been destroyed and the
+    # user can simply resubmit (fail-safe idempotence).
     client.index(index=QUESTIONNAIRE_INDEX, id=user_id, document=record, refresh="wait_for")
+
+    # Re-submission: retire cold-start memories the new answers no longer
+    # imply, before embedding what remains.  An empty current set means this
+    # submission persisted nothing (typically memory_enabled=False) - never
+    # sweep in that case, or a resubmit would wipe all cold-start memories.
+    if memory_ids:
+        _forget_superseded_cold_start_memories(client, user_id, set(memory_ids))
 
     # Vector recall over user_memory_v1 requires the embedding field, and the
     # BM25 fallback does not match Chinese queries against the English

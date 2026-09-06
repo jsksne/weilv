@@ -17,10 +17,12 @@ from elasticsearch import ApiError, NotFoundError
 from weilv.micro_tasks import load_formal_micro_tasks
 from weilv.personal_memory_retrieval import embed_memory
 from weilv.user_memory import (
+    USER_MEMORY_INDEX,
     UserMemoryCandidate,
     UserProfile,
     build_memory_id,
     create_memory,
+    forget_memory,
     get_user_profile,
     update_memory,
 )
@@ -359,6 +361,42 @@ def _upsert_memory(
     return result["status"], memory_id
 
 
+def _forget_superseded_cold_start_memories(
+    client, user_id: str, current_ids: set[str]
+) -> int:
+    """Hard-delete this user's questionnaire_cold_start memories that the
+    latest submission no longer implies.
+
+    A re-submitted questionnaire replaces the previous cold-start profile:
+    answers that disappeared must not keep steering Personal ranking.  Only
+    ``questionnaire_cold_start`` memories are touched; task_feedback and any
+    other memory the user earned later stay untouched.
+    """
+    response = client.search(
+        index=USER_MEMORY_INDEX,
+        size=100,
+        query={
+            "bool": {
+                "filter": [
+                    {"term": {"user_id": user_id}},
+                    {"term": {"source_type": QUESTIONNAIRE_SOURCE}},
+                ]
+            }
+        },
+        source=["memory_id"],
+    )
+    superseded = 0
+    for hit in response["hits"]["hits"]:
+        memory_id = hit["_source"].get("memory_id")
+        if (
+            memory_id
+            and memory_id not in current_ids
+            and forget_memory(client, user_id, memory_id)["status"] == "forgotten"
+        ):
+            superseded += 1
+    return superseded
+
+
 def save_questionnaire(
     client,
     user_id: str,
@@ -370,6 +408,11 @@ def save_questionnaire(
     Fail-safe: malformed answer sets are rejected without touching storage.
     Already-existing questionnaire memory is upserted in place, so resuming
     from a partial completion is idempotent.
+
+    Re-submission semantics: the latest questionnaire replaces the previous
+    cold-start profile.  Memories the new answers no longer imply are
+    forgotten via the existing lifecycle (same path as the profile page's
+    delete button); behavioral task_feedback memory is never touched.
 
     When ``api_key`` is provided, every persisted memory is embedded right
     after the upsert so vector recall works immediately.  Embedding failures
@@ -404,6 +447,10 @@ def save_questionnaire(
             memory_ids.append(memory_id)
 
     memory_ids = list(dict.fromkeys(memory_ids))  # a task can be implied by >1 answer
+
+    # Re-submission: retire cold-start memories the new answers no longer
+    # imply, before embedding what remains.
+    _forget_superseded_cold_start_memories(client, user_id, set(memory_ids))
 
     record = {
         "user_id": user_id,

@@ -51,6 +51,25 @@ class FakeClient:
     def index(self, *, index, id, document, refresh="true"):
         self.docs[(index, id)] = document
 
+    def update(self, *, index, id, doc, refresh=None):
+        self.docs[(index, id)].update(doc)
+
+    def delete(self, *, index, id, refresh=None):
+        self.docs.pop((index, id), None)
+
+    def search(self, *, index, size, query, source=None, source_excludes=None):
+        filters = query.get("bool", {}).get("filter", [])
+        terms = {}
+        for item in filters:
+            if "term" in item:
+                terms.update(item["term"])
+        hits = [
+            {"_source": dict(document)}
+            for (_idx, _id), document in self.docs.items()
+            if _idx == index and all(document.get(key) == value for key, value in terms.items())
+        ]
+        return {"hits": {"hits": hits[:size]}}
+
 
 def _profile_client(user_id="usr_a", target_stage="junior_high"):
     client = FakeClient()
@@ -124,6 +143,96 @@ def test_save_without_api_key_skips_embedding(monkeypatch):
     assert result["status"] == "saved"
     assert calls == []
     assert result["memory_embedding_count"] == 0
+
+
+def test_resubmission_replaces_previous_cold_start_preferences_only(monkeypatch):
+    """重提交问卷替代上一版冷启动偏好；真实反馈记忆不受影响。"""
+    monkeypatch.setattr(
+        questionnaire_module,
+        "embed_memory",
+        lambda client, user_id, memory_id, api_key: {
+            "status": "embedded",
+            "memory_id": memory_id,
+        },
+    )
+    client = _profile_client()
+
+    first = save_questionnaire(client, "usr_a", FULL_ANSWERS, api_key="test-key")
+
+    # 用户后续真实行为产生的反馈记忆（必须不被问卷重提交触碰）
+    feedback_id = "fb-feedback-1"
+    client.docs[("user_memory_v1", feedback_id)] = {
+        "memory_id": feedback_id,
+        "user_id": "usr_a",
+        "memory_type": "task_feedback",
+        "source_type": "interaction_feedback",
+        "task_id": "MT-BREAK-003",
+        "memory_key": "task_feedback",
+        "retrieval_text": "type=task_feedback task=MT-BREAK-003",
+        "active": True,
+        "review_status": "valid",
+    }
+
+    changed = {
+        **FULL_ANSWERS,
+        "rest_preference": "outdoor",
+        "annoying_reminders": ["none"],
+    }
+    second = save_questionnaire(client, "usr_a", changed, api_key="test-key")
+
+    surviving_ids = {
+        document["memory_id"]
+        for document in _stored_memories(client, "usr_a")
+        if document.get("source_type") == "questionnaire_cold_start"
+    }
+    superseded = set(first["memory_record_ids"]) - set(second["memory_record_ids"])
+    # 上一版独有偏好（quiet_rest 的 prefer、activity 的 avoid 系列）不再 active
+    assert superseded and not superseded & surviving_ids
+    # 新版偏好全部存在且可见（检索过滤 active/valid 后只剩当前有效集）
+    assert set(second["memory_record_ids"]) <= surviving_ids
+    assert any(
+        document.get("task_id") == "MT-OUT-001"
+        for document in _stored_memories(client, "usr_a")
+    )
+    assert not any(
+        document.get("task_id") == "MT-BREAK-003"
+        and document.get("source_type") == "questionnaire_cold_start"
+        for document in _stored_memories(client, "usr_a")
+    )
+    # 真实反馈记忆原样保留
+    assert ("user_memory_v1", feedback_id) in client.docs
+    assert client.docs[("user_memory_v1", feedback_id)]["memory_type"] == "task_feedback"
+
+
+def test_resubmission_keeps_feedback_memory_with_same_task(monkeypatch):
+    """反馈记忆与新版问卷偏好指向同一任务时也不能被问卷清扫误删。"""
+    monkeypatch.setattr(
+        questionnaire_module,
+        "embed_memory",
+        lambda client, user_id, memory_id, api_key: {
+            "status": "embedded",
+            "memory_id": memory_id,
+        },
+    )
+    client = _profile_client()
+    save_questionnaire(client, "usr_a", FULL_ANSWERS, api_key="test-key")
+    # 反馈回路写入：同一任务的 task_feedback，id 与偏好记忆不同（memory_type 不同）
+    feedback_id = "fb-same-task"
+    client.docs[("user_memory_v1", feedback_id)] = {
+        "memory_id": feedback_id,
+        "user_id": "usr_a",
+        "memory_type": "task_feedback",
+        "source_type": "interaction_feedback",
+        "task_id": "MT-BREAK-003",
+        "memory_key": "task_feedback",
+        "retrieval_text": "type=task_feedback task=MT-BREAK-003",
+        "active": True,
+        "review_status": "valid",
+    }
+
+    save_questionnaire(client, "usr_a", FULL_ANSWERS, api_key="test-key")
+
+    assert client.docs[("user_memory_v1", feedback_id)]["active"] is True
 
 
 def test_completion_marks_completed_and_generates_memory():

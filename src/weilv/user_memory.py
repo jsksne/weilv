@@ -355,6 +355,33 @@ def update_memory(
     return {"status": "updated", "memory_id": memory_id}
 
 
+MEMORY_HISTORY_SIZE = 200
+
+
+def list_active_memories(client, user_id: str) -> list[dict[str, Any]]:
+    """All active, valid memories for one user, newest update first.
+
+    Personalization scoring must consider every structured memory - not only
+    the semantic-retrieval top-K - because a memory that ranks low against
+    the current query can still legitimately change a task's order.
+    """
+    response = client.search(
+        index=USER_MEMORY_INDEX,
+        size=MEMORY_HISTORY_SIZE,
+        query={
+            "bool": {
+                "filter": [
+                    {"term": {"user_id": user_id}},
+                    {"term": {"active": True}},
+                    {"term": {"review_status": "valid"}},
+                ]
+            }
+        },
+        sort=[{"updated_at": {"order": "desc"}}],
+    )
+    return [hit["_source"] for hit in response["hits"]["hits"]]
+
+
 def forget_memory(client, user_id: str, memory_id: str) -> dict[str, str]:
     existing = _get_memory_source(client, memory_id)
     if existing is None:

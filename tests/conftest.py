@@ -29,3 +29,11 @@ def tmp_path(request):
 
     request.addfinalizer(_cleanup)
     return path
+
+
+class NullElasticClient:
+    """ES stub for unit tests that monkeypatch every storage call except the
+    personalization memory-history read, which returns no memories."""
+
+    def search(self, **_kwargs):
+        return {"hits": {"hits": []}}

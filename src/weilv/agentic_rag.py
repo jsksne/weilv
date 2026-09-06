@@ -28,7 +28,7 @@ from weilv.dashscope_models import (
 from weilv.micro_tasks import load_formal_micro_tasks
 from weilv.output_guard import validate_explanation_output
 from weilv.personal_memory_retrieval import retrieve_personal_memories
-from weilv.personal_rag import personalize_task_candidates
+from weilv.personal_rag import merge_full_memory_history, personalize_task_candidates
 from weilv.retrieval import apply_rerank, bm25_search, merge_candidates, vector_search
 from weilv.safety_rules import evaluate_input_risk, load_safety_rules, select_safe_tasks
 from weilv.user_memory import get_user_profile
@@ -432,7 +432,10 @@ class AgenticRagRuntime:
         if not base:
             return {}
         diagnostics = _diagnostics(state)
-        personalized = personalize_task_candidates(base, state.get("retrieved_memories", []))
+        memories = merge_full_memory_history(
+            self.client, self.user_id, state.get("retrieved_memories", [])
+        )
+        personalized = personalize_task_candidates(base, memories)
         before = {task["task_id"] for task in base}
         after = {task["task_id"] for task in personalized}
         if before != after:

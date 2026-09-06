@@ -9,6 +9,8 @@ recommendation_id usable by the B2 events endpoint.
 
 from fastapi.testclient import TestClient
 
+from conftest import NullElasticClient
+
 
 def _request(**overrides):
     from weilv.basic_rag import BasicRagRequest
@@ -67,7 +69,7 @@ def _run_basic(monkeypatch, tasks, evidence=None):
     )
     monkeypatch.setattr(basic_rag, "load_formal_task_identities", lambda *_a: tasks)
     monkeypatch.setattr(basic_rag, "explain_selected_task", lambda *_a, **_k: "安全解释")
-    return basic_rag.run_basic_rag(_request(), object(), "key")
+    return basic_rag.run_basic_rag(_request(), NullElasticClient(), "key")
 
 
 def test_rank1_regression_selected_task_equals_tasks0_and_returns_three(monkeypatch):
@@ -156,7 +158,7 @@ def test_help_seeking_and_no_safe_task_return_no_tasks(monkeypatch):
             "_run_basic_pipeline",
             lambda *_a, blocked_result=blocked_result, **_k: {"result": blocked_result},
         )
-        result = basic_rag.run_basic_rag(_request(), object(), "key")
+        result = basic_rag.run_basic_rag(_request(), NullElasticClient(), "key")
 
         assert result["status"] in {"help_seeking", "no_safe_task"}
         assert result["selected_task"] is None
@@ -179,7 +181,7 @@ def test_three_surfaced_tasks_still_call_explanation_once(monkeypatch):
         lambda *_a, **_k: explanation_calls.append(1) or "安全解释",
     )
 
-    result = basic_rag.run_basic_rag(_request(), object(), "key")
+    result = basic_rag.run_basic_rag(_request(), NullElasticClient(), "key")
 
     assert result["status"] == "allowed"
     assert len(result["tasks"]) == 3
@@ -205,7 +207,7 @@ def test_surfacing_adds_no_retrieval_or_embedding_calls(monkeypatch):
     monkeypatch.setattr(basic_rag, "bm25_search", forbidden)
     monkeypatch.setattr(basic_rag, "vector_search", forbidden)
 
-    result = basic_rag.run_basic_rag(_request(), object(), "key")
+    result = basic_rag.run_basic_rag(_request(), NullElasticClient(), "key")
 
     assert result["status"] == "allowed"
     assert len(result["tasks"]) == 3
@@ -244,7 +246,7 @@ def test_personal_top3_preserves_personalized_order_and_rank1_identity(monkeypat
         basic_rag, "load_task_evidence", lambda _client, task, _index: _evidence_for(task)
     )
 
-    result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert result["selected_task"]["task_id"] == "C"
     assert [item["task_id"] for item in result["tasks"]] == ["C", "A", "B"]

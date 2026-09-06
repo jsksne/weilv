@@ -14,6 +14,8 @@ only aggregate fields.
 
 import pytest
 
+from conftest import NullElasticClient
+
 from weilv.collaborative_ranking import (
     CF_SIGNAL_MAX,
     CF_SIGNAL_MIN,
@@ -424,7 +426,7 @@ def test_personal_rag_integration_cf_reorders_exact_ties(monkeypatch):
     # semantics only, so the surfacing walk is stubbed.
     monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *a, **k: [])
     result = personal_rag.run_personal_rag(
-        type("Request", (), {"query": "q"})(), "u1", None, "key",
+        type("Request", (), {"query": "q"})(), "u1", NullElasticClient(), "key",
         cf_provider=cf_provider,
     )
     # Without CF, T2 (base rank 1) would win the tie; CF prefers T1
@@ -457,7 +459,7 @@ def test_agentic_apply_personalization_integration(monkeypatch):
             for task_id in task_ids
         }
 
-    runtime = AgenticRagRuntime(None, "u1", None, "key", cf_provider=cf_provider)
+    runtime = AgenticRagRuntime(None, "u1", NullElasticClient(), "key", cf_provider=cf_provider)
     result = runtime.apply_personalization(state)
     ranking = result["personal_task_ranking"]
     assert [task["task_id"] for task in ranking] == ["T1", "T2", "T3"]
@@ -472,7 +474,7 @@ def test_agentic_non_allowed_terminal_states_never_call_cf():
     def exploding_provider(task_ids):
         raise AssertionError("CF must not run on non-allowed states")
 
-    runtime = AgenticRagRuntime(None, "u1", None, "key",
+    runtime = AgenticRagRuntime(None, "u1", NullElasticClient(), "key",
                                 cf_provider=exploding_provider)
     for terminal in ("blocked", "help_seeking", "no_safe_task"):
         result = runtime.apply_personalization(
@@ -499,7 +501,7 @@ def test_personal_terminal_states_never_call_cf(monkeypatch):
         monkeypatch.setattr(personal_rag, "_run_basic_pipeline",
                             lambda *a, status=terminal, **k: pipeline_for(status))
         result = personal_rag.run_personal_rag(
-            type("Request", (), {"query": "q"})(), "u1", None, "key",
+            type("Request", (), {"query": "q"})(), "u1", NullElasticClient(), "key",
             cf_provider=exploding_provider,
         )
         assert result["status"] == terminal
@@ -508,7 +510,7 @@ def test_personal_terminal_states_never_call_cf(monkeypatch):
 def test_agentic_default_no_cf_diagnostics():
     from weilv.agentic_rag import AgenticRagRuntime
 
-    runtime = AgenticRagRuntime(None, "u1", None, "key")
+    runtime = AgenticRagRuntime(None, "u1", NullElasticClient(), "key")
     state = {"safety_status": "allowed", "base_task_ranking": _integration_tasks(),
              "retrieved_memories": [], "diagnostics": {}}
     result = runtime.apply_personalization(state)

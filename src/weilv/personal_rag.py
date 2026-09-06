@@ -13,7 +13,7 @@ from weilv.basic_rag import (
 )
 from weilv.collaborative_ranking import apply_cf_to_ranking
 from weilv.personal_memory_retrieval import retrieve_personal_memories
-from weilv.user_memory import get_user_profile
+from weilv.user_memory import get_user_profile, list_active_memories
 
 
 def _memory_adjustment(memory: dict[str, Any]) -> tuple[int, list[str]]:
@@ -52,6 +52,58 @@ def _memory_adjustment(memory: dict[str, Any]) -> tuple[int, list[str]]:
     return delta, reasons
 
 
+def _contextual_memory_adjustment(
+    memory: dict[str, Any], task: dict[str, Any]
+) -> tuple[int, list[str]]:
+    """Score non-task-anchored memories (constraint / context) for one task.
+
+    task_preference / task_feedback are anchored to a task id and scored by
+    ``_memory_adjustment``; these two memory types describe the user, so they
+    apply to every candidate:
+
+    - ``user_constraint.preferred_max_task_minutes``: matching the task's
+      official duration +2, exceeding it -2 (a stated ceiling, not a taste).
+    - ``context_preference.preferred_context``: +1 when the task's formal
+      execution contexts include the preferred context; no penalty otherwise
+      (multi-context tasks are not a mismatch).
+    """
+    value = memory.get("memory_value") or {}
+    memory_type = memory.get("memory_type")
+    if memory_type == "user_constraint":
+        limit = value.get("preferred_max_task_minutes")
+        minutes = task.get("estimated_minutes")
+        if isinstance(limit, int) and isinstance(minutes, int):
+            if minutes <= limit:
+                return 2, ["constraint_match_task_minutes"]
+            return -2, ["constraint_exceeded_task_minutes"]
+        return 0, []
+    if memory_type == "context_preference":
+        preferred = value.get("preferred_context")
+        contexts = task.get("execution_contexts") or []
+        if preferred and preferred in contexts:
+            return 1, ["context_match_task"]
+        return 0, []
+    return 0, []
+
+
+def merge_full_memory_history(
+    client, user_id: str, retrieved: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Ranking input = retrieval hits plus the user's full active history.
+
+    Semantic retrieval top-K can miss a memory that still legitimately
+    changes a task's order (retrieval measures query relevance, not
+    preference strength).  Dedup by memory_id, retrieval order first.
+    """
+    seen = {memory.get("memory_id") for memory in retrieved}
+    merged = list(retrieved)
+    for memory in list_active_memories(client, user_id):
+        if memory.get("memory_id") not in seen:
+            merged.append(memory)
+            seen.add(memory.get("memory_id"))
+    return merged
+
+
 def personalize_task_candidates(
     tasks: list[dict[str, Any]], memories: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -62,9 +114,12 @@ def personalize_task_candidates(
         memory_ids = []
         reasons = []
         for memory in memories:
-            if memory.get("task_id") != task["task_id"]:
-                continue
-            adjustment, memory_reasons = _memory_adjustment(memory)
+            if memory.get("memory_type") in {"task_preference", "task_feedback"}:
+                if memory.get("task_id") != task["task_id"]:
+                    continue
+                adjustment, memory_reasons = _memory_adjustment(memory)
+            else:
+                adjustment, memory_reasons = _contextual_memory_adjustment(memory, task)
             if not memory_reasons:
                 continue
             delta += adjustment
@@ -134,6 +189,7 @@ def run_personal_rag(
         api_key,
         query_embedding=pipeline["query_embedding"],
     )
+    memories = merge_full_memory_history(client, user_id, memories)
     personalized = personalize_task_candidates(pipeline["reranked_tasks"], memories)
     personalized, cf_diagnostics = apply_cf_to_ranking(personalized, cf_provider)
     if getattr(request, "prefer_easy_start", False):

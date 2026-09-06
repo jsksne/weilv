@@ -5,6 +5,8 @@ import pytest
 from weilv.basic_rag import BasicRagRequest
 from weilv.user_memory import UserProfile
 
+from conftest import NullElasticClient
+
 
 def _request(**changes):
     values = {
@@ -53,7 +55,7 @@ def _knowledge(chunk_id="KC-1"):
 def _runtime(request=None):
     from weilv.agentic_rag import AgenticRagRuntime
 
-    return AgenticRagRuntime(request or _request(), "user-1", object(), "key")
+    return AgenticRagRuntime(request or _request(), "user-1", NullElasticClient(), "key")
 
 
 @pytest.mark.parametrize(
@@ -80,7 +82,7 @@ def test_input_safety_terminates_before_every_agent_or_retrieval_call(
     ):
         monkeypatch.setattr(agentic, name, forbidden)
 
-    result = agentic.run_agentic_rag(_request(**overrides), "user-1", object(), "key")
+    result = agentic.run_agentic_rag(_request(**overrides), "user-1", NullElasticClient(), "key")
 
     assert result["status"] == expected_status
     assert result["selected_task"] is None

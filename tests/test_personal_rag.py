@@ -1,5 +1,7 @@
 from dataclasses import replace
 
+from conftest import NullElasticClient
+
 
 def _task(task_id, base_rank):
     return {
@@ -195,14 +197,14 @@ def test_missing_or_disabled_profile_degrades_to_basic_result(monkeypatch):
         personal_rag, "_basic_result_from_pipeline", lambda *_args, **_kwargs: basic
     )
     monkeypatch.setattr(personal_rag, "get_user_profile", lambda *_args: None)
-    missing = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    missing = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     disabled = replace(
         UserProfile("user", "junior_high", True, "created", "updated"),
         memory_enabled=False,
     )
     monkeypatch.setattr(personal_rag, "get_user_profile", lambda *_args: disabled)
-    disabled_result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    disabled_result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert missing == disabled_result
     assert missing["selected_task"]["task_id"] == "A"
@@ -237,7 +239,7 @@ def test_personal_rag_reuses_query_embedding_and_llm_cannot_change_selection(mon
     )
     monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *_args, **_kwargs: [])
 
-    result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert retrieval_calls[0][1]["query_embedding"] is state["query_embedding"]
     assert result["selected_task"]["task_id"] == "B"
@@ -271,7 +273,7 @@ def test_personalization_cannot_restore_task_absent_from_safe_candidates(monkeyp
         },
     )
 
-    result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert result["selected_task"]["task_id"] == "SAFE"
     assert result["personalization"]["memory_used"] is False
@@ -292,7 +294,7 @@ def test_pipeline_result_short_circuits_before_profile_or_memory(monkeypatch):
         lambda *_args: (_ for _ in ()).throw(AssertionError("profile after safety only")),
     )
 
-    assert personal_rag.run_personal_rag(_request(), "user", object(), "key") == blocked
+    assert personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key") == blocked
 
 
 def test_one_query_embedding_is_shared_by_knowledge_task_and_memory(monkeypatch):
@@ -363,7 +365,7 @@ def test_one_query_embedding_is_shared_by_knowledge_task_and_memory(monkeypatch)
         },
     )
 
-    result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert result["selected_task"]["task_id"] == "A"
     assert embed_calls == [(["query"], "key", "query")]
@@ -391,7 +393,7 @@ def test_personal_rag_uses_shared_exact_evidence_and_guard_finalize(monkeypatch)
     )
     monkeypatch.setattr(personal_rag, "_surfaced_tasks", lambda *_args, **_kwargs: [])
 
-    result = personal_rag.run_personal_rag(_request(), "user", object(), "key")
+    result = personal_rag.run_personal_rag(_request(), "user", NullElasticClient(), "key")
 
     assert result["selected_task"]["task_id"] == "A"
     assert finalized[0][0][1]["task_id"] == "A"

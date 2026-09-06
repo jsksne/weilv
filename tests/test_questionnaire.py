@@ -5,6 +5,7 @@ from dataclasses import asdict
 import pytest
 from elasticsearch import ConflictError, NotFoundError
 
+import weilv.questionnaire as questionnaire_module
 from weilv.micro_tasks import load_formal_micro_tasks
 from weilv.personal_rag import personalize_task_candidates
 from weilv.questionnaire import (
@@ -69,6 +70,60 @@ def _stored_memories(client, user_id):
         for (index, memory_id), document in client.docs.items()
         if index == "user_memory_v1" and document.get("user_id") == user_id
     ]
+
+
+def test_save_with_api_key_embeds_persisted_memories(monkeypatch):
+    """问卷记忆写入后立即向量化，向量检索才能立即可用（Personal 不退化为 Basic）。"""
+    client = _profile_client()
+    embedded = []
+    monkeypatch.setattr(
+        questionnaire_module,
+        "embed_memory",
+        lambda client, user_id, memory_id, api_key: (
+            embedded.append(memory_id),
+            {"status": "embedded", "memory_id": memory_id},
+        )[1],
+    )
+
+    result = save_questionnaire(client, "usr_a", FULL_ANSWERS, api_key="test-key")
+
+    assert result["status"] == "saved"
+    assert result["memory_record_ids"]
+    assert sorted(embedded) == sorted(result["memory_record_ids"])
+    assert result["memory_embedding_count"] == len(result["memory_record_ids"])
+
+
+def test_embedding_failure_does_not_fail_the_save(monkeypatch):
+    """embed 失败不阻断保存：问卷记录已落盘，反馈回路可对同一记忆 id 重试。"""
+    client = _profile_client()
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("embedding service down")
+
+    monkeypatch.setattr(questionnaire_module, "embed_memory", boom)
+
+    result = save_questionnaire(client, "usr_a", FULL_ANSWERS, api_key="test-key")
+
+    assert result["status"] == "saved"
+    assert result["memory_record_ids"]
+    assert result["memory_embedding_count"] == 0
+
+
+def test_save_without_api_key_skips_embedding(monkeypatch):
+    """离线调用（无 api_key）保持旧行为：完全不触发 embedding。"""
+    client = _profile_client()
+    calls = []
+    monkeypatch.setattr(
+        questionnaire_module,
+        "embed_memory",
+        lambda *args, **kwargs: calls.append(args),
+    )
+
+    result = save_questionnaire(client, "usr_a", FULL_ANSWERS)
+
+    assert result["status"] == "saved"
+    assert calls == []
+    assert result["memory_embedding_count"] == 0
 
 
 def test_completion_marks_completed_and_generates_memory():

@@ -461,6 +461,7 @@ def put_user_questionnaire(
             _dependency(request, "es_client"),
             user_id,
             payload.answers,
+            api_key=_dependency(request, "api_key"),
         )
     except HTTPException:
         raise

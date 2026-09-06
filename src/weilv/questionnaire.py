@@ -12,9 +12,10 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Any
 
-from elasticsearch import NotFoundError
+from elasticsearch import ApiError, NotFoundError
 
 from weilv.micro_tasks import load_formal_micro_tasks
+from weilv.personal_memory_retrieval import embed_memory
 from weilv.user_memory import (
     UserMemoryCandidate,
     UserProfile,
@@ -362,12 +363,19 @@ def save_questionnaire(
     client,
     user_id: str,
     answers: dict[str, Any],
+    api_key: str | None = None,
 ) -> dict[str, Any]:
     """Validate, persist questionnaire answers, and initialize memory records.
 
     Fail-safe: malformed answer sets are rejected without touching storage.
     Already-existing questionnaire memory is upserted in place, so resuming
     from a partial completion is idempotent.
+
+    When ``api_key`` is provided, every persisted memory is embedded right
+    after the upsert so vector recall works immediately.  Embedding failures
+    never fail the save: the questionnaire record is already durable and the
+    next feedback-loop write can re-embed the same memory id.  Callers that
+    omit ``api_key`` (offline tests) skip embedding entirely.
     """
     reasons = [
         reason for reason in invalid_answer_reasons(answers) if reason != "missing_required_answers"
@@ -407,10 +415,21 @@ def save_questionnaire(
         "memory_record_ids": memory_ids,
     }
     client.index(index=QUESTIONNAIRE_INDEX, id=user_id, document=record, refresh="wait_for")
-    # ponytail: no per-memory embedding here.  BM25 over retrieval_text already
-    # makes the memory usable immediately; vectors can be backfilled later by a
-    # background job if vector recall ever measurably matters for cold start.
-    return {"status": "saved", **record}
+
+    # Vector recall over user_memory_v1 requires the embedding field, and the
+    # BM25 fallback does not match Chinese queries against the English
+    # retrieval_text of these memories, so memories saved without embedding
+    # were effectively unreachable by Personal retrieval.  Embed now, best
+    # effort, mirroring the feedback loop in api.app.
+    embedded = 0
+    if api_key:
+        for memory_id in memory_ids:
+            try:
+                if embed_memory(client, user_id, memory_id, api_key)["status"] == "embedded":
+                    embedded += 1
+            except (ApiError, RuntimeError, ValueError):
+                continue
+    return {"status": "saved", "memory_embedding_count": embedded, **record}
 
 
 def skip_questionnaire(client, user_id: str) -> dict[str, Any]:
